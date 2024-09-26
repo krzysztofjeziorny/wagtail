@@ -1,5 +1,4 @@
 import { Controller } from '@hotwired/stimulus';
-import type { Application } from '@hotwired/stimulus';
 
 const DEFAULT_CLASS = 'button-longrunning';
 
@@ -43,59 +42,6 @@ export class ProgressController extends Controller<HTMLButtonElement> {
   declare readonly labelTarget: HTMLElement;
   timer?: number;
 
-  /**
-   * Ensure we have backwards compatibility with buttons that have
-   * not yet adopted the new data attribute syntax.
-   * Will be removed in a future release.
-   *
-   * @deprecated RemovedInWagtail60
-   */
-  static afterLoad(identifier: string, application: Application) {
-    const { controllerAttribute } = application.schema;
-    const { actionAttribute } = application.schema;
-
-    document.addEventListener(
-      'DOMContentLoaded',
-      () => {
-        document
-          .querySelectorAll(
-            `.${DEFAULT_CLASS}:not([${controllerAttribute}~='${identifier}'])`,
-          )
-          .forEach((button) => {
-            // set the controller attribute, appending to existing if present
-            button.setAttribute(
-              controllerAttribute,
-              [button.getAttribute(controllerAttribute) || '', identifier]
-                .filter(Boolean)
-                .join(' '),
-            );
-
-            // set the action attribute, appending to existing if present
-            button.setAttribute(
-              actionAttribute,
-              [
-                button.getAttribute(actionAttribute) || '',
-                `${identifier}#activate`,
-              ]
-                .filter(Boolean)
-                .join(' '),
-            );
-
-            // set the active text label to replace the legacy data-click-text
-            const activeText = button.getAttribute('data-clicked-text');
-            if (activeText) {
-              button.setAttribute(
-                `data-${identifier}-active-value`,
-                activeText,
-              );
-              button.removeAttribute('data-clicked-text');
-            }
-          });
-      },
-      { once: true, passive: true },
-    );
-  }
-
   connect() {
     if (this.hasLabelTarget) return;
     const labelElement = this.element.querySelector('em');
@@ -124,6 +70,14 @@ export class ProgressController extends Controller<HTMLButtonElement> {
         this.loadingValue = false;
       }, this.durationValue);
     });
+  }
+
+  deactivate() {
+    this.loadingValue = false;
+
+    if (this.timer) {
+      clearTimeout(this.timer);
+    }
   }
 
   loadingValueChanged(isLoading: boolean) {
@@ -157,8 +111,6 @@ export class ProgressController extends Controller<HTMLButtonElement> {
   }
 
   disconnect(): void {
-    if (this.timer) {
-      clearTimeout(this.timer);
-    }
+    this.deactivate();
   }
 }

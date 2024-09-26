@@ -19,30 +19,30 @@ features = FeatureRegistry()
 # with the feature registry
 
 
-@lru_cache(maxsize=1)
+@lru_cache(maxsize=None)
 def get_rewriter():
     embed_rules = features.get_embed_types()
     link_rules = features.get_link_types()
     return MultiRuleRewriter(
         [
             LinkRewriter(
-                {
-                    linktype: handler.expand_db_attributes
+                bulk_rules={
+                    linktype: handler.expand_db_attributes_many
                     for linktype, handler in link_rules.items()
                 },
-                {
+                reference_extractors={
                     linktype: handler.extract_references
                     for linktype, handler in link_rules.items()
                 },
             ),
             EmbedRewriter(
-                {
-                    embedtype: handler.expand_db_attributes
+                bulk_rules={
+                    embedtype: handler.expand_db_attributes_many
                     for embedtype, handler in embed_rules.items()
                 },
-                {
-                    linktype: handler.extract_references
-                    for linktype, handler in embed_rules.items()
+                reference_extractors={
+                    embedtype: handler.extract_references
+                    for embedtype, handler in embed_rules.items()
                 },
             ),
         ]
@@ -99,6 +99,11 @@ class RichText:
     def __bool__(self):
         return bool(self.source)
 
+    def __eq__(self, other):
+        if isinstance(other, RichText):
+            return self.source == other.source
+        return False
+
 
 class EntityHandler:
     """
@@ -125,6 +130,14 @@ class EntityHandler:
         model = cls.get_model()
         return model._default_manager.get(id=attrs["id"])
 
+    @classmethod
+    def get_many(cls, attrs_list: list[dict]) -> list[Model]:
+        model = cls.get_model()
+        instance_ids = [attrs.get("id") for attrs in attrs_list]
+        instances_by_id = model._default_manager.in_bulk(instance_ids)
+        instances_by_str_id = {str(k): v for k, v in instances_by_id.items()}
+        return [instances_by_str_id.get(str(id_)) for id_ in instance_ids]
+
     @staticmethod
     def expand_db_attributes(attrs: dict) -> str:
         """
@@ -132,6 +145,14 @@ class EntityHandler:
         stored in the database, returns the real HTML representation.
         """
         raise NotImplementedError
+
+    @classmethod
+    def expand_db_attributes_many(cls, attrs_list: list[dict]) -> list[str]:
+        """
+        Given a list of attribute dicts from a list of entity tags stored in
+        the database, return the real HTML representation of each one.
+        """
+        return list(map(cls.expand_db_attributes, attrs_list))
 
     @classmethod
     def extract_references(cls, attrs):

@@ -18,7 +18,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Wagtail\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-04-20 11:47+0100\n"
+"POT-Creation-Date: 2024-08-07 10:06+0100\n"
 "PO-Revision-Date: 2014-02-19 19:01+0000\n"
 "Last-Translator: Yiannis Inglessis <negtheone@gmail.com>, 2016\n"
 "Language-Team: Greek (http://app.transifex.com/torchbox/wagtail/language/"
@@ -99,12 +99,6 @@ msgstr "Ναι, να διαγραφεί"
 msgid "No, don't delete"
 msgstr "Ακύρωση διαγραφής"
 
-msgid "Last updated"
-msgstr "Τελευταία αναθεώρηση"
-
-msgid "History"
-msgstr "Ιστορικό"
-
 msgid "Saving…"
 msgstr "Αποθήκευση…"
 
@@ -114,81 +108,20 @@ msgstr "Αντικατάσταση του τρέχοντος draft"
 msgid "Save draft"
 msgstr "Αποθήκευση σχεδίου"
 
-#, python-format
-msgid "New  %(snippet_type_name)s"
-msgstr "Δημιουργία %(snippet_type_name)s"
-
-msgid "New"
-msgstr "Δημιουργία"
-
 msgid "Actions"
 msgstr "Ενέργειες"
-
-msgid "Snippets"
-msgstr "Snippets"
-
-msgid "Usage"
-msgstr "Χρήση"
-
-#, python-format
-msgid "Snippets %(snippet_type_name_plural)s"
-msgstr "Snippets %(snippet_type_name_plural)s"
-
-#, python-format
-msgid "Add %(snippet_type_name)s"
-msgstr "Προσθήκη %(snippet_type_name)s"
-
-#, python-format
-msgid ""
-"No %(snippet_type_name_plural)s have been created. Why not <a "
-"href=\"%(wagtailsnippets_create_url)s\">add one</a>?"
-msgstr ""
-"Δεν υπάρχουν %(snippet_type_name_plural)s. Θέλετε να <a "
-"href=\"%(wagtailsnippets_create_url)s\">προσθέσετε μερικά</a>;"
-
-msgid "Live version"
-msgstr "Τρέχουσα έκδοση"
-
-msgid "Current draft"
-msgstr "Τρέχον σχέδιο"
-
-msgid "Preview"
-msgstr "Προεπισκόπηση"
-
-msgid "Edit"
-msgstr "Επεξεργασία "
 
 msgid "Choose"
 msgstr "Επιλογή"
 
+msgid "Snippets"
+msgstr "Snippets"
+
 msgid "Name"
 msgstr "Όνομα"
 
-msgid "The snippet could not be created due to errors."
-msgstr "Δεν ήταν δυνατή η δημιουργία του snippet."
-
-msgid "The snippet could not be saved due to errors."
-msgstr "Δεν ήταν δυνατή η αποθήκευση του snippet."
-
-msgid "Action"
-msgstr "Ενέργεια"
-
-msgid "User"
-msgstr "Χρήστης"
-
-msgid "Date"
-msgstr "Ημερομηνία"
-
-msgid "Snippet history"
-msgstr "Ιστορικό αποσπάσματος"
-
-#, python-format
-msgid "Edit '%(title)s'"
-msgstr "Αναθεώρηση '%(title)s'"
-
-#, python-format
-msgid "Delete '%(title)s'"
-msgstr "Διαγραφή '%(title)s'"
+msgid "Home"
+msgstr "Αρχική"
 
 #, python-format
 msgid "Choose %(object)s"

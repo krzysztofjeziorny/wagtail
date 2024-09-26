@@ -2,18 +2,21 @@
 # Translators:
 # Matej Stavanja <matej.stavanja@zfm.si>, 2022
 # Mitja Pagon <mitja.pagon@inueni.com>, 2022
-# Loic Teixeira, 2022
 # Andrej Marsetič, 2023
+# Loic Teixeira, 2024
 #
 msgid ""
 msgstr ""
-"Last-Translator: Andrej Marsetič, 2023\n"
+"Last-Translator: Loic Teixeira, 2024\n"
 "Language-Team: Slovenian (https://app.transifex.com/torchbox/teams/8009/"
 "sl/)\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Language: sl\n"
 "Plural-Forms: nplurals=4; plural=(n%100==1 ? 0 : n%100==2 ? 1 : n%100==3 || "
 "n%100==4 ? 2 : 3);\n"
+
+msgid "(%(number)s new items in this menu)"
+msgstr "(%(number)s novih elementov v tem meniju)"
 
 msgid "(1 new item in this menu)"
 msgstr "(1 nov element v tem meniju)"
@@ -86,9 +89,6 @@ msgstr "Uredi"
 msgid "Edit '%(title)s'"
 msgstr "Uredi '%(title)s'"
 
-msgid "Edit your account"
-msgstr "Uredite vaš račun"
-
 msgid "Enter your comments..."
 msgstr "Vnesite vaš komentar"
 
@@ -137,6 +137,9 @@ msgstr "Raziskovalec strani"
 msgid "Pages"
 msgstr "Strani"
 
+msgid "Pin toolbar"
+msgstr "Pripni orodno vrstico"
+
 msgid "Reload saved content"
 msgstr "Ponovno naložite shranjeno vsebino"
 
@@ -179,6 +182,9 @@ msgstr "Shranjevanje..."
 msgid "Search"
 msgstr "Iskanje"
 
+msgid "Search options…"
+msgstr "Možnosti iskanja..."
+
 msgid "See all"
 msgstr "Poglej vse"
 
@@ -200,6 +206,12 @@ msgstr ""
 "Urejevalnik se je pravkar zrušil. Vsebina je bila ponastavljena na zadnjo "
 "shranjeno različico"
 
+msgid "The maximum number of items is %(max_num)d"
+msgstr "Največje število predmetov je %(max_num)d"
+
+msgid "The minimum number of items is %(min_num)d"
+msgstr "Najmanjše število predmetov je %(min_num)d"
+
 msgid "This field is required."
 msgstr "Polje je obvezno."
 
@@ -211,6 +223,9 @@ msgstr "Preklopi stransko vrstico"
 
 msgid "Unfocus comment"
 msgstr "Odstrani fokus komentarja"
+
+msgid "Unpin toolbar"
+msgstr "Odpni orodno vrstico"
 
 msgid "View child pages of '%(title)s'"
 msgstr "Ogled podrejenih strani za  '%(title)s'"

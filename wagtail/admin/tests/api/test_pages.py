@@ -17,6 +17,7 @@ from wagtail.api.v2.tests.test_pages import (
 )
 from wagtail.models import GroupPagePermission, Locale, Page, PageLogEntry
 from wagtail.test.demosite import models
+from wagtail.test.i18n.models import TestPage
 from wagtail.test.testapp.models import (
     EventIndex,
     EventPage,
@@ -1309,7 +1310,7 @@ class TestCopyPageAction(AdminAPITestCase, TestCase):
         self.assertEqual(response.status_code, 403)
         content = json.loads(response.content.decode("utf-8"))
         self.assertEqual(
-            content, {"detail": "You do not have permission to perform this action."}
+            content, {"detail": "You do not have permission to copy this page"}
         )
 
     def test_recursively_copy_into_self(self):
@@ -1347,7 +1348,7 @@ class TestCopyPageAction(AdminAPITestCase, TestCase):
         self.assertEqual(response.status_code, 403)
         content = json.loads(response.content.decode("utf-8"))
         self.assertEqual(
-            content, {"detail": "You do not have permission to perform this action."}
+            content, {"detail": "You do not have permission to copy this page"}
         )
 
     def test_without_publish_permissions_at_destination_with_keep_live(self):
@@ -1374,7 +1375,12 @@ class TestCopyPageAction(AdminAPITestCase, TestCase):
         self.assertEqual(response.status_code, 403)
         content = json.loads(response.content.decode("utf-8"))
         self.assertEqual(
-            content, {"detail": "You do not have permission to perform this action."}
+            content,
+            {
+                "detail": (
+                    "You do not have permission to publish a page at the destination"
+                )
+            },
         )
 
     def test_respects_page_creation_rules(self):
@@ -1384,7 +1390,7 @@ class TestCopyPageAction(AdminAPITestCase, TestCase):
         self.assertEqual(response.status_code, 403)
         content = json.loads(response.content.decode("utf-8"))
         self.assertEqual(
-            content, {"detail": "You do not have permission to perform this action."}
+            content, {"detail": "You do not have permission to copy this page"}
         )
 
     def test_copy_page_slug_in_use(self):
@@ -1511,7 +1517,7 @@ class TestDeletePageAction(AdminAPITestCase, TestCase):
         self.assertEqual(response.status_code, 403)
         content = json.loads(response.content.decode("utf-8"))
         self.assertEqual(
-            content, {"detail": "You do not have permission to perform this action."}
+            content, {"detail": "You do not have permission to delete this page"}
         )
 
         # Page is still there
@@ -1559,7 +1565,7 @@ class TestPublishPageAction(AdminAPITestCase, TestCase):
         self.assertEqual(response.status_code, 403)
         content = json.loads(response.content.decode("utf-8"))
         self.assertEqual(
-            content, {"detail": "You do not have permission to perform this action."}
+            content, {"detail": "You do not have permission to publish this page"}
         )
 
     def test_publish_alias_page(self):
@@ -1649,7 +1655,7 @@ class TestUnpublishPageAction(AdminAPITestCase, TestCase):
         self.assertEqual(response.status_code, 403)
         content = json.loads(response.content.decode("utf-8"))
         self.assertEqual(
-            content, {"detail": "You do not have permission to perform this action."}
+            content, {"detail": "You do not have permission to unpublish this page"}
         )
 
 
@@ -1681,7 +1687,13 @@ class TestMovePageAction(AdminAPITestCase, TestCase):
 
         content = json.loads(response.content.decode("utf-8"))
         self.assertEqual(
-            content, {"detail": "You do not have permission to perform this action."}
+            content,
+            {
+                "detail": (
+                    "You do not have permission to move the page to the "
+                    "target specified."
+                ),
+            },
         )
 
     def test_move_page_without_destination_page_id(self):
@@ -1774,6 +1786,76 @@ class TestCopyForTranslationAction(AdminAPITestCase, TestCase):
         self.assertEqual(response.status_code, 404)
         content = json.loads(response.content.decode("utf-8"))
         self.assertEqual(content, {"message": "No Locale matches the given query."})
+
+    def test_translating_latest_non_draft_page_revision(self):
+        old_index_title = self.en_eventindex.title
+        old_post_title = self.en_eventpage.title
+        new_index_title = old_index_title + "-77777"
+        new_post_title = old_post_title + "-77777"
+        self.en_eventindex.title = new_index_title
+        self.en_eventindex.save_revision(log_action=True)
+        self.en_eventpage.title = new_post_title
+        self.en_eventpage.save_revision(log_action=True)
+
+        response = self.get_response(
+            self.en_eventindex.id,
+            {"locale": "fr", "copy_parents": True, "recursive": True},
+        )
+
+        assert response.status_code == 201
+
+        new_index_page = [
+            trans_page
+            for trans_page in self.en_eventindex.get_translations()
+            if trans_page.locale.language_code == "fr"
+        ][0]
+        assert new_index_page.title == old_index_title
+        new_post_page = [
+            trans_page
+            for trans_page in self.en_eventpage.get_translations()
+            if trans_page.locale.language_code == "fr"
+        ][0]
+        assert new_post_page.title == old_post_title
+
+    def test_translating_latest_draft_page_revision(self):
+        """In case when Page have only draft revisions"""
+
+        draft_index_page = TestPage(title="Draft Blog", slug="draft_blog", live=False)
+        self.en_homepage.add_child(instance=draft_index_page)
+        draft_blog_post = TestPage(
+            title="Draft Blog post", slug="draft_blog-post", live=False
+        )
+        draft_index_page.add_child(instance=draft_blog_post)
+
+        old_index_title = draft_index_page.title
+        new_index_title = old_index_title + "-77777"
+        draft_index_page.title = new_index_title
+        draft_index_page.save_revision(log_action=True)
+
+        old_page_title = draft_blog_post.title
+        new_page_title = old_page_title + "-77777"
+        draft_blog_post.title = new_page_title
+        draft_blog_post.save_revision(log_action=True)
+
+        response = self.get_response(
+            draft_index_page.id,
+            {"locale": "fr", "copy_parents": True, "recursive": True},
+        )
+
+        assert response.status_code == 201
+
+        new_index_page = [
+            trans_page
+            for trans_page in draft_index_page.get_translations()
+            if trans_page.locale.language_code == "fr"
+        ][0]
+        assert new_index_page.title == new_index_title
+        new_post_page = [
+            trans_page
+            for trans_page in draft_blog_post.get_translations()
+            if trans_page.locale.language_code == "fr"
+        ][0]
+        assert new_post_page.title == new_page_title
 
 
 class TestCreatePageAliasAction(AdminAPITestCase, TestCase):
@@ -1884,7 +1966,12 @@ class TestCreatePageAliasAction(AdminAPITestCase, TestCase):
 
         content = json.loads(response.content.decode("utf-8"))
         self.assertEqual(
-            content, {"detail": "You do not have permission to perform this action."}
+            content,
+            {
+                "detail": (
+                    "You do not have permission to publish a page at the destination"
+                ),
+            },
         )
 
 
@@ -1941,7 +2028,7 @@ class TestRevertToPageRevisionAction(AdminAPITestCase, TestCase):
 
         content = json.loads(response.content.decode("utf-8"))
         self.assertEqual(
-            content, {"detail": "You do not have permission to perform this action."}
+            content, {"detail": "You do not have permission to edit this page"}
         )
 
     def test_revert_to_page_revision_without_revision_id(self):

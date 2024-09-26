@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Wagtail\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-04-20 11:47+0100\n"
+"POT-Creation-Date: 2024-08-07 10:06+0100\n"
 "PO-Revision-Date: 2014-09-11 15:42+0000\n"
 "Last-Translator: Soft Exim, 2022\n"
 "Language-Team: Mongolian (http://app.transifex.com/torchbox/wagtail/language/"
@@ -128,20 +128,12 @@ msgstr "Формын мэдээллийг устгах"
 msgid "Delete"
 msgstr "Устгах"
 
-msgid "Forms"
-msgstr "Формууд"
-
-msgid "Pages"
-msgstr "Хуудсууд"
-
-msgid "Title"
-msgstr "Гарчиг"
-
-msgid "Origin"
-msgstr "Үүсэл"
-
 msgid "Delete selected submissions"
 msgstr "Бөглөсөн мэдээллийг устгах"
+
+#, python-format
+msgid "There have been no submissions of the '%(title)s' form."
+msgstr "'%(title)s' форм огт бөглөгдөөгүй байна."
 
 msgid "Total submissions"
 msgstr "Нийт бөглөсөн тоо"
@@ -149,25 +141,21 @@ msgstr "Нийт бөглөсөн тоо"
 msgid "Latest submission"
 msgstr "Сүүлийн бөглөсөн мэдээлэл"
 
-msgid "No form pages have been created."
-msgstr "Форм хуудас үүсээгүй байна."
-
 #, python-format
 msgid "Submissions of %(form_title)s"
 msgstr "Бөглөсөн %(form_title)s"
 
-msgid "Download XLSX"
-msgstr "XLSX-р татах"
+msgid "Forms"
+msgstr "Формууд"
 
-msgid "Download CSV"
-msgstr "CSV татах"
+msgid "Title"
+msgstr "Гарчиг"
 
-#, python-format
-msgid "There have been no submissions of the '%(title)s' form."
-msgstr "'%(title)s' форм огт бөглөгдөөгүй байна."
+msgid "Origin"
+msgstr "Үүсэл"
 
-msgid "Filter"
-msgstr "Шүүлтүүр"
+msgid "Pages"
+msgstr "Хуудсууд"
 
 #, python-format
 msgid "One submission has been deleted."

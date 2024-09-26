@@ -10,7 +10,7 @@
 # Ettore Atalan <atalanttore@googlemail.com>, 2017,2020
 # fd3e232e7013009a14520c2bc2e16691_e19811b, 2018
 # Florian Vogt <flori@vorlif.org>, 2015
-# Florian Vogt <flori@vorlif.org>, 2015,2017
+# Florian Vogt <flori@vorlif.org>, 2015,2017,2023
 # Henrik Kröger <hedwig@riseup.net>, 2016,2018
 # Oliver Engel <codeangel@posteo.de>, 2021
 # Bohreromir, 2020
@@ -20,7 +20,7 @@
 # Matthias Martin, 2019
 # Matthias Martin, 2019
 # Matti Borchers, 2022
-# Matti Borchers, 2022
+# mattibo, 2022
 # Matt Westcott <matthew@torchbox.com>, 2015
 # Max Pfeiffer <max.pfeiffer@alp-phone.ch>, 2015
 # Moritz Pfeiffer <moritz@alp-phone.ch>, 2016-2018
@@ -28,7 +28,7 @@
 # Oliver Engel <codeangel@posteo.de>, 2021
 # Patrick Hebner <hebner.tec@gmail.com>, 2020
 # Peter Dreuw <archandha@gmx.net>, 2019
-# Stefan Hammer <stefan@hammerworxx.com>, 2022-2023
+# Stefan Hammer <stefan@hammerworxx.com>, 2022-2024
 # Stefan Hammer <stefan@hammerworxx.com>, 2022
 # Tammo van Lessen <tvanlessen@gmail.com>, 2015
 # Stefan Hammer <stefan@hammerworxx.com>, 2022
@@ -39,9 +39,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Wagtail\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-04-20 11:47+0100\n"
+"POT-Creation-Date: 2024-08-07 10:05+0100\n"
 "PO-Revision-Date: 2014-02-21 15:51+0000\n"
-"Last-Translator: Stefan Hammer <stefan@hammerworxx.com>, 2022-2023\n"
+"Last-Translator: Stefan Hammer <stefan@hammerworxx.com>, 2022-2024\n"
 "Language-Team: German (http://app.transifex.com/torchbox/wagtail/language/"
 "de/)\n"
 "MIME-Version: 1.0\n"
@@ -172,7 +172,7 @@ msgstr ""
 #, python-format
 msgid "Only reviewers for this task can edit the %(model_name)s."
 msgstr ""
-"Nur Gutachter für diese Aufgabe können dieses %(model_name)s-Objekt "
+"Nur Reviewer für diese Aufgabe können dieses %(model_name)s-Objekt "
 "bearbeiten."
 
 msgid "Unlocked"
@@ -186,13 +186,13 @@ msgid ""
 "Reviewers can edit this %(model_name)s – lock it to prevent other reviewers "
 "from editing"
 msgstr ""
-"Gutachter können dieses %(model_name)s-Objekt bearbeiten – sperren Sie es, "
-"um zu verhindern, dass andere Gutachter es bearbeiten"
+"Reviewer können dieses %(model_name)s-Objekt bearbeiten – sperren Sie es, um "
+"zu verhindern, dass andere Gutachter es bearbeiten"
 
 #, python-format
 msgid "Only reviewers can edit and approve the %(model_name)s"
 msgstr ""
-"Nur Gutachter können das %(model_name)s-Objekt bearbeiten und genehmigen"
+"Nur Reviewer können das %(model_name)s-Objekt bearbeiten und genehmigen"
 
 #, python-brace-format
 msgid ""
@@ -264,6 +264,39 @@ msgstr "in Moderation"
 
 msgid "live + in moderation"
 msgstr "Live + in Moderation"
+
+msgid "Add/edit pages you own"
+msgstr "Hinzufügen/Bearbeiten von Seiten, die Sie besitzen"
+
+msgid "Bulk delete"
+msgstr "Alles löschen"
+
+msgid "Delete pages with children"
+msgstr "Seiten inkl. Unterseiten löschen"
+
+msgid "Edit"
+msgstr "Bearbeiten"
+
+msgid "Edit any page"
+msgstr "Jede Seite bearbeiten."
+
+msgid "Lock"
+msgstr "Sperren"
+
+msgid "Lock/unlock pages you've locked"
+msgstr "Sperren/Entsperren der von Ihnen gesperrten Seiten"
+
+msgid "Publish"
+msgstr "Veröffentlichen"
+
+msgid "Publish any page"
+msgstr "Jede Seite veröffentlichen"
+
+msgid "Unlock"
+msgstr "Entsperren"
+
+msgid "Unlock any page"
+msgstr "Beliebige Seite entsperren"
 
 msgid "title"
 msgstr "Titel"
@@ -338,9 +371,6 @@ msgstr "Seiten"
 msgid "object id"
 msgstr "Objekt-ID"
 
-msgid "submitted for moderation"
-msgstr "Zur Freischaltung eingereicht"
-
 msgid "created at"
 msgstr "Erstellt am"
 
@@ -359,44 +389,11 @@ msgstr "Revision"
 msgid "revisions"
 msgstr "Revisionen"
 
-msgid "Add/edit pages you own"
-msgstr "Hinzufügen/Bearbeiten von Seiten, die Sie besitzen"
-
-msgid "Edit"
-msgstr "Bearbeiten"
-
-msgid "Edit any page"
-msgstr "Jede Seite bearbeiten."
-
-msgid "Publish"
-msgstr "Veröffentlichen"
-
-msgid "Publish any page"
-msgstr "Jede Seite veröffentlichen"
-
-msgid "Bulk delete"
-msgstr "Alles löschen"
-
-msgid "Delete pages with children"
-msgstr "Seiten inkl. Unterseiten löschen"
-
-msgid "Lock"
-msgstr "Sperren"
-
-msgid "Lock/unlock pages you've locked"
-msgstr "Sperren/Entsperren der von Ihnen gesperrten Seiten"
-
-msgid "Unlock"
-msgstr "Entsperren"
-
-msgid "Unlock any page"
-msgstr "Beliebige Seite entsperren"
-
 msgid "group"
 msgstr "Gruppe"
 
-msgid "permission type"
-msgstr "Berechtigungstyp"
+msgid "permission"
+msgstr "Berechtigung"
 
 msgid "group page permission"
 msgstr "Gruppen Seitenberechtigung"
@@ -605,6 +602,9 @@ msgstr "Protokolleintrag"
 msgid "model log entries"
 msgstr "Protokolleinträge"
 
+msgid "locale"
+msgstr "Locale"
+
 msgid "collection"
 msgstr "Sammlung"
 
@@ -617,14 +617,17 @@ msgstr "Sammlung Ansichtsrestriktionen"
 msgid "collections"
 msgstr "Sammlungen"
 
-msgid "permission"
-msgstr "Berechtigung"
-
 msgid "group collection permission"
 msgstr "Gruppen Sammlungs-Berechtigung"
 
 msgid "group collection permissions"
 msgstr "Gruppen-Sammlungs-Berechtigungen"
+
+msgid "for content type"
+msgstr "für Inhaltstyp"
+
+msgid "uploaded by user"
+msgstr "Hochgeladen von Benutzer"
 
 #, python-format
 msgid "the %(model_name)s will also be deleted"
@@ -704,17 +707,24 @@ msgstr ""
 msgid "Public"
 msgstr "Öffentlich"
 
-msgid "Private, accessible to logged-in users"
-msgstr "Privat, nur für angemeldete Benutzer einsehbar"
+msgid "Private, accessible with a shared password"
+msgstr "Privat, zugänglich mit einem gemeinsamen Passwort"
 
-msgid "Private, accessible with the following password"
-msgstr "Privat, einsehbar mit folgendem Passwort"
+msgid "Private, accessible to any logged-in users"
+msgstr "Privat, zugänglich für alle angemeldeten Benutzer"
 
 msgid "Private, accessible to users in specific groups"
 msgstr "Privat, einsehbar für Benutzer in bestimmten Gruppen"
 
-msgid "password"
-msgstr "Passwort"
+msgid "shared password"
+msgstr "gemeinsames Passwort"
+
+msgid ""
+"Shared passwords should not be used to protect sensitive content. Anyone who "
+"has this password will be able to view the content."
+msgstr ""
+"Gemeinsame Passwörter sollten nicht zum Schutz sensibler Inhalte verwendet "
+"werden. Jeder, der dieses Passwort kennt, kann den Inhalt einsehen."
 
 msgid "view restriction"
 msgstr "Ansichtsrestriktion"
@@ -931,8 +941,9 @@ msgid "Remove view restrictions"
 msgstr "Ansichtsrestriktionen entfernen"
 
 #, python-format
-msgid "Removed the '%(restriction)s' view restriction"
-msgstr "Ansichtsrestriktion „%(restriction)s“ entfernt"
+msgid "Removed the '%(restriction)s' view restriction. The page is public."
+msgstr ""
+"Ansichtsrestriktion „%(restriction)s“ entfernt. Die Seite ist öffentlich."
 
 msgid "Removed view restriction"
 msgstr "Ansichtsrestriktion entfernt"

@@ -28,6 +28,16 @@ export class InlinePanel extends ExpandingFormset {
     }
 
     this.updateControlStates();
+    // dispatch event for form ready
+    setTimeout(() => {
+      this.formsElt.get(0)?.dispatchEvent(
+        new CustomEvent('w-formset:ready', {
+          bubbles: true,
+          cancelable: false,
+          detail: { ...opts },
+        }),
+      );
+    });
   }
 
   updateControlStates() {
@@ -42,14 +52,27 @@ export class InlinePanel extends ExpandingFormset {
     const childId = 'inline_child_' + prefix;
     const deleteInputId = 'id_' + prefix + '-DELETE';
     const currentChild = $('#' + childId);
-    const $up = currentChild.find('[data-inline-panel-child-move-up]');
-    const $down = currentChild.find('[data-inline-panel-child-move-down]');
+    const $up = currentChild.find('[data-inline-panel-child-move-up]:first ');
+    const $down = currentChild.find(
+      '[data-inline-panel-child-move-down]:first ',
+    );
 
     $('#' + deleteInputId + '-button').on('click', () => {
       /* set 'deleted' form field to true */
-      $('#' + deleteInputId).val('1');
+      $('#' + deleteInputId)
+        .val('1')
+        .get(0)
+        .dispatchEvent(new Event('change', { bubbles: true }));
       currentChild.addClass('deleted').slideUp(() => {
         this.updateControlStates();
+        // dispatch event for deleting form
+        currentChild.get(0).dispatchEvent(
+          new CustomEvent('w-formset:removed', {
+            bubbles: true,
+            cancelable: false,
+            detail: { ...this.opts },
+          }),
+        );
       });
     });
 
@@ -127,8 +150,14 @@ export class InlinePanel extends ExpandingFormset {
       forms.each(function updateButtonStates(i) {
         const isFirst = i === 0;
         const isLast = i === forms.length - 1;
-        $('[data-inline-panel-child-move-up]', this).prop('disabled', isFirst);
-        $('[data-inline-panel-child-move-down]', this).prop('disabled', isLast);
+        $('[data-inline-panel-child-move-up]:first', this).prop(
+          'disabled',
+          isFirst,
+        );
+        $('[data-inline-panel-child-move-down]:first', this).prop(
+          'disabled',
+          isLast,
+        );
       });
     }
   }
@@ -209,6 +238,29 @@ export class InlinePanel extends ExpandingFormset {
     );
   }
 
+  /**
+   * Add tabindex -1 into newly created form if attr not present and
+   * remove attr from old forms on blur event, if not present previously.
+   * Always scroll and then focus on the element.
+   */
+  initialFocus($node) {
+    if (!$node || !$node.length) return;
+
+    // If element does not already have tabindex, set it
+    // then ensure we remove after blur (when it loses focus).
+    if (!$node.attr('tabindex')) {
+      $node.attr('tabindex', -1);
+      $node.one('blur', () => {
+        if ($node.attr('tabindex') === '-1') {
+          $node.removeAttr('tabindex');
+        }
+      });
+    }
+
+    $node[0].scrollIntoView({ behavior: 'smooth' });
+    $node.focus();
+  }
+
   addForm(opts = {}) {
     /*
     Supported opts:
@@ -229,7 +281,10 @@ export class InlinePanel extends ExpandingFormset {
     this.initChildControls(newChildPrefix);
     if (this.opts.canOrder) {
       /* ORDER values are 1-based, so need to add 1 to formIndex */
-      $('#id_' + newChildPrefix + '-ORDER').val(formIndex + 1);
+      $('#id_' + newChildPrefix + '-ORDER')
+        .val(formIndex + 1)
+        .get(0)
+        .dispatchEvent(new Event('change', { bubbles: true }));
     }
 
     this.updateControlStates();
@@ -243,5 +298,19 @@ export class InlinePanel extends ExpandingFormset {
       if (this.opts.onAdd) this.opts.onAdd(formIndex);
       if (this.opts.onInit) this.opts.onInit(formIndex);
     }
+
+    this.initialFocus($(`#inline_child_${newChildPrefix}-panel-content`));
+
+    const newChild = this.formsElt.children().last().get(0);
+    if (!newChild) return;
+
+    // dispatch event for initialising a form
+    newChild.dispatchEvent(
+      new CustomEvent('w-formset:added', {
+        bubbles: true,
+        cancelable: false,
+        detail: { formIndex, ...this.opts },
+      }),
+    );
   }
 }

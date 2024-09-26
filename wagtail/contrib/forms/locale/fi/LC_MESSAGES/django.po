@@ -13,7 +13,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Wagtail\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-04-20 11:47+0100\n"
+"POT-Creation-Date: 2024-08-07 10:06+0100\n"
 "PO-Revision-Date: 2014-09-11 15:42+0000\n"
 "Last-Translator: Valter Maasalo <vmaasalo@gmail.com>, 2020\n"
 "Language-Team: Finnish (http://app.transifex.com/torchbox/wagtail/language/"
@@ -173,20 +173,12 @@ msgstr[1] "Haluatko varmasti poistaa nämä lähetetyt lomakkeet?"
 msgid "Delete"
 msgstr "Poista"
 
-msgid "Forms"
-msgstr "Lomakkeet"
-
-msgid "Pages"
-msgstr "Sivut"
-
-msgid "Title"
-msgstr "Otsikko"
-
-msgid "Origin"
-msgstr "Lähde"
-
 msgid "Delete selected submissions"
 msgstr "Poista valitut tiedot"
+
+#, python-format
+msgid "There have been no submissions of the '%(title)s' form."
+msgstr "Lomaketta '%(title)s' ei ole lähetetty kertaakaan."
 
 msgid "Total submissions"
 msgstr "Lähettyjä yhteensä"
@@ -194,28 +186,21 @@ msgstr "Lähettyjä yhteensä"
 msgid "Latest submission"
 msgstr "Viimeksi lähetetty"
 
-msgid "No form pages have been created."
-msgstr "Lomakesivuja ei ole luotu."
-
 #, python-format
 msgid "Submissions of %(form_title)s"
 msgstr "Lähetetyt %(form_title)s -lomakkeet"
 
-msgid "Download XLSX"
-msgstr "Lataa XLSX"
+msgid "Forms"
+msgstr "Lomakkeet"
 
-msgid "Download CSV"
-msgstr "Lataa CSV"
+msgid "Title"
+msgstr "Otsikko"
 
-#, python-format
-msgid "There have been no submissions of the '%(title)s' form."
-msgstr "Lomaketta '%(title)s' ei ole lähetetty kertaakaan."
+msgid "Origin"
+msgstr "Lähde"
 
-msgid "Filter"
-msgstr "Suodatin"
-
-msgid "Apply filters"
-msgstr "Toteuta suodatukset"
+msgid "Pages"
+msgstr "Sivut"
 
 #, python-format
 msgid "One submission has been deleted."

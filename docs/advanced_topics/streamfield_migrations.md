@@ -6,7 +6,7 @@
 
 ## Migrating RichTextFields to StreamField
 
-If you change an existing RichTextField to a StreamField, the database migration will complete with no errors, since both fields use a text column within the database. However, StreamField uses a JSON representation for its data, so the existing text requires an extra conversion step in order to become accessible again. For this to work, the StreamField needs to include a RichTextBlock as one of the available block types. Create the migration as normal using `./manage.py makemigrations`, then edit it as follows (in this example, the 'body' field of the `demo.BlogPage` model is being converted to a StreamField with a RichTextBlock named `rich_text`):
+If you change an existing RichTextField to a StreamField, the database migration will complete with no errors, since both fields use a text column within the database. However, StreamField uses a JSON representation for its data, so the existing text requires an extra conversion step to become accessible again. For this to work, the StreamField needs to include a RichTextBlock as one of the available block types. Create the migration as normal using `./manage.py makemigrations`, then edit it as follows (in this example, the 'body' field of the `demo.BlogPage` model is being converted to a StreamField with a RichTextBlock named `rich_text`):
 
 ```python
 import json
@@ -59,7 +59,6 @@ class Migration(migrations.Migration):
             name="body",
             field=wagtail.fields.StreamField(
                 [("rich_text", wagtail.blocks.RichTextBlock())],
-                use_json_field=True,
             ),
         ),
     ]
@@ -200,7 +199,6 @@ class Migration(migrations.Migration):
             name="body",
             field=wagtail.fields.StreamField(
                 [("rich_text", wagtail.blocks.RichTextBlock())],
-                use_json_field=True,
             ),
         ),
     ]
@@ -226,7 +224,7 @@ If you change the block definition of a StreamField on a model that has existing
 
 A StreamField is stored as a single column of JSON data in the database. Blocks are stored as structures within the JSON, and can be nested. However, as far as Django is concerned when generating schema migrations, everything inside this column is just a string of JSON data. The database schema doesn’t change - regardless of the content/structure of the StreamField - since it is the same field type before and after any change to the StreamField's blocks. Therefore whenever changes are made to StreamFields, any existing data must be changed into the new required structure, typically by defining a data migration. If the data is not migrated, even a simple change like renaming a block can result in old data being lost.
 
-Generally, data migrations are performed manually by making an empty migration file and writing the forward and backward functions for a `RunPython` command. These functions handle the logic for taking the previously saved JSON representation and converting it into the new JSON representation needed. While this is fairly straightforward for simple changes (e.g. renaming a block), this can easily get very complicated when nested blocks, multiple fields, and revisions are involved.
+Generally, data migrations are performed manually by making an empty migration file and writing the forward and backward functions for a `RunPython` command. These functions handle the logic for taking the previously saved JSON representation and converting it into the new JSON representation needed. While this is fairly straightforward for simple changes (such as renaming a block), this can easily get very complicated when nested blocks, multiple fields, and revisions are involved.
 
 To reduce boilerplate, and the potential for errors, `wagtail.blocks.migrations` provides the following:
 
@@ -301,7 +299,7 @@ Instead, we have a `migrate_operation.MigrateStreamData` operation which will ha
 ```python
 from django.db import migrations
 
-from from wagtail.blocks.migrations.migrate_operation import MigrateStreamData
+from wagtail.blocks.migrations.migrate_operation import MigrateStreamData
 
 class Migration(migrations.Migration):
 
@@ -319,7 +317,7 @@ class Migration(migrations.Migration):
 
 In a StreamField, accessing just the field is not enough, since we will typically need to operate on specific block types. For this, we define a block path which points to that specific block path within the `StreamField` definition to obtain the specific data we need. Finally, we define an operation to update that data. As such we have an `(IntraFieldOperation(), 'block_path')` tuple. We can have as many as these as we like in our `operations_and_block_paths`, but for now we'll look at a single one for our rename operation.
 
-In this case the block that we are operating on is `stream1`, the parent of the block being renamed (refer to [](rename_stream_children_operation) - for rename and remove operations we always operate on the parent block). In that case our block path will be `stream1`. Next we need a function which will update our data. For this, the `wagtail.blocks.operations` module has a set of commonly used intra-field operations available (and it is possible to write [custom operations](custom_streamfield_migration_operations)). Since this is a rename operation which operates on a StreamField, we will use `wagtail.blocks.operations.RenameStreamChildrenOperation` which accepts two arguments as the old block name and the new block name. As such our operation and block path tuple will look like:
+In this case the block that we are operating on is `stream1`, the parent of the block being renamed (refer to [](rename_stream_children_operation) - for rename and remove operations we always operate on the parent block). In that case our block path will be `stream1`. Next we need a function that will update our data. For this, the `wagtail.blocks.operations` module has a set of commonly used intra-field operations available (and it is possible to write [custom operations](custom_streamfield_migration_operations)). Since this is a rename operation that operates on a StreamField, we will use `wagtail.blocks.operations.RenameStreamChildrenOperation` which accepts two arguments as the old block name and the new block name. As such our operation and block path tuple will look like this:
 
 ```python
 (RenameStreamChildrenOperation(old_name="field1", new_name="block1"), "stream1")
@@ -511,7 +509,7 @@ Block ids are not preserved here since the new blocks are structurally different
 While this package comes with a set of operations for common use cases, there may be many instances where you need to define your own operation for mapping data. Making a custom operation is fairly straightforward. All you need to do is extend the `BaseBlockOperation` class and define the required methods,
 
 -   `apply`  
-    This applies the actual changes on the existing block value and returns the new block value.
+    This applies the actual changes to the existing block value and returns the new block value.
 -   `operation_name_fragment`  
     (`@property`) Returns a name to be used for generating migration names.
 
@@ -545,7 +543,7 @@ class MyBlockOperation(BaseBlockOperation):
 
 Note that depending on the type of block we're dealing with, the `block_value` which is passed to `apply` may take different structures.
 
-For non structural blocks, the value of the block will be passed directly. For example, if we're dealing with a `CharBlock`, it will be a string value.
+For non-structural blocks, the value of the block will be passed directly. For example, if we're dealing with a `CharBlock`, it will be a string value.
 
 The value passed to `apply` when the matched block is a StreamBlock would look like this,
 
@@ -579,13 +577,13 @@ The value passed to `apply` when the matched block is a ListBlock would look lik
 
 #### Making structural changes
 
-When making changes involving the structure of blocks (eg: changing block type), it may be necessary to operate on the block value of the parent block instead of the block to which the change is made, since only the value of a block is changed by the `apply` operation.
+When making changes involving the structure of blocks (changing the block type for example), it may be necessary to operate on the block value of the parent block instead of the block to which the change is made, since only the value of a block is changed by the `apply` operation.
 
 Take a look at the implementation of `RenameStreamChildrenOperation` for an example.
 
 #### Old list format
 
-Prior to Wagtail version 2.16, `ListBlock` children were saved as just a normal python list of values. However for newer versions of Wagtail, list block children are saved as `ListValue`s. When handling raw data, the changes would look like the following:
+Prior to Wagtail version 2.16, `ListBlock` children were saved as just a normal Python list of values. However, for newer versions of Wagtail, list block children are saved as `ListValue`s. When handling raw data, the changes would look like the following:
 
 Old format
 

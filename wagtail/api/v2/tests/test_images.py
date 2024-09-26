@@ -582,18 +582,18 @@ class TestImageFind(TestCase):
     },
     WAGTAILAPI_BASE_URL="http://api.example.com",
 )
-@mock.patch("wagtail.contrib.frontend_cache.backends.HTTPBackend.purge")
+@mock.patch("wagtail.contrib.frontend_cache.backends.http.HTTPBackend.purge")
 class TestImageCacheInvalidation(TestCase):
     fixtures = ["demosite.json"]
 
     @classmethod
     def setUpClass(cls):
-        super(TestImageCacheInvalidation, cls).setUpClass()
+        super().setUpClass()
         signal_handlers.register_signal_handlers()
 
     @classmethod
     def tearDownClass(cls):
-        super(TestImageCacheInvalidation, cls).tearDownClass()
+        super().tearDownClass()
         signal_handlers.unregister_signal_handlers()
 
     def test_resave_image_purges(self, purge):

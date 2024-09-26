@@ -7,12 +7,17 @@ from django.urls import reverse
 from django.utils import timezone
 from freezegun import freeze_time
 
+from wagtail.log_actions import log
 from wagtail.models import GroupPagePermission, Page, PageLogEntry, PageViewRestriction
 from wagtail.test.testapp.models import SimplePage
 from wagtail.test.utils import WagtailTestUtils
+from wagtail.test.utils.template_tests import AdminTemplateTestUtils
+from wagtail.utils.timestamps import render_timestamp
 
 
-class TestAuditLogAdmin(WagtailTestUtils, TestCase):
+class TestAuditLogAdmin(AdminTemplateTestUtils, WagtailTestUtils, TestCase):
+    base_breadcrumb_items = []
+
     def setUp(self):
         self.root_page = Page.objects.get(id=2)
 
@@ -43,7 +48,7 @@ class TestAuditLogAdmin(WagtailTestUtils, TestCase):
         )
         self.editor.groups.add(sub_editors)
 
-        for permission_type in ["add", "edit", "publish"]:
+        for permission_type in ["add", "change", "publish"]:
             GroupPagePermission.objects.create(
                 group=sub_editors, page=self.hello_page, permission_type=permission_type
             )
@@ -73,6 +78,39 @@ class TestAuditLogAdmin(WagtailTestUtils, TestCase):
             restriction.save(user=self.administrator)
             restriction.delete()
 
+    def test_simple(self):
+        history_url = reverse(
+            "wagtailadmin_pages:history", kwargs={"page_id": self.hello_page.id}
+        )
+
+        self.login(user=self.administrator)
+
+        response = self.client.get(history_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "wagtailadmin/pages/history.html")
+        self.assertTemplateUsed(response, "wagtailadmin/generic/listing.html")
+
+        items = [
+            {
+                "url": reverse("wagtailadmin_explore_root"),
+                "label": "Root",
+            },
+            {
+                "url": reverse("wagtailadmin_explore", args=(self.root_page.id,)),
+                "label": "Welcome to your new Wagtail site!",
+            },
+            {
+                "url": reverse("wagtailadmin_explore", args=(self.hello_page.id,)),
+                "label": "Hello world! (simple page)",
+            },
+            {
+                "url": "",
+                "label": "History",
+                "sublabel": "Hello world! (simple page)",
+            },
+        ]
+        self.assertBreadcrumbsItemsRendered(items, response.content)
+
     def test_page_history(self):
         self._update_page(self.hello_page)
 
@@ -94,15 +132,15 @@ class TestAuditLogAdmin(WagtailTestUtils, TestCase):
 
         self.assertContains(
             response,
-            "Added the &#x27;Private, accessible to logged-in users&#x27; view restriction",
+            "Added the &#x27;Private, accessible to any logged-in users&#x27; view restriction",
         )
         self.assertContains(
             response,
-            "Updated the view restriction to &#x27;Private, accessible with the following password&#x27;",
+            "Updated the view restriction to &#x27;Private, accessible with a shared password&#x27;",
         )
         self.assertContains(
             response,
-            "Removed the &#x27;Private, accessible with the following password&#x27; view restriction",
+            "Removed the &#x27;Private, accessible with a shared password&#x27; view restriction",
         )
 
         self.assertContains(
@@ -122,13 +160,92 @@ class TestAuditLogAdmin(WagtailTestUtils, TestCase):
         history_url = reverse(
             "wagtailadmin_pages:history", kwargs={"page_id": self.hello_page.id}
         )
-        response = self.client.get(history_url + "?action=wagtail.edit")
+
+        # Should allow filtering by multiple actions
+        response = self.client.get(
+            f"{history_url}?action=wagtail.edit&action=wagtail.lock"
+        )
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Draft saved", count=2)
+        self.assertContains(response, "Locked")
+        self.assertNotContains(response, "Unlocked")
+        self.assertNotContains(response, "Page scheduled for publishing")
+        self.assertNotContains(response, "Published")
+
+        # Should render the active filter pills separately for each action
+        soup = self.get_soup(response.content)
+        active_filters = soup.select('[data-w-active-filter-id="id_action"]')
+        self.assertCountEqual(
+            [filter.get_text(separator=" ", strip=True) for filter in active_filters],
+            ["Action: Edit", "Action: Lock"],
+        )
+
+    def test_is_commenting_action_filters(self):
+        self.login(user=self.editor)
+        self._update_page(self.hello_page)
+
+        history_url = reverse(
+            "wagtailadmin_pages:history", kwargs={"page_id": self.hello_page.id}
+        )
+
+        log(
+            instance=self.hello_page,
+            action="wagtail.comments.create",
+            user=self.editor,
+            revision=self.hello_page.latest_revision,
+            data={
+                "comment": {
+                    "id": 123,
+                    "contentpath": "content",
+                    "text": "A comment that was added",
+                }
+            },
+        )
+
+        log(
+            instance=self.hello_page,
+            action="wagtail.comments.edit",
+            user=self.editor,
+            revision=self.hello_page.latest_revision,
+            data={
+                "comment": {
+                    "id": 123,
+                    "contentpath": "content",
+                    "text": "A comment that was edited",
+                }
+            },
+        )
+
+        # Without the filter applied
+        response = self.client.get(history_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Draft saved", count=2)
+        self.assertContains(response, "Locked")
+        self.assertContains(response, "Unlocked")
+        self.assertContains(response, "Page scheduled for publishing")
+        self.assertContains(response, "Published")
+
+        # Filter to only commenting actions
+        response = self.client.get(history_url + "?is_commenting_action=true")
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "A comment that was added")
+        self.assertContains(response, "A comment that was edited")
+        self.assertNotContains(response, "Draft saved")
         self.assertNotContains(response, "Locked")
         self.assertNotContains(response, "Unlocked")
         self.assertNotContains(response, "Page scheduled for publishing")
         self.assertNotContains(response, "Published")
+
+        # Filter to only non-commenting actions
+        response = self.client.get(history_url + "?is_commenting_action=false")
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "A comment that was added")
+        self.assertNotContains(response, "A comment that was edited")
+        self.assertContains(response, "Draft saved")
+        self.assertContains(response, "Locked")
+        self.assertContains(response, "Unlocked")
+        self.assertContains(response, "Page scheduled for publishing")
+        self.assertContains(response, "Published")
 
     def test_site_history(self):
         self._update_page(self.hello_page)
@@ -286,7 +403,7 @@ class TestAuditLogAdmin(WagtailTestUtils, TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(
             response,
-            f"Page unscheduled for publishing at {go_live_at.strftime('%d %b %Y %H:%M')}",
+            f"Page unscheduled for publishing at {render_timestamp(go_live_at)}",
         )
 
     def test_page_history_after_unscheduled_revision(self):
@@ -325,5 +442,56 @@ class TestAuditLogAdmin(WagtailTestUtils, TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(
             response,
-            f"Revision {revision.id} from {revision.created_at.strftime('%d %b %Y %H:%M')} unscheduled from publishing at {go_live_at.strftime('%d %b %Y %H:%M')}.",
+            f"Revision {revision.id} from {render_timestamp(revision.created_at)} unscheduled from publishing at {render_timestamp(go_live_at)}.",
         )
+
+    def test_num_queries(self):
+        self.login(user=self.editor)
+
+        history_url = reverse(
+            "wagtailadmin_pages:history", kwargs={"page_id": self.hello_page.id}
+        )
+
+        # Warm up the cache
+        self.client.get(history_url)
+
+        # Initial load, without any log entries
+        with self.assertNumQueries(17):
+            self.client.get(history_url)
+
+        # With some log entries
+        self._update_page(self.hello_page)
+        with self.assertNumQueries(19):
+            self.client.get(history_url)
+
+        # With even more log entries, should remain the same (no N+1 queries)
+        log(
+            instance=self.hello_page,
+            action="wagtail.comments.create",
+            user=self.editor,
+            revision=self.hello_page.latest_revision,
+            data={
+                "comment": {
+                    "id": 123,
+                    "contentpath": "content",
+                    "text": "A comment that was added",
+                }
+            },
+        )
+
+        log(
+            instance=self.hello_page,
+            action="wagtail.comments.edit",
+            user=self.editor,
+            revision=self.hello_page.latest_revision,
+            data={
+                "comment": {
+                    "id": 123,
+                    "contentpath": "content",
+                    "text": "A comment that was edited",
+                }
+            },
+        )
+        self._update_page(self.hello_page)
+        with self.assertNumQueries(19):
+            self.client.get(history_url)

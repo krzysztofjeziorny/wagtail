@@ -1,11 +1,8 @@
-from django.forms import Media
-
-from wagtail.admin.staticfiles import versioned_static
 from wagtail.admin.widgets.datetime import AdminDateTimeInput
 from wagtail.models import Page
 
 from .field_panel import FieldPanel
-from .group import FieldRowPanel, MultiFieldPanel
+from .group import MultiFieldPanel
 
 
 # This allows users to include the publishing panel in their own per-model override
@@ -16,21 +13,27 @@ class PublishingPanel(MultiFieldPanel):
         js_overlay_parent_selector = "#schedule-publishing-dialog"
         updated_kwargs = {
             "children": [
-                FieldRowPanel(
-                    [
-                        FieldPanel(
-                            "go_live_at",
-                            widget=AdminDateTimeInput(
-                                js_overlay_parent_selector=js_overlay_parent_selector,
-                            ),
-                        ),
-                        FieldPanel(
-                            "expire_at",
-                            widget=AdminDateTimeInput(
-                                js_overlay_parent_selector=js_overlay_parent_selector,
-                            ),
-                        ),
-                    ],
+                FieldPanel(
+                    "go_live_at",
+                    widget=AdminDateTimeInput(
+                        js_overlay_parent_selector=js_overlay_parent_selector,
+                        attrs={
+                            "data-controller": "w-action",
+                            "data-action": "w-dialog:hidden->w-action#reset",
+                            "data-w-dialog-target": "notify",
+                        },
+                    ),
+                ),
+                FieldPanel(
+                    "expire_at",
+                    widget=AdminDateTimeInput(
+                        js_overlay_parent_selector=js_overlay_parent_selector,
+                        attrs={
+                            "data-controller": "w-action",
+                            "data-action": "w-dialog:hidden->w-action#reset",
+                            "data-w-dialog-target": "notify",
+                        },
+                    ),
                 ),
             ],
             "classname": "publishing",
@@ -50,15 +53,10 @@ class PublishingPanel(MultiFieldPanel):
             context["request"] = self.request
             context["instance"] = self.instance
             context["classname"] = self.classname
+            context["model_opts"] = self.instance._meta
             if isinstance(self.instance, Page):
                 context["page"] = self.instance
             return context
 
         def show_panel_furniture(self):
             return False
-
-        @property
-        def media(self):
-            return super().media + Media(
-                js=[versioned_static("wagtailadmin/js/schedule-publishing.js")],
-            )

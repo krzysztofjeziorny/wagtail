@@ -3,15 +3,15 @@
 # This file is distributed under the same license as the PACKAGE package.
 #
 # Translators:
-# Erlend <debcf78e@opayq.com>, 2020
-# Erlend <debcf78e@opayq.com>, 2020
+# Erlend Eelmets <debcf78e@opayq.com>, 2020
+# Erlend Eelmets <debcf78e@opayq.com>, 2020
 msgid ""
 msgstr ""
 "Project-Id-Version: Wagtail\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-04-20 11:47+0100\n"
+"POT-Creation-Date: 2024-08-07 10:06+0100\n"
 "PO-Revision-Date: 2014-02-19 21:18+0000\n"
-"Last-Translator: Erlend <debcf78e@opayq.com>, 2020\n"
+"Last-Translator: Erlend Eelmets <debcf78e@opayq.com>, 2020\n"
 "Language-Team: Estonian (http://app.transifex.com/torchbox/wagtail/language/"
 "et/)\n"
 "MIME-Version: 1.0\n"
@@ -22,24 +22,3 @@ msgstr ""
 
 msgid "Wagtail search"
 msgstr "Wagtail otsing"
-
-msgid "Query Daily Hits"
-msgstr "Päringu Igapäevased Kordused"
-
-msgid "Popular search terms"
-msgstr "Populaarsed otsinguterminid"
-
-msgid "Search"
-msgstr "Otsing"
-
-msgid "Terms"
-msgstr "Terminid"
-
-msgid "Views (past week)"
-msgstr "Vaatamised (eelmine nädal) "
-
-msgid "No results found"
-msgstr "Tulemusi ei leitud"
-
-msgid "Choose from popular search terms"
-msgstr "Valige populaarsete otsinguterminite hulgast"

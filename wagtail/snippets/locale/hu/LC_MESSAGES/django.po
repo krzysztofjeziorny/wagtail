@@ -3,14 +3,14 @@
 # This file is distributed under the same license as the PACKAGE package.
 #
 # Translators:
-# Istvan Farkas <istvan.farkas@gmail.com>, 2019-2022
+# Istvan Farkas <istvan.farkas@gmail.com>, 2019-2023
 msgid ""
 msgstr ""
 "Project-Id-Version: Wagtail\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-04-20 11:47+0100\n"
+"POT-Creation-Date: 2024-08-07 10:06+0100\n"
 "PO-Revision-Date: 2014-02-19 19:01+0000\n"
-"Last-Translator: Istvan Farkas <istvan.farkas@gmail.com>, 2019-2022\n"
+"Last-Translator: Istvan Farkas <istvan.farkas@gmail.com>, 2019-2023\n"
 "Language-Team: Hungarian (http://app.transifex.com/torchbox/wagtail/language/"
 "hu/)\n"
 "MIME-Version: 1.0\n"
@@ -49,7 +49,7 @@ msgid "Save"
 msgstr "Mentés"
 
 msgid "Locked"
-msgstr "Lezárt"
+msgstr "Zárolt"
 
 #, python-format
 msgid "%(label)s and Publish"
@@ -64,6 +64,12 @@ msgstr "Kiválasztott elemek törlése"
 #, python-format
 msgid "%(model_name)s '%(object)s' deleted."
 msgstr "'%(object)s' %(model_name)s törölve."
+
+#, python-format
+msgid "%(count)d %(model_name)s deleted."
+msgid_plural "%(count)d %(model_name)s deleted."
+msgstr[0] "%(count)d %(model_name)s törölve."
+msgstr[1] "%(count)d %(model_name)s törölve."
 
 #, python-format
 msgid "Delete %(snippet_type_name)s"
@@ -116,12 +122,6 @@ msgstr ""
 "<a href=\"%(wagtailsnippets_create_snippet_url)s\" target=\"_blank\" "
 "rel=\"noopener noreferrer\">hoz létre egy újat most</a>?"
 
-msgid "Last updated"
-msgstr "Utolsó frissítés"
-
-msgid "History"
-msgstr "Történet"
-
 msgid "Publishing…"
 msgstr "Közzététel folyamatban..."
 
@@ -140,103 +140,17 @@ msgstr "Jelenlegi verzió lecserélése"
 msgid "Save draft"
 msgstr "Vázlat mentése"
 
-#, python-format
-msgid "New  %(snippet_type_name)s"
-msgstr "Új %(snippet_type_name)s"
-
-msgid "New"
-msgstr "Új"
-
 msgid "Actions"
 msgstr "Akciók"
-
-#, python-format
-msgid "Editing %(snippet_type_name)s - %(object)s"
-msgstr "%(object)s - %(snippet_type_name)s szerkesztése"
-
-msgid "Toggle breadcrumbs"
-msgstr "Morzsamenü kapcsolása"
-
-msgid "Breadcrumb"
-msgstr "Morzsamenü"
-
-msgid "Snippets"
-msgstr "Elemek"
-
-#, python-format
-msgid "Editing %(snippet_type)s %(title)s"
-msgstr "%(title)s %(snippet_type)s szerkesztése"
-
-msgid "Usage"
-msgstr "Használat"
-
-#, python-format
-msgid "Snippet history for %(subtitle)s"
-msgstr "%(subtitle)s elem törénete"
-
-msgid "Edit this snippet"
-msgstr "Elem szerkesztése"
-
-msgid "No log entries found."
-msgstr "Nincs naplóbejegyzés."
-
-#, python-format
-msgid "Snippets %(snippet_type_name_plural)s"
-msgstr "%(snippet_type_name_plural)s "
-
-#, python-format
-msgid "Add %(snippet_type_name)s"
-msgstr "%(snippet_type_name)s hozzáadása"
 
 msgid "Select all snippets in listing"
 msgstr "Összes elem kiválasztása a listában"
 
-#, python-format
-msgid "There is %(counter)s match"
-msgid_plural "There are %(counter)s matches"
-msgstr[0] "%(counter)s találat van"
-msgstr[1] "%(counter)s találat van"
-
-#, python-format
-msgid "Sorry, no %(snippet_type_name_plural)s match your query"
-msgstr ""
-"Sajnáljuk, de egyetlen %(snippet_type_name_plural)ssem felel meg a "
-"feltételeknek"
-
-#, python-format
-msgid ""
-"No %(snippet_type_name_plural)s have been created. Why not <a "
-"href=\"%(wagtailsnippets_create_url)s\">add one</a>?"
-msgstr ""
-"%(snippet_type_name_plural)s közül még nincs egy sem létrehozva. Miért nem "
-"<a href=\"%(wagtailsnippets_create_url)s\">ad hozzá egyet</a>?"
-
-msgid "Live version"
-msgstr "Élő verzió"
-
-msgid "Current draft"
-msgstr "Jelenlegi vázlat"
-
-msgid "Preview"
-msgstr "Előnézet"
-
-msgid "Edit"
-msgstr "Szerkeszt"
-
-msgid "Review this version"
-msgstr "Verzió ellenőrzése"
-
-msgid "Compare with previous version"
-msgstr "Összehasonlítás az előző verzióval"
-
-msgid "Compare with current version"
-msgstr "Összehasonlítás a jelenlegi verzióval"
-
-msgid "Cancel scheduled publish"
-msgstr "Időzített közzététel visszavonása"
-
 msgid "Choose"
 msgstr "Kiválasztás"
+
+msgid "Snippets"
+msgstr "Elemek"
 
 msgid "Name"
 msgstr "Név"
@@ -244,23 +158,9 @@ msgstr "Név"
 msgid "Instances"
 msgstr "Példányok"
 
-msgid "The snippet could not be created due to errors."
-msgstr "Hiba történt az elem létrehozása közben."
-
-msgid "The snippet could not be saved due to errors."
-msgstr "Hiba történt az elem frissítése közben."
-
-msgid "Action"
-msgstr "Akció"
-
-msgid "User"
-msgstr "Felhasználó"
-
-msgid "Date"
-msgstr "Dátum"
-
-msgid "Snippet history"
-msgstr "Elem történet"
+#, python-format
+msgid "More options for '%(title)s'"
+msgstr "'%(title)s' további lehetőségei"
 
 #, python-format
 msgid "Edit this %(model_name)s"
@@ -270,13 +170,8 @@ msgstr "%(model_name)s szerkesztése"
 msgid "%(model_name)s history"
 msgstr "%(model_name)s története"
 
-#, python-format
-msgid "Edit '%(title)s'"
-msgstr "'%(title)s' szerkesztése"
-
-#, python-format
-msgid "Delete '%(title)s'"
-msgstr "'%(title)s' törlése"
+msgid "Home"
+msgstr "Nyitólap"
 
 #, python-format
 msgid "Choose %(object)s"

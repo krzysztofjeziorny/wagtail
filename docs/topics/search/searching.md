@@ -6,7 +6,7 @@
 
 ## Searching QuerySets
 
-Wagtail search is built on Django's [QuerySet API](django:ref/models/querysets). You should be able to search any Django QuerySet provided the model and the fields being filtered on have been added to the search index.
+Wagtail search is built on Django's [QuerySet API](inv:django#ref/models/querysets). You should be able to search any Django QuerySet provided the model and the fields being filtered have been added to the search index.
 
 ### Searching Pages
 
@@ -30,23 +30,15 @@ All other methods of `PageQuerySet` can be used with `search()`. For example:
 The `search()` method will convert your `QuerySet` into an instance of one of Wagtail's `SearchResults` classes (depending on backend). This means that you must perform filtering before calling `search()`.
 ```
 
-The standard behaviour of the `search` method is to only return matches for complete words; for example, a search for "hel" will not return results containing the word "hello". The exception to this is the fallback database search backend, used when the database does not have full-text search extensions available, and no alternative backend has been specified. This performs basic substring matching, and will return results containing the search term ignoring all word boundaries.
-
-```{versionchanged} 5.0
-The Elasticsearch backend now defaults to matching on complete words. Previously, this backend performed partial matching by default, and it was necessary to pass the keyword argument `partial_match=False` to disable this. To perform searches with partial matching behaviour, you should instead use the `autocomplete` method (see below) in conjunction with `AutocompleteField`. Any occurrences of `partial_match=False` in your code can now be removed.
-```
+The standard behavior of the `search` method is to only return matches for complete words; for example, a search for "hel" will not return results containing the word "hello". The exception to this is the fallback database search backend, used when the database does not have full-text search extensions available, and no alternative backend has been specified. This performs basic substring matching and will return results containing the search term ignoring all word boundaries.
 
 ### Autocomplete searches
 
-Wagtail provides a separate method which performs partial matching on specific autocomplete fields. This is useful for suggesting pages to the user in real-time as they type their query.
+Wagtail provides a separate method which performs partial matching on specific autocomplete fields. This is primarily useful for suggesting pages to the user in real-time as they type their query - it is not recommended for ordinary searches, as the autocompletion will tend to add unwanted results beyond the specific term being searched for.
 
 ```python
 >>> EventPage.objects.live().autocomplete("Eve")
 [<EventPage: Event 1>, <EventPage: Event 2>]
-```
-
-```{note}
-This method should only be used for real-time autocomplete and actual search requests should always use the `search()` method.
 ```
 
 (wagtailsearch_images_documents_custom_models)=
@@ -125,7 +117,7 @@ OrderedDict([
 ])
 ```
 
-## Changing search behaviour
+## Changing search behavior
 
 ### Search operator
 
@@ -134,9 +126,9 @@ The search operator specifies how the search should behave when the user has typ
 -   "or" - The results must match at least one term (default for Elasticsearch)
 -   "and" - The results must match all terms (default for database search)
 
-Both operators have benefits and drawbacks. The "or" operator will return many more results but will likely contain a lot of results that aren't relevant. The "and" operator only returns results that contain all search terms, but requires the user to be more precise with their query.
+Both operators have benefits and drawbacks. The "or" operator will return many more results but will likely contain a lot of results that aren't relevant. The "and" operator only returns results that contain all search terms but requires the user to be more precise with their query.
 
-We recommend using the "or" operator when ordering by relevance and the "and" operator when ordering by anything else (note: the database backend doesn't currently support ordering by relevance).
+We recommend using the "or" operator when ordering by relevance and the "and" operator when ordering by anything else.
 
 Here's an example of using the `operator` keyword argument:
 
@@ -163,7 +155,7 @@ Here's an example of using the `operator` keyword argument:
 [<Thing: Hello world>]
 ```
 
-For page, image and document models, the `operator` keyword argument is also supported on the QuerySet's `search` method:
+For page, image, and document models, the `operator` keyword argument is also supported on the QuerySet's `search` method:
 
 ```python
 >>> Page.objects.search("Hello world", operator="or")
@@ -197,7 +189,7 @@ If you are looking to implement phrase queries using the double-quote syntax, se
 
 Fuzzy matching will return documents which contain terms similar to the search term, as measured by a [Levenshtein edit distance](https://en.wikipedia.org/wiki/Levenshtein_distance).
 
-A maximum of one edit (transposition, insertion, or removal of a character) is permitted for three to five letter terms, two edits for longer terms, and shorter terms must match exactly.
+A maximum of one edit (transposition, insertion, or removal of a character) is permitted for three to five-letter terms, two edits for longer terms, and shorter terms must match exactly.
 
 For example:
 
@@ -265,11 +257,11 @@ Note that this isn't supported by the PostgreSQL or database search backends.
 ### Query string parsing
 
 The previous sections show how to construct a phrase search query manually, but a lot of search engines (Wagtail admin included, try it!)
-support writing phrase queries by wrapping the phrase with double-quotes. In addition to phrases, you might also want to allow users to
-add filters into the query using the colon syntax (`hello world published:yes`).
+support writing phrase queries by wrapping the phrase with double quotes. In addition to phrases, you might also want to allow users to
+add filters to the query using the colon syntax (`hello world published:yes`).
 
 These two features can be implemented using the `parse_query_string` utility function. This function takes a query string that a user
-typed and returns a query object and a [QueryDict](django:django.http.QueryDict) of filters:
+typed and returns a query object and a [QueryDict](inv:django#django.http.QueryDict) of filters:
 
 For example:
 
@@ -283,12 +275,12 @@ For example:
 >>> filters
 <QueryDict: {'this_is_a': ['filter'], 'key': ['value1', 'value2']}>>
 
-# Get a list of values associated to a particular key using getlist method
+# Get a list of values associated with a particular key using the getlist method
 >>> filters.getlist('key')
 ['value1', 'value2']
 
-# Get a dict representation using dict method
-# NOTE: dict method will reduce multiple values for a particular key to the last assigned value
+# Get a dict representation using the dict method
+# NOTE: The dict method will reduce multiple values for a particular key to the last assigned value
 >>> filters.dict()
 {
     'this_is_a': 'filter',
@@ -382,7 +374,7 @@ Here's an example Django view that could be used to add a "search" page to your 
 from django.shortcuts import render
 
 from wagtail.models import Page
-from wagtail.search.models import Query
+from wagtail.contrib.search_promotions.models import Query
 
 
 def search(request):

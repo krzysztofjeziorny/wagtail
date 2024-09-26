@@ -590,18 +590,18 @@ class TestDocumentFind(TestCase):
     },
     WAGTAILAPI_BASE_URL="http://api.example.com",
 )
-@mock.patch("wagtail.contrib.frontend_cache.backends.HTTPBackend.purge")
+@mock.patch("wagtail.contrib.frontend_cache.backends.http.HTTPBackend.purge")
 class TestDocumentCacheInvalidation(TestCase):
     fixtures = ["demosite.json"]
 
     @classmethod
     def setUpClass(cls):
-        super(TestDocumentCacheInvalidation, cls).setUpClass()
+        super().setUpClass()
         signal_handlers.register_signal_handlers()
 
     @classmethod
     def tearDownClass(cls):
-        super(TestDocumentCacheInvalidation, cls).tearDownClass()
+        super().tearDownClass()
         signal_handlers.unregister_signal_handlers()
 
     def test_resave_document_purges(self, purge):

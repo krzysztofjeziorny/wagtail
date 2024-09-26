@@ -1,4 +1,3 @@
-# coding: utf-8
 import unittest
 from collections import OrderedDict
 from datetime import date
@@ -247,8 +246,7 @@ class BackendTests(WagtailTestUtils):
         )
 
     def test_autocomplete_uses_autocompletefield(self):
-        # Autocomplete should only require an AutocompleteField, not a SearchField with
-        # partial_match=True
+        # Autocomplete should only require an AutocompleteField, not a SearchField
         # TODO: given that partial_match=True has no effect as of Wagtail 5, also test that
         # AutocompleteField is actually being respected, and it's not just relying on the
         # presence of a SearchField (with or without partial_match)
@@ -505,6 +503,37 @@ class BackendTests(WagtailTestUtils):
                     MATCH_ALL, models.Author.objects.filter(name__startswith="Issac")
                 )
             )
+
+    def test_search_with_date_filter(self):
+        results = self.backend.search(
+            MATCH_ALL, models.Book.objects.filter(publication_date__gt=date(2000, 6, 1))
+        )
+        self.assertEqual(len(results), 4)
+
+        results = self.backend.search(
+            MATCH_ALL, models.Book.objects.filter(publication_date__year__gte=2000)
+        )
+        self.assertEqual(len(results), 5)
+
+        results = self.backend.search(
+            MATCH_ALL, models.Book.objects.filter(publication_date__year__gt=2000)
+        )
+        self.assertEqual(len(results), 4)
+
+        results = self.backend.search(
+            MATCH_ALL, models.Book.objects.filter(publication_date__year__lte=1954)
+        )
+        self.assertEqual(len(results), 4)
+
+        results = self.backend.search(
+            MATCH_ALL, models.Book.objects.filter(publication_date__year__lt=1954)
+        )
+        self.assertEqual(len(results), 2)
+
+        results = self.backend.search(
+            MATCH_ALL, models.Book.objects.filter(publication_date__year=1954)
+        )
+        self.assertEqual(len(results), 2)
 
     # ORDER BY RELEVANCE
 

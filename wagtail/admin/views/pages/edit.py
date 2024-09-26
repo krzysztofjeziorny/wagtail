@@ -11,15 +11,24 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.html import format_html
 from django.utils.translation import gettext as _
-from django.views.generic.base import ContextMixin, TemplateResponseMixin, View
+from django.views.generic.base import View
 
 from wagtail.actions.publish_page_revision import PublishPageRevisionAction
 from wagtail.admin import messages
 from wagtail.admin.action_menu import PageActionMenu
 from wagtail.admin.mail import send_notification
-from wagtail.admin.ui.side_panels import PageSidePanels
+from wagtail.admin.models import EditingSession
+from wagtail.admin.ui.components import MediaContainer
+from wagtail.admin.ui.editing_sessions import EditingSessionsModule
+from wagtail.admin.ui.side_panels import (
+    ChecksSidePanel,
+    CommentsSidePanel,
+    PageStatusSidePanel,
+    PreviewSidePanel,
+)
 from wagtail.admin.utils import get_valid_next_url_from_request
 from wagtail.admin.views.generic import HookResponseMixin
+from wagtail.admin.views.generic.base import WagtailAdminTemplateMixin
 from wagtail.exceptions import PageClassNotFoundError
 from wagtail.locks import BasicLock, ScheduledForPublishLock, WorkflowLock
 from wagtail.models import (
@@ -28,32 +37,27 @@ from wagtail.models import (
     CommentReply,
     Page,
     PageSubscription,
-    UserPagePermissionsProxy,
     WorkflowState,
+    get_default_page_content_type,
 )
+from wagtail.utils.timestamps import render_timestamp
 
 
-class EditView(TemplateResponseMixin, ContextMixin, HookResponseMixin, View):
+class EditView(WagtailAdminTemplateMixin, HookResponseMixin, View):
+    def get_page_title(self):
+        return _("Editing %(page_type)s") % {
+            "page_type": self.page_class.get_verbose_name()
+        }
+
+    def get_page_subtitle(self):
+        return self.page.get_admin_display_title()
+
     def get_template_names(self):
         if self.page.alias_of_id:
             return ["wagtailadmin/pages/edit_alias.html"]
 
         else:
             return ["wagtailadmin/pages/edit.html"]
-
-    def add_legacy_moderation_warning(self):
-        # Check for revisions still undergoing moderation and warn - this is for the old moderation system
-        if self.latest_revision and self.latest_revision.submitted_for_moderation:
-            buttons = []
-
-            if self.page.live:
-                buttons.append(self.get_compare_with_live_message_button())
-
-            messages.warning(
-                self.request,
-                _("This page is currently awaiting moderation"),
-                buttons=buttons,
-            )
 
     def add_save_confirmation_message(self):
         if self.is_reverting:
@@ -62,8 +66,8 @@ class EditView(TemplateResponseMixin, ContextMixin, HookResponseMixin, View):
                 "with version from %(previous_revision_datetime)s."
             ) % {
                 "page_title": self.page.get_admin_display_title(),
-                "previous_revision_datetime": self.previous_revision.created_at.strftime(
-                    "%d %b %Y %H:%M"
+                "previous_revision_datetime": render_timestamp(
+                    self.previous_revision.created_at
                 ),
             }
         else:
@@ -355,14 +359,13 @@ class EditView(TemplateResponseMixin, ContextMixin, HookResponseMixin, View):
         if response:
             return response
 
-        try:
-            self.subscription = PageSubscription.objects.get(
-                page=self.page, user=self.request.user
-            )
-        except PageSubscription.DoesNotExist:
-            self.subscription = PageSubscription(
-                page=self.page, user=self.request.user, comment_notifications=False
-            )
+        self.subscription, created = PageSubscription.objects.get_or_create(
+            page=self.page,
+            user=self.request.user,
+            defaults={
+                "comment_notifications": False,
+            },
+        )
 
         self.edit_handler = self.page_class.get_edit_handler()
         self.form_class = self.edit_handler.get_form_class()
@@ -375,6 +378,13 @@ class EditView(TemplateResponseMixin, ContextMixin, HookResponseMixin, View):
             )
         else:
             self.workflow_state = None
+
+        if getattr(settings, "WAGTAIL_I18N_ENABLED", False):
+            self.locale = self.page.locale
+            self.translations = self.get_translations()
+        else:
+            self.locale = None
+            self.translations = []
 
         if self.workflow_state:
             self.workflow_tasks = self.workflow_state.all_tasks_with_status()
@@ -426,7 +436,6 @@ class EditView(TemplateResponseMixin, ContextMixin, HookResponseMixin, View):
             for_user=self.request.user,
         )
         self.has_unsaved_changes = False
-        self.add_legacy_moderation_warning()
         self.page_for_status = self.get_page_for_status()
 
         return self.render_to_response(self.get_context_data())
@@ -517,7 +526,7 @@ class EditView(TemplateResponseMixin, ContextMixin, HookResponseMixin, View):
             return self.save_action()
 
     def save_action(self):
-        self.page = self.form.save(commit=False)
+        self.page = self.form.save(commit=not self.page.live)
         self.subscription.save()
 
         # Save revision
@@ -542,7 +551,7 @@ class EditView(TemplateResponseMixin, ContextMixin, HookResponseMixin, View):
         return self.redirect_and_remain()
 
     def publish_action(self):
-        self.page = self.form.save(commit=False)
+        self.page = self.form.save(commit=not self.page.live)
         self.subscription.save()
 
         # Save revision
@@ -589,8 +598,8 @@ class EditView(TemplateResponseMixin, ContextMixin, HookResponseMixin, View):
                     "Version from %(previous_revision_datetime)s "
                     "of page '%(page_title)s' has been scheduled for publishing."
                 ) % {
-                    "previous_revision_datetime": self.previous_revision.created_at.strftime(
-                        "%d %b %Y %H:%M"
+                    "previous_revision_datetime": render_timestamp(
+                        self.previous_revision.created_at
                     ),
                     "page_title": self.page.get_admin_display_title(),
                 }
@@ -616,9 +625,7 @@ class EditView(TemplateResponseMixin, ContextMixin, HookResponseMixin, View):
                 message = _(
                     "Version from %(datetime)s of page '%(page_title)s' has been published."
                 ) % {
-                    "datetime": self.previous_revision.created_at.strftime(
-                        "%d %b %Y %H:%M"
-                    ),
+                    "datetime": render_timestamp(self.previous_revision.created_at),
                     "page_title": self.page.get_admin_display_title(),
                 }
             else:
@@ -640,7 +647,7 @@ class EditView(TemplateResponseMixin, ContextMixin, HookResponseMixin, View):
         return self.redirect_away()
 
     def submit_action(self):
-        self.page = self.form.save(commit=False)
+        self.page = self.form.save(commit=not self.page.live)
         self.subscription.save()
 
         # Save revision
@@ -687,7 +694,7 @@ class EditView(TemplateResponseMixin, ContextMixin, HookResponseMixin, View):
         return self.redirect_away()
 
     def restart_workflow_action(self):
-        self.page = self.form.save(commit=False)
+        self.page = self.form.save(commit=not self.page.live)
         self.subscription.save()
 
         # save revision
@@ -729,7 +736,7 @@ class EditView(TemplateResponseMixin, ContextMixin, HookResponseMixin, View):
         return self.redirect_away()
 
     def perform_workflow_action(self):
-        self.page = self.form.save(commit=False)
+        self.page = self.form.save(commit=not self.page.live)
         self.subscription.save()
 
         if self.has_content_changes:
@@ -769,7 +776,7 @@ class EditView(TemplateResponseMixin, ContextMixin, HookResponseMixin, View):
 
     def cancel_workflow_action(self):
         self.workflow_state.cancel(user=self.request.user)
-        self.page = self.form.save(commit=False)
+        self.page = self.form.save(commit=not self.page.live)
         self.subscription.save()
 
         # Save revision
@@ -839,14 +846,67 @@ class EditView(TemplateResponseMixin, ContextMixin, HookResponseMixin, View):
         )
         self.has_unsaved_changes = True
 
-        self.add_legacy_moderation_warning()
         self.page_for_status = self.get_page_for_status()
 
         return self.render_to_response(self.get_context_data())
 
+    def get_preview_url(self):
+        return reverse("wagtailadmin_pages:preview_on_edit", args=[self.page.id])
+
+    def get_history_url(self):
+        permissions = self.page.permissions_for_user(self.request.user)
+        if permissions.can_view_revisions():
+            return reverse("wagtailadmin_pages:history", args=[self.page.id])
+
+    def get_side_panels(self):
+        side_panels = [
+            PageStatusSidePanel(
+                self.page,
+                self.request,
+                show_schedule_publishing_toggle=self.form.show_schedule_publishing_toggle,
+                live_object=self.real_page_record,
+                scheduled_object=self.scheduled_page,
+                locale=self.locale,
+                translations=self.translations,
+            ),
+        ]
+        if self.page.is_previewable():
+            side_panels.append(
+                PreviewSidePanel(
+                    self.page, self.request, preview_url=self.get_preview_url()
+                )
+            )
+            side_panels.append(ChecksSidePanel(self.page, self.request))
+        if self.form.show_comments_toggle:
+            side_panels.append(CommentsSidePanel(self.page, self.request))
+        return MediaContainer(side_panels)
+
+    def get_editing_sessions(self):
+        EditingSession.cleanup()
+        content_type = get_default_page_content_type()
+        session = EditingSession.objects.create(
+            user=self.request.user,
+            content_type=content_type,
+            object_id=self.page.pk,
+            last_seen_at=timezone.now(),
+        )
+        return EditingSessionsModule(
+            session,
+            reverse(
+                "wagtailadmin_editing_sessions:ping",
+                args=("wagtailcore", "page", self.page.pk, session.id),
+            ),
+            reverse(
+                "wagtailadmin_editing_sessions:release",
+                args=(session.id,),
+            ),
+            [],
+            self.page.latest_revision_id,
+        )
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        user_perms = UserPagePermissionsProxy(self.request.user)
+        user_perms = self.page.permissions_for_user(self.request.user)
         bound_panel = self.edit_handler.get_bound_panel(
             instance=self.page, request=self.request, form=self.form
         )
@@ -857,15 +917,9 @@ class EditView(TemplateResponseMixin, ContextMixin, HookResponseMixin, View):
             lock=self.lock,
             locked_for_user=self.locked_for_user,
         )
-        side_panels = PageSidePanels(
-            self.request,
-            self.page,
-            live_page=self.real_page_record,
-            scheduled_page=self.scheduled_page,
-            preview_enabled=True,
-            comments_enabled=self.form.show_comments_toggle,
-            show_schedule_publishing_toggle=self.form.show_schedule_publishing_toggle,
-        )
+        side_panels = self.get_side_panels()
+
+        media = MediaContainer([bound_panel, self.form, action_menu, side_panels]).media
 
         context.update(
             {
@@ -878,6 +932,7 @@ class EditView(TemplateResponseMixin, ContextMixin, HookResponseMixin, View):
                 "side_panels": side_panels,
                 "form": self.form,
                 "next": self.next_url,
+                "history_url": self.get_history_url(),
                 "has_unsaved_changes": self.has_unsaved_changes,
                 "page_locked": self.locked_for_user,
                 "workflow_state": self.workflow_state
@@ -891,35 +946,25 @@ class EditView(TemplateResponseMixin, ContextMixin, HookResponseMixin, View):
                     args=(self.page.id,),
                 ),
                 "user_can_lock": (not self.lock or isinstance(self.lock, WorkflowLock))
-                and user_perms.for_page(self.page).can_lock(),
+                and user_perms.can_lock(),
                 "user_can_unlock": isinstance(self.lock, BasicLock)
-                and user_perms.for_page(self.page).can_unlock(),
-                "locale": None,
-                "translations": [],
-                "media": bound_panel.media
-                + self.form.media
-                + action_menu.media
-                + side_panels.media,
+                and user_perms.can_unlock(),
+                "locale": self.locale,
+                "media": media,
+                "editing_sessions": self.get_editing_sessions(),
             }
         )
 
-        if getattr(settings, "WAGTAIL_I18N_ENABLED", False):
-            context.update(
-                {
-                    "locale": self.page.locale,
-                    "translations": [
-                        {
-                            "locale": translation.locale,
-                            "url": reverse(
-                                "wagtailadmin_pages:edit", args=[translation.id]
-                            ),
-                        }
-                        for translation in self.page.get_translations()
-                        .only("id", "locale", "depth")
-                        .select_related("locale")
-                        if user_perms.for_page(translation).can_edit()
-                    ],
-                }
-            )
-
         return context
+
+    def get_translations(self):
+        return [
+            {
+                "locale": translation.locale,
+                "url": reverse("wagtailadmin_pages:edit", args=[translation.id]),
+            }
+            for translation in self.page.get_translations()
+            .only("id", "locale", "depth")
+            .select_related("locale")
+            if translation.permissions_for_user(self.request.user).can_edit()
+        ]

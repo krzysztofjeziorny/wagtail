@@ -1,11 +1,13 @@
 import React from 'react';
 
 import { gettext } from '../../utils/gettext';
-import { ADMIN_URLS, LOCALE_NAMES } from '../../config/wagtailConfig';
+import { LOCALE_NAMES, WAGTAIL_CONFIG } from '../../config/wagtailConfig';
 import Icon from '../Icon/Icon';
-import Button from '../Button/Button';
+import Link from '../Link/Link';
 import PublicationStatus from '../PublicationStatus/PublicationStatus';
 import { PageState } from './reducers/nodes';
+
+const { ADMIN_URLS } = WAGTAIL_CONFIG;
 
 // Hoist icons in the explorer item, as it is re-rendered many times.
 const childrenIcon = <Icon name="folder-inverse" className="icon--menuitem" />;
@@ -35,7 +37,7 @@ const PageExplorerItem: React.FunctionComponent<PageExplorerItemProps> = ({
 
   return (
     <div className="c-page-explorer__item">
-      <Button
+      <Link
         href={`${ADMIN_URLS.PAGES}${id}/`}
         navigate={navigate}
         className="c-page-explorer__item__link"
@@ -45,14 +47,12 @@ const PageExplorerItem: React.FunctionComponent<PageExplorerItemProps> = ({
 
         {(!isPublished || localeName) && (
           <span className="c-page-explorer__meta">
-            {localeName && (
-              <span className="o-pill c-status">{localeName}</span>
-            )}
+            {localeName && <span className="c-status">{localeName}</span>}
             {!isPublished && <PublicationStatus status={meta.status} />}
           </span>
         )}
-      </Button>
-      <Button
+      </Link>
+      <Link
         href={`${ADMIN_URLS.PAGES}${id}/edit/`}
         className="c-page-explorer__item__action c-page-explorer__item__action--small"
         navigate={navigate}
@@ -62,9 +62,9 @@ const PageExplorerItem: React.FunctionComponent<PageExplorerItemProps> = ({
           title={gettext("Edit '%(title)s'").replace('%(title)s', title || '')}
           className="icon--item-action"
         />
-      </Button>
+      </Link>
       {hasChildren ? (
-        <Button
+        <Link
           className="c-page-explorer__item__action"
           onClick={onClick}
           href={`${ADMIN_URLS.PAGES}${id}/`}
@@ -78,7 +78,7 @@ const PageExplorerItem: React.FunctionComponent<PageExplorerItemProps> = ({
             )}
             className="icon--item-action"
           />
-        </Button>
+        </Link>
       ) : null}
     </div>
   );

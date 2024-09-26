@@ -2,6 +2,7 @@ module.exports = {
   extends: [
     '@wagtail/eslint-config-wagtail',
     'plugin:@typescript-eslint/recommended',
+    'plugin:storybook/recommended',
   ],
   parser: '@typescript-eslint/parser',
   plugins: ['@typescript-eslint'],
@@ -44,7 +45,7 @@ module.exports = {
     'react/jsx-filename-extension': ['error', { extensions: ['.js', '.tsx'] }],
     'no-underscore-dangle': [
       'error',
-      { allow: ['__REDUX_DEVTOOLS_EXTENSION__'] },
+      { allow: ['__REDUX_DEVTOOLS_EXTENSION__', '_tippy'] },
     ],
     // this rule can be confusing as it forces some non-intuitive code for variable assignment
     'prefer-destructuring': 'off',
@@ -54,6 +55,14 @@ module.exports = {
     'import/resolver': { node: { extensions: ['.js', '.ts', '.tsx'] } },
   },
   overrides: [
+    // Rules that needs to be adjusted for TypeScript only files
+    {
+      files: ['*.ts'],
+      rules: {
+        '@typescript-eslint/no-shadow': 'error',
+        'no-shadow': 'off',
+      },
+    },
     // Rules that we are ignoring currently due to legacy code in React components only
     {
       files: ['client/src/components/**'],
@@ -61,7 +70,6 @@ module.exports = {
         'jsx-a11y/click-events-have-key-events': 'off',
         'jsx-a11y/interactive-supports-focus': 'off',
         'jsx-a11y/no-noninteractive-element-interactions': 'off',
-        'jsx-a11y/role-supports-aria-props': 'off',
         'no-restricted-syntax': 'off',
         'react-hooks/exhaustive-deps': 'off',
         'react-hooks/rules-of-hooks': 'off',
@@ -99,7 +107,7 @@ module.exports = {
             },
           },
           {
-            selector: 'property',
+            selector: 'classProperty',
             format: ['camelCase'],
             custom: {
               // Use Stimulus values where possible for internal state, avoid a generic state object as these are not reactive.
@@ -135,11 +143,14 @@ module.exports = {
       ],
       rules: {
         '@typescript-eslint/no-empty-function': 'off',
+        '@typescript-eslint/no-this-alias': 'off',
         '@typescript-eslint/no-unused-vars': 'off',
         '@typescript-eslint/no-var-requires': 'off',
         'global-require': 'off',
         'import/first': 'off',
         'import/no-extraneous-dependencies': 'off',
+        'jsx-a11y/control-has-associated-label': 'off',
+        'no-new': 'off',
         'no-unused-expressions': 'off',
         'react/function-component-definition': 'off',
         'react/jsx-props-no-spreading': 'off',
@@ -148,17 +159,14 @@ module.exports = {
     // Files that use jquery via a global
     {
       files: [
-        'docs/_static/**',
-        'wagtail/contrib/modeladmin/static_src/wagtailmodeladmin/js/prepopulate.js',
+        'wagtail/contrib/search_promotions/static_src/wagtailsearchpromotions/js/query-chooser-modal.js',
         'wagtail/contrib/search_promotions/templates/wagtailsearchpromotions/includes/searchpromotions_formset.js',
+        'wagtail/contrib/search_promotions/templates/wagtailsearchpromotions/queries/chooser_field.js',
         'wagtail/documents/static_src/wagtaildocs/js/add-multiple.js',
         'wagtail/embeds/static_src/wagtailembeds/js/embed-chooser-modal.js',
         'wagtail/images/static_src/wagtailimages/js/add-multiple.js',
         'wagtail/images/static_src/wagtailimages/js/focal-point-chooser.js',
         'wagtail/images/static_src/wagtailimages/js/image-url-generator.js',
-        'wagtail/search/static_src/wagtailsearch/js/query-chooser-modal.js',
-        'wagtail/search/templates/wagtailsearch/queries/chooser_field.js',
-        'wagtail/snippets/static_src/wagtailsnippets/js/snippet-multiple-select.js',
         'wagtail/users/static_src/wagtailusers/js/group-form.js',
       ],
       globals: { $: 'readonly', jQuery: 'readonly' },
@@ -168,9 +176,7 @@ module.exports = {
       files: ['wagtail/**/**'],
       globals: {
         buildExpandingFormset: 'readonly',
-        cancelSpinner: 'readonly',
         escapeHtml: 'readonly',
-        jsonData: 'readonly',
         ModalWorkflow: 'readonly',
         DOCUMENT_CHOOSER_MODAL_ONLOAD_HANDLERS: 'writable',
         EMBED_CHOOSER_MODAL_ONLOAD_HANDLERS: 'writable',
@@ -195,16 +201,10 @@ module.exports = {
         'consistent-return': 'off',
         'func-names': 'off',
         'id-length': 'off',
-        'indent': 'off',
-        'key-spacing': 'off',
-        'new-cap': 'off',
-        'newline-per-chained-call': 'off',
         'no-param-reassign': 'off',
         'no-underscore-dangle': 'off',
         'object-shorthand': 'off',
         'prefer-arrow-callback': 'off',
-        'quote-props': 'off',
-        'space-before-function-paren': 'off',
         'vars-on-top': 'off',
       },
     },

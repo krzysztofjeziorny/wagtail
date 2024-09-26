@@ -4,6 +4,7 @@ from django.test import TestCase
 
 from wagtail import blocks
 from wagtail.blocks.base import get_error_json_data
+from wagtail.blocks.definition_lookup import BlockDefinitionLookup
 from wagtail.blocks.struct_block import StructBlockValidationError
 from wagtail.contrib.typed_table_block.blocks import (
     TypedTable,
@@ -38,6 +39,7 @@ class TestTableBlock(TestCase):
         )
 
         self.form_data = {
+            "table-caption": "Countries and their food",
             "table-column-count": "2",
             "table-row-count": "3",
             "table-column-0-type": "country",
@@ -71,6 +73,7 @@ class TestTableBlock(TestCase):
                 {"values": ["nl", "A small country with stroopwafels"]},
                 {"values": ["fr", "A large country with baguettes"]},
             ],
+            "caption": "Countries and their food",
         }
 
     def test_value_from_datadict(self):
@@ -81,6 +84,7 @@ class TestTableBlock(TestCase):
         table = self.block.value_from_datadict(self.form_data, {}, "table")
 
         self.assertIsInstance(table, TypedTable)
+        self.assertEqual(table.caption, "Countries and their food")
         self.assertEqual(len(table.columns), 2)
         self.assertEqual(table.columns[0]["heading"], "Country")
         self.assertEqual(table.columns[1]["heading"], "Description")
@@ -103,6 +107,7 @@ class TestTableBlock(TestCase):
         # Column id 1 is a population column that was deleted before being replaced by the
         # current one with id 3.
         form_data = {
+            "table-caption": "Countries and their food",
             # table-column-count includes deleted columns, as it's telling the server code
             # the maximum column ID number it should consider
             "table-column-count": "4",
@@ -129,6 +134,7 @@ class TestTableBlock(TestCase):
         table = self.block.value_from_datadict(form_data, {}, "table")
 
         self.assertIsInstance(table, TypedTable)
+        self.assertEqual(table.caption, "Countries and their food")
         self.assertEqual(len(table.columns), 3)
         self.assertEqual(table.columns[0]["heading"], "Country")
         self.assertEqual(table.columns[1]["heading"], "Population")
@@ -145,6 +151,7 @@ class TestTableBlock(TestCase):
         Test that we can turn JSONish data from the database into a TypedTable instance
         """
         table = self.block.to_python(self.db_data)
+        self.assertEqual(table.caption, "Countries and their food")
         self.assertIsInstance(table, TypedTable)
         self.assertEqual(len(table.columns), 2)
         self.assertEqual(table.columns[0]["heading"], "Country")
@@ -188,6 +195,7 @@ class TestTableBlock(TestCase):
         table = self.block.value_from_datadict(self.form_data, {}, "table")
         html = self.block.render(table)
 
+        self.assertIn("<caption>Countries and their food</caption>", html)
         self.assertIn('<th scope="col">Country</th>', html)
         # rendering should use the block renderings of the child blocks ('FR' not 'fr')
         self.assertIn("<td>FR</td>", html)
@@ -250,3 +258,40 @@ class TestTableBlock(TestCase):
                 "blockErrors": {1: {2: {"messages": ["This field is required."]}}},
             },
         )
+
+
+class TestBlockDefinitionLookup(TestCase):
+    def test_block_lookup(self):
+        lookup = BlockDefinitionLookup(
+            {
+                0: ("wagtail.blocks.CharBlock", [], {"required": True}),
+                1: (
+                    "wagtail.blocks.ChoiceBlock",
+                    [],
+                    {
+                        "choices": [
+                            ("be", "Belgium"),
+                            ("fr", "France"),
+                            ("nl", "Netherlands"),
+                        ]
+                    },
+                ),
+                2: (
+                    "wagtail.contrib.typed_table_block.blocks.TypedTableBlock",
+                    [
+                        [
+                            ("text", 0),
+                            ("country", 1),
+                        ],
+                    ],
+                    {},
+                ),
+            }
+        )
+        struct_block = lookup.get_block(2)
+        self.assertIsInstance(struct_block, TypedTableBlock)
+        text_block = struct_block.child_blocks["text"]
+        self.assertIsInstance(text_block, blocks.CharBlock)
+        self.assertTrue(text_block.required)
+        country_block = struct_block.child_blocks["country"]
+        self.assertIsInstance(country_block, blocks.ChoiceBlock)

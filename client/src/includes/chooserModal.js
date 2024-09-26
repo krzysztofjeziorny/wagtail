@@ -1,6 +1,5 @@
 import $ from 'jquery';
 import { initTabs } from './tabs';
-import { initTooltips } from './initTooltips';
 import { gettext } from '../utils/gettext';
 
 const validateCreationForm = (form) => {
@@ -19,14 +18,19 @@ const validateCreationForm = (form) => {
         }
         const errorElement = document.createElement('p');
         errorElement.classList.add('error-message');
-        errorElement.innerHTML = gettext('This field is required.');
+        errorElement.textContent = gettext('This field is required.');
         errors.appendChild(errorElement);
       }
     }
   });
   if (hasErrors) {
-    // eslint-disable-next-line no-undef
-    setTimeout(cancelSpinner, 500);
+    setTimeout(() => {
+      // clear any loading state on progress buttons
+      const attr = 'data-w-progress-loading-value';
+      form.querySelectorAll(`[${attr}~="true"]`).forEach((element) => {
+        element.removeAttribute(attr);
+      });
+    }, 500);
   }
   return !hasErrors;
 };
@@ -226,9 +230,6 @@ class ChooserModalOnloadHandlerFactory {
     // Reinitialize tabs to hook up tab event listeners in the modal
     if (this.modalHasTabs(modal)) initTabs();
 
-    // Reinitialise any tooltips
-    initTooltips();
-
     this.updateMultipleChoiceSubmitEnabledState(modal);
     $('[data-multiple-choice-select]', containerElement).on('change', () => {
       this.updateMultipleChoiceSubmitEnabledState(modal);
@@ -347,6 +348,9 @@ class ChooserModal {
     const urlParams = {};
     if (opts.multiple) {
       urlParams.multiple = 1;
+    }
+    if (opts.linkedFieldFilters) {
+      Object.assign(urlParams, opts.linkedFieldFilters);
     }
     return urlParams;
   }

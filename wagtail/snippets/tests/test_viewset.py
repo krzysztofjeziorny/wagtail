@@ -1,20 +1,31 @@
+from datetime import datetime
+from io import BytesIO
 from unittest import mock
 
+from django.conf import settings
 from django.contrib.admin.utils import quote
 from django.contrib.auth import get_permission_codename
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ImproperlyConfigured
-from django.test import TestCase, TransactionTestCase
-from django.urls import reverse
+from django.template.defaultfilters import date
+from django.test import SimpleTestCase, TestCase, TransactionTestCase, override_settings
+from django.urls import NoReverseMatch, resolve, reverse
 from django.utils.timezone import now
+from openpyxl import load_workbook
 
 from wagtail.admin.admin_url_finder import AdminURLFinder
+from wagtail.admin.forms.search import SearchForm
 from wagtail.admin.menu import admin_menu, settings_menu
 from wagtail.admin.panels import get_edit_handler
 from wagtail.admin.staticfiles import versioned_static
+from wagtail.admin.views.mixins import ExcelDateFormatter
 from wagtail.blocks.field_block import FieldBlockAdapter
 from wagtail.coreutils import get_dummy_request
+from wagtail.documents import get_document_model
+from wagtail.documents.tests.utils import get_test_document_file
+from wagtail.images import get_image_model
+from wagtail.images.tests.utils import get_test_image_file
 from wagtail.models import Locale, Workflow, WorkflowContentType
 from wagtail.snippets.blocks import SnippetChooserBlock
 from wagtail.snippets.models import register_snippet
@@ -28,19 +39,25 @@ from wagtail.test.testapp.models import (
     RevisableChildModel,
     RevisableModel,
     SnippetChooserModel,
+    VariousOnDeleteModel,
 )
 from wagtail.test.utils import WagtailTestUtils
+from wagtail.test.utils.template_tests import AdminTemplateTestUtils
+from wagtail.utils.timestamps import render_timestamp
 
 
-class TestIncorrectRegistration(TestCase):
+class TestIncorrectRegistration(SimpleTestCase):
     def test_no_model_set_or_passed(self):
         # The base SnippetViewSet class has no `model` attribute set,
         # so using it directly should raise an error
-        with self.assertRaisesMessage(
-            ImproperlyConfigured,
-            "SnippetViewSet must be passed a model or define a model attribute.",
-        ):
+        with self.assertRaises(ImproperlyConfigured) as cm:
             register_snippet(SnippetViewSet)
+        message = str(cm.exception)
+        self.assertIn("ModelViewSet", message)
+        self.assertIn(
+            "must define a `model` attribute or pass a `model` argument",
+            message,
+        )
 
 
 class BaseSnippetViewSetTests(WagtailTestUtils, TestCase):
@@ -67,35 +84,41 @@ class TestCustomIcon(BaseSnippetViewSetTests):
     def test_get_views(self):
         pk = quote(self.object.pk)
         views = [
-            ("list", []),
-            ("add", []),
-            ("edit", [pk]),
-            ("delete", [pk]),
-            ("usage", [pk]),
-            ("unpublish", [pk]),
-            ("workflow_history", [pk]),
-            ("revisions_revert", [pk, self.revision_1.id]),
-            ("revisions_compare", [pk, self.revision_1.id, self.revision_2.id]),
-            ("revisions_unschedule", [pk, self.revision_2.id]),
+            ("list", [], "headers/slim_header.html"),
+            ("add", [], "headers/slim_header.html"),
+            ("edit", [pk], "headers/slim_header.html"),
+            ("delete", [pk], "header.html"),
+            ("usage", [pk], "headers/slim_header.html"),
+            ("unpublish", [pk], "header.html"),
+            ("workflow_history", [pk], "headers/slim_header.html"),
+            ("revisions_revert", [pk, self.revision_1.id], "headers/slim_header.html"),
+            (
+                "revisions_compare",
+                [pk, self.revision_1.id, self.revision_2.id],
+                "header.html",
+            ),
+            ("revisions_unschedule", [pk, self.revision_2.id], "header.html"),
         ]
-        for view_name, args in views:
+        for view_name, args, header in views:
             with self.subTest(view_name=view_name):
                 response = self.client.get(self.get_url(view_name, args))
                 self.assertEqual(response.status_code, 200)
                 self.assertEqual(response.context["header_icon"], "cog")
                 self.assertContains(response, "icon icon-cog", count=1)
-                # TODO: Make the list view use the shared header template
-                if view_name != "list":
-                    self.assertTemplateUsed(response, "wagtailadmin/shared/header.html")
+                self.assertTemplateUsed(response, f"wagtailadmin/shared/{header}")
 
     def test_get_history(self):
         response = self.client.get(self.get_url("history", [quote(self.object.pk)]))
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "wagtailadmin/shared/header.html")
+        self.assertTemplateUsed(
+            response,
+            "wagtailadmin/shared/headers/slim_header.html",
+        )
         # History view icon is not configurable for consistency with pages
         self.assertEqual(response.context["header_icon"], "history")
         self.assertContains(response, "icon icon-history")
         self.assertNotContains(response, "icon icon-cog")
+        self.assertTemplateNotUsed(response, "wagtailadmin/shared/header.html")
 
     def test_get_workflow_history_detail(self):
         # Assign default workflow to the snippet model
@@ -114,11 +137,9 @@ class TestCustomIcon(BaseSnippetViewSetTests):
             )
         )
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "wagtailadmin/shared/header.html")
-        # The icon is not displayed in the header,
-        # but it is displayed in the main content
-        self.assertEqual(response.context["header_icon"], "list-ul")
-        self.assertContains(response, "icon icon-list-ul")
+        self.assertTemplateNotUsed(response, "wagtailadmin/shared/header.html")
+        self.assertEqual(response.context["header_icon"], "cog")
+        self.assertContains(response, "icon icon-clipboard-list")
         self.assertContains(response, "icon icon-cog")
 
 
@@ -150,9 +171,10 @@ class TestSnippetChooserPanelWithIcon(BaseSnippetViewSetTests):
         self.request = get_dummy_request()
         self.request.user = self.user
         self.text = "Test full-featured snippet with icon text"
+        self.full_featured_snippet = FullFeaturedSnippet.objects.create(text=self.text)
         test_snippet = SnippetChooserModel.objects.create(
             advert=Advert.objects.create(text="foo"),
-            full_featured=FullFeaturedSnippet.objects.create(text=self.text),
+            full_featured=self.full_featured_snippet,
         )
 
         self.edit_handler = get_edit_handler(SnippetChooserModel)
@@ -211,6 +233,38 @@ class TestSnippetChooserPanelWithIcon(BaseSnippetViewSetTests):
         for key in response.context.keys():
             if "icon" in key:
                 self.assertNotIn("snippet", response.context[key])
+
+        # chooser should include the creation form
+        response_json = response.json()
+        soup = self.get_soup(response_json["html"])
+        self.assertTrue(soup.select_one("form[data-chooser-modal-creation-form]"))
+
+    def test_chosen(self):
+        chooser_viewset = FullFeaturedSnippet.snippet_viewset.chooser_viewset
+        response = self.client.get(
+            reverse(
+                chooser_viewset.get_url_name("chosen"),
+                args=[self.full_featured_snippet.pk],
+            )
+        )
+        response_json = response.json()
+        self.assertEqual(response_json["step"], "chosen")
+        self.assertEqual(
+            response_json["result"]["id"], str(self.full_featured_snippet.pk)
+        )
+        self.assertEqual(response_json["result"]["string"], self.text)
+
+    def test_create_from_chooser(self):
+        chooser_viewset = FullFeaturedSnippet.snippet_viewset.chooser_viewset
+        response = self.client.post(
+            reverse(chooser_viewset.get_url_name("create")),
+            {
+                "text": "New snippet",
+            },
+        )
+        response_json = response.json()
+        self.assertEqual(response_json["step"], "chosen")
+        self.assertEqual(response_json["result"]["string"], "New snippet")
 
 
 class TestAdminURLs(BaseSnippetViewSetTests):
@@ -387,22 +441,16 @@ class TestFilterSetClass(BaseSnippetViewSetTests):
 
     def test_unfiltered_no_results(self):
         response = self.get()
-        add_url = self.get_url("add")
-        self.assertContains(
-            response,
-            f'No full-featured snippets have been created. Why not <a href="{add_url}">add one</a>',
-        )
+        self.assertContains(response, "There are no full-featured snippets to display.")
         self.assertContains(
             response,
             '<label for="id_country_code_0"><input type="radio" name="country_code" value="" id="id_country_code_0" checked>All</label>',
             html=True,
         )
-        self.assertTemplateUsed(response, "wagtailadmin/shared/filters.html")
 
     def test_unfiltered_with_results(self):
         self.create_test_snippets()
         response = self.get()
-        self.assertTemplateUsed(response, "wagtailadmin/shared/filters.html")
         self.assertContains(response, "Nasi goreng from Indonesia")
         self.assertContains(response, "Fish and chips from the UK")
         self.assertNotContains(response, "There are 2 matches")
@@ -415,7 +463,6 @@ class TestFilterSetClass(BaseSnippetViewSetTests):
     def test_empty_filter_with_results(self):
         self.create_test_snippets()
         response = self.get({"country_code": ""})
-        self.assertTemplateUsed(response, "wagtailadmin/shared/filters.html")
         self.assertContains(response, "Nasi goreng from Indonesia")
         self.assertContains(response, "Fish and chips from the UK")
         self.assertNotContains(response, "There are 2 matches")
@@ -428,20 +475,25 @@ class TestFilterSetClass(BaseSnippetViewSetTests):
     def test_filtered_no_results(self):
         self.create_test_snippets()
         response = self.get({"country_code": "PH"})
-        self.assertTemplateUsed(response, "wagtailadmin/shared/filters.html")
-        self.assertContains(
-            response, "Sorry, no full-featured snippets match your query"
-        )
+        self.assertContains(response, "No full-featured snippets match your query")
         self.assertContains(
             response,
             '<label for="id_country_code_2"><input type="radio" name="country_code" value="PH" id="id_country_code_2" checked>Philippines</label>',
             html=True,
         )
+        # Should render the active filters even when there are no results
+        soup = self.get_soup(response.content)
+        active_filters = soup.select_one(".w-active-filters")
+        self.assertIsNotNone(active_filters)
+        clear = active_filters.select_one(".w-pill__remove")
+        self.assertIsNotNone(clear)
+        url, params = clear.attrs.get("data-w-swap-src-value").split("?", 1)
+        self.assertEqual(url, self.get_url("list_results"))
+        self.assertNotIn("country_code=PH", params)
 
     def test_filtered_with_results(self):
         self.create_test_snippets()
         response = self.get({"country_code": "ID"})
-        self.assertTemplateUsed(response, "wagtailadmin/shared/filters.html")
         self.assertContains(response, "Nasi goreng from Indonesia")
         self.assertContains(response, "There is 1 match")
         self.assertContains(
@@ -449,6 +501,15 @@ class TestFilterSetClass(BaseSnippetViewSetTests):
             '<label for="id_country_code_1"><input type="radio" name="country_code" value="ID" id="id_country_code_1" checked>Indonesia</label>',
             html=True,
         )
+        # Should render the active filters
+        soup = self.get_soup(response.content)
+        active_filters = soup.select_one(".w-active-filters")
+        self.assertIsNotNone(active_filters)
+        clear = active_filters.select_one(".w-pill__remove")
+        self.assertIsNotNone(clear)
+        url, params = clear.attrs.get("data-w-swap-src-value").split("?", 1)
+        self.assertEqual(url, self.get_url("list_results"))
+        self.assertNotIn("country_code=ID", params)
 
 
 class TestFilterSetClassSearch(WagtailTestUtils, TransactionTestCase):
@@ -476,10 +537,7 @@ class TestFilterSetClassSearch(WagtailTestUtils, TransactionTestCase):
     def test_filtered_searched_no_results(self):
         self.create_test_snippets()
         response = self.get({"country_code": "ID", "q": "chips"})
-        self.assertTemplateUsed(response, "wagtailadmin/shared/filters.html")
-        self.assertContains(
-            response, "Sorry, no full-featured snippets match your query"
-        )
+        self.assertContains(response, "No full-featured snippets match your query")
         self.assertContains(
             response,
             '<label for="id_country_code_1"><input type="radio" name="country_code" value="ID" id="id_country_code_1" checked>Indonesia</label>',
@@ -489,7 +547,6 @@ class TestFilterSetClassSearch(WagtailTestUtils, TransactionTestCase):
     def test_filtered_searched_with_results(self):
         self.create_test_snippets()
         response = self.get({"country_code": "UK", "q": "chips"})
-        self.assertTemplateUsed(response, "wagtailadmin/shared/filters.html")
         self.assertContains(response, "Fish and chips from the UK")
         self.assertContains(response, "There is 1 match")
         self.assertContains(
@@ -530,7 +587,9 @@ class TestListFilterWithList(BaseSnippetViewSetTests):
         add_url = self.get_url("add")
         self.assertContains(
             response,
-            f'No {self.model._meta.verbose_name_plural} have been created. Why not <a href="{add_url}">add one</a>',
+            f"""<p>There are no {self.model._meta.verbose_name_plural} to display.
+            Why not <a href="{add_url}">add one</a>?</p>""",
+            html=True,
         )
         self.assertContains(
             response,
@@ -542,12 +601,10 @@ class TestListFilterWithList(BaseSnippetViewSetTests):
             '<input type="text" name="first_published_at" autocomplete="off" id="id_first_published_at">',
             html=True,
         )
-        self.assertTemplateUsed(response, "wagtailadmin/shared/filters.html")
 
     def test_unfiltered_with_results(self):
         self.create_test_snippets()
         response = self.get()
-        self.assertTemplateUsed(response, "wagtailadmin/shared/filters.html")
         self.assertContains(response, "The first created object")
         self.assertContains(response, "A second one after that")
         self.assertNotContains(response, "There are 2 matches")
@@ -565,7 +622,6 @@ class TestListFilterWithList(BaseSnippetViewSetTests):
     def test_empty_filter_with_results(self):
         self.create_test_snippets()
         response = self.get({"first_published_at": ""})
-        self.assertTemplateUsed(response, "wagtailadmin/shared/filters.html")
         self.assertContains(response, "The first created object")
         self.assertContains(response, "A second one after that")
         self.assertNotContains(response, "There are 2 matches")
@@ -583,10 +639,9 @@ class TestListFilterWithList(BaseSnippetViewSetTests):
     def test_filtered_no_results(self):
         self.create_test_snippets()
         response = self.get({"first_published_at": "1970-01-01"})
-        self.assertTemplateUsed(response, "wagtailadmin/shared/filters.html")
         self.assertContains(
             response,
-            f"Sorry, no {self.model._meta.verbose_name_plural} match your query",
+            f"No {self.model._meta.verbose_name_plural} match your query",
         )
         self.assertContains(
             response,
@@ -602,7 +657,6 @@ class TestListFilterWithList(BaseSnippetViewSetTests):
     def test_filtered_with_results(self):
         self.create_test_snippets()
         response = self.get({"first_published_at": self.date_str})
-        self.assertTemplateUsed(response, "wagtailadmin/shared/filters.html")
         self.assertContains(response, "A second one after that")
         self.assertContains(response, "There is 1 match")
         self.assertContains(
@@ -623,7 +677,6 @@ class TestListFilterWithDict(TestListFilterWithList):
     def test_filtered_contains_with_results(self):
         self.create_test_snippets()
         response = self.get({"text__contains": "second one"})
-        self.assertTemplateUsed(response, "wagtailadmin/shared/filters.html")
         self.assertContains(response, "A second one after that")
         self.assertContains(response, "There is 1 match")
         self.assertContains(
@@ -652,9 +705,11 @@ class TestListViewWithCustomColumns(BaseSnippetViewSetTests):
     def test_custom_columns(self):
         response = self.get()
         self.assertContains(response, "Text")
-        self.assertContains(response, "Country Code")
-        self.assertContains(response, "Custom Foo Column")
+        self.assertContains(response, "Country code")
+        self.assertContains(response, "Custom FOO column")
         self.assertContains(response, "Updated")
+        self.assertContains(response, "Modulo two")
+        self.assertContains(response, "Tristate")
 
         self.assertContains(response, "Foo UK")
 
@@ -664,10 +719,193 @@ class TestListViewWithCustomColumns(BaseSnippetViewSetTests):
         # One from the country code column, another from the custom foo column
         self.assertContains(response, sort_country_code_url, count=2)
 
-        html = response.content.decode()
+        soup = self.get_soup(response.content)
 
-        # The bulk actions column plus 4 columns defined in FullFeaturedSnippetViewSet
-        self.assertTagInHTML("<th>", html, count=5, allow_extra_attrs=True)
+        headings = soup.select("#listing-results table th")
+
+        # The bulk actions column plus 6 columns defined in FullFeaturedSnippetViewSet
+        self.assertEqual(len(headings), 7)
+
+    def test_falsy_value(self):
+        # https://github.com/wagtail/wagtail/issues/10765
+        response = self.get()
+        self.assertContains(response, "<td>0</td>", html=True, count=1)
+
+    def test_boolean_column(self):
+        self.model.objects.create(text="Another one")
+        response = self.get()
+        self.assertContains(
+            response,
+            """
+            <td>
+                <svg class="icon icon-success default w-text-positive-100" aria-hidden="true">
+                    <use href="#icon-success"></use>
+                </svg>
+                <span class="w-sr-only">True</span>
+            </td>
+            """,
+            html=True,
+            count=1,
+        )
+        self.assertContains(
+            response,
+            """
+            <td>
+                <svg class="icon icon-error default w-text-critical-100" aria-hidden="true">
+                    <use href="#icon-error"></use>
+                </svg>
+                <span class="w-sr-only">False</span>
+            </td>
+            """,
+            html=True,
+            count=1,
+        )
+        self.assertContains(
+            response,
+            """
+            <td>
+                <svg class="icon icon-help default" aria-hidden="true">
+                    <use href="#icon-help"></use>
+                </svg>
+                <span class="w-sr-only">None</span>
+            </td>
+            """,
+            html=True,
+            count=1,
+        )
+
+
+class TestRelatedFieldListDisplay(BaseSnippetViewSetTests):
+    model = SnippetChooserModel
+
+    def setUp(self):
+        super().setUp()
+        url = "https://example.com/free_examples"
+        self.advert = Advert.objects.create(url=url, text="Free Examples")
+        self.ffs = FullFeaturedSnippet.objects.create(text="royale with cheese")
+
+    def test_empty_foreignkey(self):
+        self.no_ffs_chooser = self.model.objects.create(advert=self.advert)
+        response = self.client.get(self.get_url("list"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Chosen snippet text")
+        self.assertContains(response, "<td></td>", html=True)
+
+    def test_single_level_relation(self):
+        self.scm = self.model.objects.create(advert=self.advert, full_featured=self.ffs)
+        response = self.client.get(self.get_url("list"))
+        self.assertEqual(response.status_code, 200)
+        soup = self.get_soup(response.content)
+        headers = [
+            header.get_text(strip=True)
+            for header in soup.select("#listing-results table th")
+        ]
+        self.assertIn("Chosen snippet text", headers)
+        self.assertContains(response, "<td>royale with cheese</td>", html=True)
+
+    def test_multi_level_relation(self):
+        self.scm = self.model.objects.create(advert=self.advert, full_featured=self.ffs)
+        dummy_revision = self.ffs.save_revision()
+        timestamp = render_timestamp(dummy_revision.created_at)
+        response = self.client.get(self.get_url("list"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Latest revision created at")
+        self.assertContains(response, f"<td>{timestamp}</td>", html=True)
+
+
+class TestListExport(BaseSnippetViewSetTests):
+    model = FullFeaturedSnippet
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.model.objects.create(text="Pot Noodle", country_code="UK")
+
+        cls.first_published_at = "2023-07-01T13:12:11.100"
+        if settings.USE_TZ:
+            cls.first_published_at = "2023-07-01T13:12:11.100Z"
+
+        obj = cls.model.objects.create(
+            text="Indomie",
+            country_code="ID",
+            first_published_at=cls.first_published_at,
+            some_number=1,
+        )
+        # Refresh so the first_published_at becomes a datetime object
+        obj.refresh_from_db()
+        cls.first_published_at = obj.first_published_at
+        cls.some_date = obj.some_date
+
+    def test_get_not_export_shows_export_buttons(self):
+        response = self.client.get(self.get_url("list"))
+        self.assertContains(response, "Download CSV")
+        self.assertContains(response, self.get_url("list") + "?export=csv")
+        self.assertContains(response, "Download XLSX")
+        self.assertContains(response, self.get_url("list") + "?export=xlsx")
+
+    def test_csv_export(self):
+        response = self.client.get(self.get_url("list"), {"export": "csv"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.get("Content-Disposition"),
+            'attachment; filename="all-fullfeatured-snippets.csv"',
+        )
+
+        data_lines = response.getvalue().decode().split("\n")
+        self.assertEqual(
+            data_lines[0],
+            "Text,Country code,Custom FOO column,Some date,Some number,First published at\r",
+        )
+        self.assertEqual(
+            data_lines[1],
+            f"Indomie,ID,Foo ID,{self.some_date.isoformat()},1,{self.first_published_at.isoformat(sep=' ')}\r",
+        )
+        self.assertEqual(
+            data_lines[2],
+            f"Pot Noodle,UK,Foo UK,{self.some_date.isoformat()},0,\r",
+        )
+
+    def test_xlsx_export(self):
+        response = self.client.get(self.get_url("list"), {"export": "xlsx"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.get("Content-Disposition"),
+            'attachment; filename="all-fullfeatured-snippets.xlsx"',
+        )
+
+        workbook_data = response.getvalue()
+        worksheet = load_workbook(filename=BytesIO(workbook_data)).active
+        cell_array = [[cell.value for cell in row] for row in worksheet.rows]
+        self.assertEqual(
+            cell_array[0],
+            [
+                "Text",
+                "Country code",
+                "Custom FOO column",
+                "Some date",
+                "Some number",
+                "First published at",
+            ],
+        )
+        self.assertEqual(
+            cell_array[1],
+            [
+                "Indomie",
+                "ID",
+                "Foo ID",
+                self.some_date,
+                1,
+                datetime(2023, 7, 1, 13, 12, 11, 100000),
+            ],
+        )
+        self.assertEqual(
+            cell_array[2],
+            ["Pot Noodle", "UK", "Foo UK", self.some_date, 0, None],
+        )
+        self.assertEqual(len(cell_array), 3)
+
+        self.assertEqual(worksheet["F2"].number_format, ExcelDateFormatter().get())
 
 
 class TestCustomTemplates(BaseSnippetViewSetTests):
@@ -683,45 +921,61 @@ class TestCustomTemplates(BaseSnippetViewSetTests):
             "with app label and model name": (
                 "add",
                 [],
-                "wagtailsnippets/snippets/tests/fullfeaturedsnippet/create.html",
+                [
+                    "wagtailsnippets/snippets/tests/fullfeaturedsnippet/create.html",
+                ],
             ),
             "with app label": (
                 "edit",
                 [pk],
-                "wagtailsnippets/snippets/tests/edit.html",
+                [
+                    "wagtailsnippets/snippets/tests/edit.html",
+                ],
             ),
             "without app label and model name": (
                 "delete",
                 [pk],
-                "wagtailsnippets/snippets/delete.html",
+                [
+                    "wagtailsnippets/snippets/delete.html",
+                ],
             ),
             "override a view that uses a generic template": (
                 "unpublish",
                 [pk],
-                "wagtailsnippets/snippets/tests/fullfeaturedsnippet/unpublish.html",
+                [
+                    "wagtailsnippets/snippets/tests/fullfeaturedsnippet/unpublish.html",
+                ],
             ),
-            "override with index_template_name": (
+            "override with index_template_name and index results template with namespaced template": (
                 "list",
                 [],
-                "tests/fullfeaturedsnippet_index.html",
+                [
+                    "tests/fullfeaturedsnippet_index.html",
+                    "wagtailsnippets/snippets/tests/fullfeaturedsnippet/index_results.html",
+                ],
             ),
             "override index results template with namespaced template": (
                 # This is technically the same as the first case, but this ensures that
                 # the index results view can be overridden separately from the index view
                 "list_results",
                 [],
-                "wagtailsnippets/snippets/tests/fullfeaturedsnippet/index_results.html",
+                [
+                    "wagtailsnippets/snippets/tests/fullfeaturedsnippet/index_results.html"
+                ],
             ),
             "override with get_history_template": (
                 "history",
                 [pk],
-                "tests/snippet_history.html",
+                [
+                    "tests/snippet_history.html",
+                ],
             ),
         }
-        for case, (view_name, args, template_name) in cases.items():
+        for case, (view_name, args, template_names) in cases.items():
             with self.subTest(case=case):
                 response = self.client.get(self.get_url(view_name, args=args))
-                self.assertTemplateUsed(response, template_name)
+                for template_name in template_names:
+                    self.assertTemplateUsed(response, template_name)
                 self.assertContains(response, "<p>An added paragraph</p>", html=True)
 
 
@@ -822,7 +1076,7 @@ class TestDjangoORMSearchBackend(BaseSnippetViewSetTests):
         self.assertNotContains(response, "This field is required.")
 
     def test_is_searchable(self):
-        self.assertTrue(self.get().context["is_searchable"])
+        self.assertIsInstance(self.get().context["search_form"], SearchForm)
 
     def test_search_index_view(self):
         response = self.get({"q": "Django"})
@@ -882,14 +1136,14 @@ class TestMenuItemRegistration(BaseSnippetViewSetTests):
         self.model = RevisableModel
         revisable_item = group_item.menu_items[0]
         self.assertEqual(revisable_item.name, "revisable-models")
-        self.assertEqual(revisable_item.label, "Revisable Models")
+        self.assertEqual(revisable_item.label, "Revisable models")
         self.assertEqual(revisable_item.icon_name, "snippet")
         self.assertEqual(revisable_item.url, self.get_url("list"))
 
         self.model = RevisableChildModel
         revisable_child_item = group_item.menu_items[1]
         self.assertEqual(revisable_child_item.name, "revisable-child-models")
-        self.assertEqual(revisable_child_item.label, "Revisable Child Models")
+        self.assertEqual(revisable_child_item.label, "Revisable child models")
         self.assertEqual(revisable_child_item.icon_name, "snippet")
         self.assertEqual(revisable_child_item.url, self.get_url("list"))
 
@@ -959,3 +1213,435 @@ class TestMenuItemRegistration(BaseSnippetViewSetTests):
             menu_items = admin_menu.render_component(self.request)
             snippets = [item for item in menu_items if item.name == "snippets"]
             self.assertEqual(len(snippets), 0)
+
+
+class TestCustomFormClass(BaseSnippetViewSetTests):
+    model = DraftStateModel
+
+    def test_get_form_class(self):
+        add_view = self.client.get(self.get_url("add"))
+        self.assertNotContains(add_view, '<input type="text" name="text"')
+        self.assertContains(add_view, '<textarea name="text"')
+
+        obj = self.model.objects.create(text="Hello World")
+
+        # The get_form_class has been overridden to replace the widget for the
+        # text field with a TextInput, but only for the edit view
+        edit_view = self.client.get(self.get_url("edit", args=(quote(obj.pk),)))
+        self.assertContains(edit_view, '<input type="text" name="text"')
+        self.assertNotContains(edit_view, '<textarea name="text"')
+
+
+class TestInspectViewConfiguration(BaseSnippetViewSetTests):
+    model = FullFeaturedSnippet
+
+    def setUp(self):
+        super().setUp()
+        self.viewset = self.model.snippet_viewset
+        self.object = self.model.objects.create(text="Perkedel", country_code="ID")
+
+    def test_enabled(self):
+        self.model = FullFeaturedSnippet
+        url = self.get_url("inspect", args=(quote(self.object.pk),))
+        response = self.client.get(url)
+        self.assertContains(
+            response,
+            "<dt>Text</dt> <dd>Perkedel</dd>",
+            html=True,
+        )
+        self.assertContains(
+            response,
+            "<dt>Country code</dt> <dd>Indonesia</dd>",
+            html=True,
+        )
+        self.assertContains(
+            response,
+            f"<dt>Some date</dt> <dd>{date(self.object.some_date)}</dd>",
+            html=True,
+        )
+        self.assertNotContains(
+            response,
+            "<dt>Some attribute</dt> <dd>some value</dd>",
+            html=True,
+        )
+        self.assertContains(
+            response,
+            self.get_url("edit", args=(quote(self.object.pk),)),
+        )
+        self.assertContains(
+            response,
+            self.get_url("delete", args=(quote(self.object.pk),)),
+        )
+
+    def test_disabled(self):
+        self.model = Advert
+        object = self.model.objects.create(text="ad")
+        with self.assertRaises(NoReverseMatch):
+            self.get_url("inspect", args=(quote(object.pk),))
+
+    def test_only_add_permission(self):
+        self.model = FullFeaturedSnippet
+
+        self.user.is_superuser = False
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                content_type__app_label="wagtailadmin", codename="access_admin"
+            ),
+            Permission.objects.get(
+                content_type__app_label=self.model._meta.app_label,
+                codename=get_permission_codename("add", self.model._meta),
+            ),
+        )
+        self.user.save()
+
+        url = self.get_url("inspect", args=(quote(self.object.pk),))
+        response = self.client.get(url)
+
+        self.assertContains(
+            response,
+            "<dt>Text</dt> <dd>Perkedel</dd>",
+            html=True,
+        )
+        self.assertContains(
+            response,
+            "<dt>Country code</dt> <dd>Indonesia</dd>",
+            html=True,
+        )
+        self.assertContains(
+            response,
+            f"<dt>Some date</dt> <dd>{date(self.object.some_date)}</dd>",
+            html=True,
+        )
+        self.assertNotContains(
+            response,
+            self.get_url("edit", args=(quote(self.object.pk),)),
+        )
+        self.assertNotContains(
+            response,
+            self.get_url("delete", args=(quote(self.object.pk),)),
+        )
+
+    def test_custom_fields(self):
+        self.model = FullFeaturedSnippet
+        url = self.get_url("inspect", args=(quote(self.object.pk),))
+        view_func = resolve(url).func
+
+        adverts = [Advert.objects.create(text=f"advertisement {i}") for i in range(3)]
+        queryset = Advert.objects.filter(pk=adverts[0].pk)
+
+        mock_manager = mock.patch.object(
+            self.model, "adverts", Advert.objects, create=True
+        )
+
+        mock_queryset = mock.patch.object(
+            self.model, "some_queryset", queryset, create=True
+        )
+
+        mock_fields = mock.patch.dict(
+            view_func.view_initkwargs,
+            {
+                "fields": [
+                    "country_code",  # Field with choices (thus get_FOO_display method)
+                    "some_date",  # DateField
+                    "some_attribute",  # Model attribute
+                    "adverts",  # Manager
+                    "some_queryset",  # QuerySet
+                ]
+            },
+        )
+
+        # We need to mock the view's init kwargs instead of the viewset's
+        # attributes, because the viewset's attributes are only used when the
+        # view is instantiated, and the view is instantiated once at startup.
+        with mock_manager, mock_queryset, mock_fields:
+            response = self.client.get(url)
+
+        self.assertNotContains(
+            response,
+            "<dt>Text</dt> <dd>Perkedel</dd>",
+            html=True,
+        )
+        self.assertContains(
+            response,
+            "<dt>Country code</dt> <dd>Indonesia</dd>",
+            html=True,
+        )
+        self.assertContains(
+            response,
+            f"<dt>Some date</dt> <dd>{date(self.object.some_date)}</dd>",
+            html=True,
+        )
+        self.assertContains(
+            response,
+            "<dt>Some attribute</dt> <dd>some value</dd>",
+            html=True,
+        )
+        self.assertContains(
+            response,
+            """
+            <dt>Adverts</dt>
+            <dd>advertisement 0, advertisement 1, advertisement 2</dd>
+            """,
+            html=True,
+        )
+        self.assertContains(
+            response,
+            "<dt>Some queryset</dt> <dd>advertisement 0</dd>",
+            html=True,
+        )
+
+    def test_exclude_fields(self):
+        self.model = FullFeaturedSnippet
+        url = self.get_url("inspect", args=(quote(self.object.pk),))
+        view_func = resolve(url).func
+
+        # We need to mock the view's init kwargs instead of the viewset's
+        # attributes, because the viewset's attributes are only used when the
+        # view is instantiated, and the view is instantiated once at startup.
+        with mock.patch.dict(
+            view_func.view_initkwargs,
+            {"fields_exclude": ["some_date"]},
+        ):
+            response = self.client.get(url)
+
+        self.assertContains(
+            response,
+            "<dt>Text</dt> <dd>Perkedel</dd>",
+            html=True,
+        )
+        self.assertContains(
+            response,
+            "<dt>Country code</dt> <dd>Indonesia</dd>",
+            html=True,
+        )
+        self.assertNotContains(
+            response,
+            f"<dt>Some date</dt> <dd>{date(self.object.some_date)}</dd>",
+            html=True,
+        )
+        self.assertNotContains(
+            response,
+            "<dt>Some attribute</dt> <dd>some value</dd>",
+            html=True,
+        )
+
+    def test_image_and_document_fields(self):
+        self.model = VariousOnDeleteModel
+        image = get_image_model().objects.create(
+            title="Test image",
+            file=get_test_image_file(),
+        )
+        document = get_document_model().objects.create(
+            title="Test document", file=get_test_document_file()
+        )
+        object = self.model.objects.create(
+            protected_image=image, protected_document=document
+        )
+        response = self.client.get(self.get_url("inspect", args=(quote(object.pk),)))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            f"<dt>Protected image</dt> <dd>{image.get_rendition('max-400x400').img_tag()}</dd>",
+            html=True,
+        )
+        self.assertContains(response, "<dt>Protected document</dt>", html=True)
+        self.assertContains(response, f'<a href="{document.url}">')
+        self.assertContains(response, "Test document")
+        self.assertContains(response, "TXT")
+        self.assertContains(response, f"{document.file.size}\xa0bytes")
+
+    def test_image_and_document_fields_none_values(self):
+        self.model = VariousOnDeleteModel
+        object = self.model.objects.create()
+        response = self.client.get(self.get_url("inspect", args=(quote(object.pk),)))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            "<dt>Protected image</dt> <dd>None</dd>",
+            html=True,
+        )
+        self.assertContains(
+            response,
+            "<dt>Protected document</dt> <dd>None</dd>",
+            html=True,
+        )
+
+
+class TestBreadcrumbs(AdminTemplateTestUtils, BaseSnippetViewSetTests):
+    model = FullFeaturedSnippet
+    base_breadcrumb_items = AdminTemplateTestUtils.base_breadcrumb_items + [
+        {"label": "Snippets", "url": "/admin/snippets/"},
+    ]
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.object = cls.model.objects.create(text="Hello World")
+
+    def test_index_view(self):
+        response = self.client.get(self.get_url("list"))
+        items = [{"url": "", "label": "Full-featured snippets"}]
+        self.assertBreadcrumbsItemsRendered(items, response.content)
+
+    def test_add_view(self):
+        response = self.client.get(self.get_url("add"))
+        items = [
+            {
+                "url": self.get_url("list"),
+                "label": "Full-featured snippets",
+            },
+            {"url": "", "label": "New: Full-featured snippet"},
+        ]
+        self.assertBreadcrumbsItemsRendered(items, response.content)
+
+    def test_edit_view(self):
+        response = self.client.get(self.get_url("edit", args=(self.object.pk,)))
+        items = [
+            {
+                "url": self.get_url("list"),
+                "label": "Full-featured snippets",
+            },
+            {"url": "", "label": str(self.object)},
+        ]
+        self.assertBreadcrumbsItemsRendered(items, response.content)
+
+    def test_delete_view(self):
+        response = self.client.get(self.get_url("delete", args=(self.object.pk,)))
+        self.assertBreadcrumbsNotRendered(response.content)
+
+    def test_history_view(self):
+        response = self.client.get(self.get_url("history", args=(self.object.pk,)))
+        items = [
+            {
+                "url": self.get_url("list"),
+                "label": "Full-featured snippets",
+            },
+            {
+                "url": self.get_url("edit", args=(self.object.pk,)),
+                "label": str(self.object),
+            },
+            {"url": "", "label": "History", "sublabel": str(self.object)},
+        ]
+        self.assertBreadcrumbsItemsRendered(items, response.content)
+
+    def test_usage_view(self):
+        response = self.client.get(self.get_url("usage", args=(self.object.pk,)))
+        items = [
+            {
+                "url": self.get_url("list"),
+                "label": "Full-featured snippets",
+            },
+            {
+                "url": self.get_url("edit", args=(self.object.pk,)),
+                "label": str(self.object),
+            },
+            {"url": "", "label": "Usage", "sublabel": str(self.object)},
+        ]
+        self.assertBreadcrumbsItemsRendered(items, response.content)
+
+    def test_inspect_view(self):
+        response = self.client.get(self.get_url("inspect", args=(self.object.pk,)))
+        items = [
+            {
+                "url": self.get_url("list"),
+                "label": "Full-featured snippets",
+            },
+            {
+                "url": self.get_url("edit", args=(self.object.pk,)),
+                "label": str(self.object),
+            },
+            {"url": "", "label": "Inspect", "sublabel": str(self.object)},
+        ]
+        self.assertBreadcrumbsItemsRendered(items, response.content)
+
+    def test_workflow_history_view(self):
+        response = self.client.get(
+            self.get_url("workflow_history", args=(self.object.pk,))
+        )
+        items = [
+            {
+                "url": self.get_url("list"),
+                "label": "Full-featured snippets",
+            },
+            {
+                "url": self.get_url("edit", args=(self.object.pk,)),
+                "label": str(self.object),
+            },
+            {"url": "", "label": "Workflow history", "sublabel": str(self.object)},
+        ]
+        self.assertBreadcrumbsItemsRendered(items, response.content)
+
+
+class TestCustomMethods(BaseSnippetViewSetTests):
+    model = FullFeaturedSnippet
+
+    def test_index_view_get_add_url_is_respected(self):
+        response = self.client.get(self.get_url("list"))
+        add_url = self.get_url("add") + "?customised=param"
+        soup = self.get_soup(response.content)
+        links = soup.find_all("a", attrs={"href": add_url})
+        self.assertEqual(len(links), 2)
+
+    @override_settings(WAGTAIL_I18N_ENABLED=True)
+    def test_index_view_get_add_url_is_respected_with_i18n(self):
+        Locale.objects.create(language_code="fr")
+        response = self.client.get(self.get_url("list") + "?locale=fr")
+        add_url = self.get_url("add") + "?locale=fr&customised=param"
+        soup = self.get_soup(response.content)
+        links = soup.find_all("a", attrs={"href": add_url})
+        self.assertEqual(len(links), 1)
+
+    def test_index_results_view_get_add_url_teleports_to_header(self):
+        response = self.client.get(self.get_url("list_results"))
+        add_url = self.get_url("add") + "?customised=param"
+        soup = self.get_soup(response.content)
+        template = soup.find(
+            "template",
+            {
+                "data-controller": "w-teleport",
+                "data-w-teleport-target-value": "#w-slim-header-buttons",
+            },
+        )
+        self.assertIsNotNone(template)
+        links = template.find_all("a", attrs={"href": add_url})
+        self.assertEqual(len(links), 1)
+
+    @override_settings(WAGTAIL_I18N_ENABLED=True)
+    def test_index_results_view_get_add_url_teleports_to_header_with_i18n(self):
+        Locale.objects.create(language_code="fr")
+        response = self.client.get(self.get_url("list_results") + "?locale=fr")
+        add_url = self.get_url("add") + "?locale=fr&customised=param"
+        soup = self.get_soup(response.content)
+        template = soup.find(
+            "template",
+            {
+                "data-controller": "w-teleport",
+                "data-w-teleport-target-value": "#w-slim-header-buttons",
+            },
+        )
+        self.assertIsNotNone(template)
+        links = template.find_all("a", attrs={"href": add_url})
+        self.assertEqual(len(links), 1)
+
+
+class TestCustomPermissionPolicy(BaseSnippetViewSetTests):
+    model = FullFeaturedSnippet
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.object = cls.model.objects.create(text="Hello World")
+
+    def test_get_edit_view_not_allowed(self):
+        response = self.client.get(self.get_url("edit", args=(quote(self.object.pk),)))
+        self.assertEqual(response.status_code, 200)
+
+        # The custom permission policy disallows any user with [FORBIDDEN]
+        # in their name, even if they are a superuser
+        self.user.first_name = "[FORBIDDEN]"
+        self.user.last_name = "Joe"
+        self.user.save()
+        self.assertTrue(self.user.is_superuser)
+        self.assertEqual(self.user.get_full_name(), "[FORBIDDEN] Joe")
+        response = self.client.get(self.get_url("edit", args=(quote(self.object.pk),)))
+        self.assertRedirects(response, reverse("wagtailadmin_home"))

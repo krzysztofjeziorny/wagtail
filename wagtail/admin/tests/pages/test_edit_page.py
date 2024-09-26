@@ -1,4 +1,5 @@
 import datetime
+import json
 import os
 from unittest import mock
 
@@ -30,6 +31,7 @@ from wagtail.test.testapp.models import (
     EVENT_AUDIENCE_CHOICES,
     Advert,
     AdvertPlacement,
+    CustomPermissionPage,
     EventCategory,
     EventPage,
     EventPageCarouselItem,
@@ -39,15 +41,22 @@ from wagtail.test.testapp.models import (
     SimplePage,
     SingleEventPage,
     StandardIndex,
+    StreamPage,
     TaggedPage,
 )
 from wagtail.test.utils import WagtailTestUtils
 from wagtail.test.utils.form_data import inline_formset, nested_form_data
-from wagtail.test.utils.timestamps import rendered_timestamp, submittable_timestamp
+from wagtail.test.utils.timestamps import submittable_timestamp
 from wagtail.users.models import UserProfile
+from wagtail.utils.timestamps import render_timestamp
 
 
 class TestPageEdit(WagtailTestUtils, TestCase):
+    STATUS_TOGGLE_BADGE_REGEX = (
+        r'data-side-panel-toggle="status"[^<]+<svg[^<]+<use[^<]+</use[^<]+</svg[^<]+'
+        r"<div data-side-panel-toggle-counter[^>]+w-bg-critical-200[^>]+>\s*%(num_errors)s\s*</div>"
+    )
+
     def setUp(self):
         # Find root page
         self.root_page = Page.objects.get(id=2)
@@ -108,6 +117,38 @@ class TestPageEdit(WagtailTestUtils, TestCase):
         # Login
         self.user = self.login()
 
+    def assertSchedulingDialogRendered(self, response, edit_url):
+        # Should show the "Edit schedule" button
+        html = response.content.decode()
+        self.assertTagInHTML(
+            '<button type="button" data-a11y-dialog-show="schedule-publishing-dialog">Edit schedule</button>',
+            html,
+            count=1,
+            allow_extra_attrs=True,
+        )
+        # Should show the dialog template pointing to the [data-edit-form] selector as the root
+        soup = self.get_soup(html)
+        dialog = soup.select_one(
+            """
+            template[data-controller="w-teleport"][data-w-teleport-target-value="[data-edit-form]"]
+            #schedule-publishing-dialog
+            """
+        )
+        self.assertIsNotNone(dialog)
+        # Should render the main form with data-edit-form attribute
+        self.assertTagInHTML(
+            f'<form action="{edit_url}" method="POST" data-edit-form>',
+            html,
+            count=1,
+            allow_extra_attrs=True,
+        )
+        self.assertTagInHTML(
+            '<div id="schedule-publishing-dialog" class="w-dialog w-dialog--message publishing" data-controller="w-dialog">',
+            html,
+            count=1,
+            allow_extra_attrs=True,
+        )
+
     def test_page_edit(self):
         # Tests that the edit page loads
         response = self.client.get(
@@ -163,6 +204,15 @@ class TestPageEdit(WagtailTestUtils, TestCase):
             response, reverse("wagtailadmin_pages:usage", args=(self.event_page.id,))
         )
 
+        # test that the link to the history view is shown,
+        # one in the header dropdown button, one beside the side panel toggles,
+        # one in the status side panel
+        self.assertContains(
+            response,
+            reverse("wagtailadmin_pages:history", args=(self.event_page.id,)),
+            count=3,
+        )
+
         # test that AdminURLFinder returns the edit view for the page
         url_finder = AdminURLFinder(self.user)
         expected_url = "/admin/pages/%d/edit/" % self.event_page.id
@@ -180,6 +230,18 @@ class TestPageEdit(WagtailTestUtils, TestCase):
         self.assertContains(response, "Referenced 1 time")
         self.assertContains(
             response, reverse("wagtailadmin_pages:usage", args=(self.event_page.id,))
+        )
+
+    def test_edit_custom_permissions(self):
+        page = CustomPermissionPage(title="Page with custom perms", slug="custom-perms")
+        self.root_page.add_child(instance=page)
+        response = self.client.get(reverse("wagtailadmin_pages:edit", args=(page.id,)))
+        self.assertEqual(response.status_code, 200)
+        # Respecting PagePermissionTester.can_view_revisions(),
+        # should not contain a link to the history view
+        self.assertNotContains(
+            response,
+            reverse("wagtailadmin_pages:history", args=(page.id,)),
         )
 
     @override_settings(WAGTAIL_WORKFLOW_ENABLED=False)
@@ -334,6 +396,86 @@ class TestPageEdit(WagtailTestUtils, TestCase):
         # The draft_title should have a new title
         self.assertEqual(child_page_new.draft_title, post_data["title"])
 
+    def test_page_edit_post_unpublished_page(self):
+        # Based on test_page_edit_post(), but tests changes on a draft page vs. live page.
+        post_data = {
+            "title": "Hello unpublished world! edited",
+            "content": "hello edited",
+            "slug": "hello-unpublished-world-edited",
+        }
+        response = self.client.post(
+            reverse("wagtailadmin_pages:edit", args=(self.unpublished_page.id,)),
+            post_data,
+        )
+
+        # Should be redirected to edit page
+        self.assertRedirects(
+            response,
+            reverse("wagtailadmin_pages:edit", args=(self.unpublished_page.id,)),
+        )
+
+        # The page should have "has_unpublished_changes" flag set
+        child_page_new = SimplePage.objects.get(id=self.unpublished_page.id)
+        self.assertTrue(child_page_new.has_unpublished_changes)
+        self.assertFalse(child_page_new.live)
+
+        # Page fields should be changed, since the page is still a draft
+        self.assertEqual(child_page_new.title, "Hello unpublished world! edited")
+        self.assertEqual(child_page_new.content, "hello edited")
+        self.assertEqual(child_page_new.slug, "hello-unpublished-world-edited")
+
+        # The draft_title should have a new title
+        self.assertEqual(child_page_new.draft_title, post_data["title"])
+
+        # Publish the page
+        go_live_at = timezone.now()
+        post_data.update(
+            {
+                "action-publish": "Publish",
+                "go_live_at": submittable_timestamp(go_live_at),
+            }
+        )
+        response = self.client.post(
+            reverse("wagtailadmin_pages:edit", args=(self.unpublished_page.id,)),
+            post_data,
+        )
+
+        # Should be redirected to explorer page
+        self.assertEqual(response.status_code, 302)
+
+        # The page should be live now
+        child_page_new = SimplePage.objects.get(id=self.unpublished_page.id)
+        self.assertTrue(child_page_new.live)
+
+        # We edit the live page again, but now those changes must not be written to the database.
+        post_data = {
+            "title": "Hello unpublished world! edited 2",
+            "content": "hello edited 2",
+            "slug": "hello-unpublished-world-edited-2",
+        }
+        response = self.client.post(
+            reverse("wagtailadmin_pages:edit", args=(self.unpublished_page.id,)),
+            post_data,
+        )
+
+        # Should be redirected to edit page
+        self.assertRedirects(
+            response,
+            reverse("wagtailadmin_pages:edit", args=(self.unpublished_page.id,)),
+        )
+
+        # The page should have "has_unpublished_changes" flag set
+        child_page_new = SimplePage.objects.get(id=self.unpublished_page.id)
+        self.assertTrue(child_page_new.has_unpublished_changes)
+
+        # live Page fields should not be changed
+        self.assertEqual(child_page_new.title, "Hello unpublished world! edited")
+        self.assertEqual(child_page_new.content, "hello edited")
+        self.assertEqual(child_page_new.slug, "hello-unpublished-world-edited")
+
+        # The draft_title should have a new title
+        self.assertEqual(child_page_new.draft_title, post_data["title"])
+
     def test_page_edit_post_when_locked(self):
         # Tests that trying to edit a locked page results in an error
 
@@ -405,43 +547,28 @@ class TestPageEdit(WagtailTestUtils, TestCase):
         # Should show the draft go_live_at and expire_at under the "Once published" label
         self.assertContains(
             response,
-            '<div class="w-label-3">Once published:</div>',
+            '<div class="w-label-3 w-text-primary">Once published:</div>',
             html=True,
             count=1,
         )
         self.assertContains(
             response,
-            f'<span class="w-text-text-label">Go-live:</span> {rendered_timestamp(go_live_at)}',
+            f'<span class="w-text-grey-600">Go-live:</span> {render_timestamp(go_live_at)}',
             html=True,
             count=1,
         )
         self.assertContains(
             response,
-            f'<span class="w-text-text-label">Expiry:</span> {rendered_timestamp(expire_at)}',
+            f'<span class="w-text-grey-600">Expiry:</span> {render_timestamp(expire_at)}',
             html=True,
             count=1,
         )
 
-        # Should show the "Edit schedule" button
-        html = response.content.decode()
-        self.assertTagInHTML(
-            '<button type="button" data-a11y-dialog-show="schedule-publishing-dialog">Edit schedule</button>',
-            html,
-            count=1,
-            allow_extra_attrs=True,
-        )
-
-        # Should show the dialog template pointing to the [data-edit-form] selector as the root
-        self.assertTagInHTML(
-            '<div id="schedule-publishing-dialog" class="w-dialog publishing" data-dialog-root-selector="[data-edit-form]">',
-            html,
-            count=1,
-            allow_extra_attrs=True,
-        )
+        self.assertSchedulingDialogRendered(response, edit_url)
 
         self.assertContains(
             response,
-            "This publishing schedule will only take effect after you have published",
+            'This publishing schedule will only take effect after you select the "Publish" option',
         )
 
     def test_edit_post_scheduled_custom_timezone(self):
@@ -498,32 +625,18 @@ class TestPageEdit(WagtailTestUtils, TestCase):
         # and should be in the user's timezone
         self.assertContains(
             response,
-            '<div class="w-label-3">Once published:</div>',
+            '<div class="w-label-3 w-text-primary">Once published:</div>',
             html=True,
             count=1,
         )
         self.assertContains(
             response,
-            '<span class="w-text-text-label">Go-live:</span> March 20, 2022, 6 a.m.',
+            '<span class="w-text-grey-600">Go-live:</span> March 20, 2022, 6 a.m.',
             html=True,
             count=1,
         )
 
-        # Should show the "Edit schedule" button
-        self.assertTagInHTML(
-            '<button type="button" data-a11y-dialog-show="schedule-publishing-dialog">Edit schedule</button>',
-            html,
-            count=1,
-            allow_extra_attrs=True,
-        )
-
-        # Should show the dialog template pointing to the [data-edit-form] selector as the root
-        self.assertTagInHTML(
-            '<div id="schedule-publishing-dialog" class="w-dialog publishing" data-dialog-root-selector="[data-edit-form]">',
-            html,
-            count=1,
-            allow_extra_attrs=True,
-        )
+        self.assertSchedulingDialogRendered(response, edit_url)
 
         # Should show the input with the correct value in the user's timezone
         self.assertTagInHTML(
@@ -535,7 +648,7 @@ class TestPageEdit(WagtailTestUtils, TestCase):
 
         self.assertContains(
             response,
-            "This publishing schedule will only take effect after you have published",
+            'This publishing schedule will only take effect after you select the "Publish" option',
         )
 
     def test_schedule_panel_without_publish_permission(self):
@@ -570,20 +683,32 @@ class TestPageEdit(WagtailTestUtils, TestCase):
 
         # Check that a form error was raised
         self.assertFormError(
-            response,
-            "form",
+            response.context["form"],
             "go_live_at",
             "Go live date/time must be before expiry date/time",
         )
         self.assertFormError(
-            response,
-            "form",
+            response.context["form"],
             "expire_at",
             "Go live date/time must be before expiry date/time",
         )
 
+        self.assertContains(
+            response,
+            '<div class="w-label-3 w-text-primary">Invalid schedule</div>',
+            html=True,
+        )
+
+        num_errors = 2
+
+        # Should show the correct number on the badge of the toggle button
+        self.assertRegex(
+            response.content.decode(),
+            self.STATUS_TOGGLE_BADGE_REGEX % {"num_errors": num_errors},
+        )
+
         # form should be marked as having unsaved changes for the purposes of the dirty-forms warning
-        self.assertContains(response, "alwaysDirty: true")
+        self.assertContains(response, 'data-w-unsaved-force-value="true"')
 
     def test_edit_scheduled_expire_in_the_past(self):
         post_data = {
@@ -602,11 +727,95 @@ class TestPageEdit(WagtailTestUtils, TestCase):
 
         # Check that a form error was raised
         self.assertFormError(
-            response, "form", "expire_at", "Expiry date/time must be in the future"
+            response.context["form"],
+            "expire_at",
+            "Expiry date/time must be in the future",
+        )
+
+        self.assertContains(
+            response,
+            '<div class="w-label-3 w-text-primary">Invalid schedule</div>',
+            html=True,
+        )
+
+        num_errors = 1
+
+        # Should show the correct number on the badge of the toggle button
+        self.assertRegex(
+            response.content.decode(),
+            self.STATUS_TOGGLE_BADGE_REGEX % {"num_errors": num_errors},
         )
 
         # form should be marked as having unsaved changes for the purposes of the dirty-forms warning
-        self.assertContains(response, "alwaysDirty: true")
+        self.assertContains(response, 'data-w-unsaved-force-value="true"')
+
+    def test_edit_post_invalid_schedule_with_existing_draft_schedule(self):
+        self.child_page.go_live_at = timezone.now() + datetime.timedelta(days=1)
+        self.child_page.expire_at = timezone.now() + datetime.timedelta(days=2)
+        latest_revision = self.child_page.save_revision()
+
+        go_live_at = timezone.now() + datetime.timedelta(days=10)
+        expire_at = timezone.now() + datetime.timedelta(days=-20)
+        post_data = {
+            "title": "I've been edited!",
+            "content": "Some content",
+            "slug": "hello-world",
+            "go_live_at": submittable_timestamp(go_live_at),
+            "expire_at": submittable_timestamp(expire_at),
+        }
+        edit_url = reverse("wagtailadmin_pages:edit", args=(self.child_page.id,))
+        response = self.client.post(edit_url, post_data)
+
+        # Should render the edit page with errors instead of redirecting
+        self.assertEqual(response.status_code, 200)
+
+        child_page_new = SimplePage.objects.get(id=self.child_page.id)
+
+        # The page will still be live
+        self.assertTrue(child_page_new.live)
+
+        # No new revision should have been created
+        self.assertEqual(child_page_new.latest_revision_id, latest_revision.pk)
+
+        # Should not show the draft go_live_at and expire_at under the "Once published" label
+        self.assertNotContains(
+            response,
+            '<div class="w-label-3 w-text-primary">Once published:</div>',
+            html=True,
+        )
+        self.assertNotContains(
+            response,
+            '<span class="w-text-grey-600">Go-live:</span>',
+            html=True,
+        )
+        self.assertNotContains(
+            response,
+            '<span class="w-text-grey-600">Expiry:</span>',
+            html=True,
+        )
+
+        # Should show the "Edit schedule" button
+        html = response.content.decode()
+        self.assertTagInHTML(
+            '<button type="button" data-a11y-dialog-show="schedule-publishing-dialog">Edit schedule</button>',
+            html,
+            count=1,
+            allow_extra_attrs=True,
+        )
+
+        self.assertContains(
+            response,
+            '<div class="w-label-3 w-text-primary">Invalid schedule</div>',
+            html=True,
+        )
+
+        num_errors = 2
+
+        # Should show the correct number on the badge of the toggle button
+        self.assertRegex(
+            response.content.decode(),
+            self.STATUS_TOGGLE_BADGE_REGEX % {"num_errors": num_errors},
+        )
 
     def test_page_edit_post_publish(self):
         # Connect a mock signal handler to page_published signal
@@ -760,18 +969,18 @@ class TestPageEdit(WagtailTestUtils, TestCase):
         # Should show the go_live_at and expire_at without the "Once published" label
         self.assertNotContains(
             response,
-            '<div class="w-label-3">Once published:</div>',
+            '<div class="w-label-3 w-text-primary">Once published:</div>',
             html=True,
         )
         self.assertContains(
             response,
-            f'<span class="w-text-text-label">Go-live:</span> {rendered_timestamp(go_live_at)}',
+            f'<span class="w-text-grey-600">Go-live:</span> {render_timestamp(go_live_at)}',
             html=True,
             count=1,
         )
         self.assertContains(
             response,
-            f'<span class="w-text-text-label">Expiry:</span> {rendered_timestamp(expire_at)}',
+            f'<span class="w-text-grey-600">Expiry:</span> {render_timestamp(expire_at)}',
             html=True,
             count=1,
         )
@@ -924,18 +1133,18 @@ class TestPageEdit(WagtailTestUtils, TestCase):
         # Should show the go_live_at and expire_at without the "Once published" label
         self.assertNotContains(
             response,
-            '<div class="w-label-3">Once published:</div>',
+            '<div class="w-label-3 w-text-primary">Once published:</div>',
             html=True,
         )
         self.assertContains(
             response,
-            f'<span class="w-text-text-label">Go-live:</span> {rendered_timestamp(go_live_at)}',
+            f'<span class="w-text-grey-600">Go-live:</span> {render_timestamp(go_live_at)}',
             html=True,
             count=1,
         )
         self.assertContains(
             response,
-            f'<span class="w-text-text-label">Expiry:</span> {rendered_timestamp(expire_at)}',
+            f'<span class="w-text-grey-600">Expiry:</span> {render_timestamp(expire_at)}',
             html=True,
             count=1,
         )
@@ -1099,7 +1308,7 @@ class TestPageEdit(WagtailTestUtils, TestCase):
         # Should still show the active expire_at in the live object
         self.assertContains(
             response,
-            f'<span class="w-text-text-label">Expiry:</span> {rendered_timestamp(expire_at)}',
+            f'<span class="w-text-grey-600">Expiry:</span> {render_timestamp(expire_at)}',
             html=True,
             count=1,
         )
@@ -1107,39 +1316,23 @@ class TestPageEdit(WagtailTestUtils, TestCase):
         # Should also show the draft go_live_at and expire_at under the "Once published" label
         self.assertContains(
             response,
-            '<div class="w-label-3">Once published:</div>',
+            '<div class="w-label-3 w-text-primary">Once published:</div>',
             html=True,
             count=1,
         )
         self.assertContains(
             response,
-            f'<span class="w-text-text-label">Go-live:</span> {rendered_timestamp(go_live_at)}',
+            f'<span class="w-text-grey-600">Go-live:</span> {render_timestamp(go_live_at)}',
             html=True,
             count=1,
         )
         self.assertContains(
             response,
-            f'<span class="w-text-text-label">Expiry:</span> {rendered_timestamp(new_expire_at)}',
+            f'<span class="w-text-grey-600">Expiry:</span> {render_timestamp(new_expire_at)}',
             html=True,
             count=1,
         )
-
-        # Should show the "Edit schedule" button
-        html = response.content.decode()
-        self.assertTagInHTML(
-            '<button type="button" data-a11y-dialog-show="schedule-publishing-dialog">Edit schedule</button>',
-            html,
-            count=1,
-            allow_extra_attrs=True,
-        )
-
-        # Should show the dialog template pointing to the [data-edit-form] selector as the root
-        self.assertTagInHTML(
-            '<div id="schedule-publishing-dialog" class="w-dialog publishing" data-dialog-root-selector="[data-edit-form]">',
-            html,
-            count=1,
-            allow_extra_attrs=True,
-        )
+        self.assertSchedulingDialogRendered(response, edit_url)
 
     def test_edit_post_publish_schedule_before_a_scheduled_expire_page(self):
         # First let's publish a page with *just* an expire_at in the future
@@ -1210,25 +1403,25 @@ class TestPageEdit(WagtailTestUtils, TestCase):
         # override the existing expire_at when it goes live
         self.assertNotContains(
             response,
-            f'<span class="w-text-text-label">Expiry:</span> {rendered_timestamp(expire_at)}',
+            f'<span class="w-text-grey-600">Expiry:</span> {render_timestamp(expire_at)}',
             html=True,
         )
 
         # Should show the go_live_at and expire_at without the "Once published" label
         self.assertNotContains(
             response,
-            '<div class="w-label-3">Once published:</div>',
+            '<div class="w-label-3 w-text-primary">Once published:</div>',
             html=True,
         )
         self.assertContains(
             response,
-            f'<span class="w-text-text-label">Go-live:</span> {rendered_timestamp(go_live_at)}',
+            f'<span class="w-text-grey-600">Go-live:</span> {render_timestamp(go_live_at)}',
             html=True,
             count=1,
         )
         self.assertContains(
             response,
-            f'<span class="w-text-text-label">Expiry:</span> {rendered_timestamp(new_expire_at)}',
+            f'<span class="w-text-grey-600">Expiry:</span> {render_timestamp(new_expire_at)}',
             html=True,
             count=1,
         )
@@ -1313,7 +1506,7 @@ class TestPageEdit(WagtailTestUtils, TestCase):
         # unpublished (expired) -> published (scheduled) -> unpublished (expired again)
         self.assertContains(
             response,
-            f'<span class="w-text-text-label">Expiry:</span> {rendered_timestamp(expire_at)}',
+            f'<span class="w-text-grey-600">Expiry:</span> {render_timestamp(expire_at)}',
             html=True,
             count=1,
         )
@@ -1321,18 +1514,18 @@ class TestPageEdit(WagtailTestUtils, TestCase):
         # Should show the go_live_at and expire_at without the "Once published" label
         self.assertNotContains(
             response,
-            '<div class="w-label-3">Once published:</div>',
+            '<div class="w-label-3 w-text-primary">Once published:</div>',
             html=True,
         )
         self.assertContains(
             response,
-            f'<span class="w-text-text-label">Go-live:</span> {rendered_timestamp(go_live_at)}',
+            f'<span class="w-text-grey-600">Go-live:</span> {render_timestamp(go_live_at)}',
             html=True,
             count=1,
         )
         self.assertContains(
             response,
-            f'<span class="w-text-text-label">Expiry:</span> {rendered_timestamp(new_expire_at)}',
+            f'<span class="w-text-grey-600">Expiry:</span> {render_timestamp(new_expire_at)}',
             html=True,
             count=1,
         )
@@ -1400,8 +1593,7 @@ class TestPageEdit(WagtailTestUtils, TestCase):
 
         # Check that a form error was raised
         self.assertFormError(
-            response,
-            "form",
+            response.context["form"],
             "slug",
             "The slug 'hello-world' is already in use within the parent page",
         )
@@ -1579,8 +1771,8 @@ class TestPageEdit(WagtailTestUtils, TestCase):
             reverse("wagtailadmin_pages:edit", args=(self.child_page.id,))
         )
 
-        input_field_for_draft_slug = '<input type="text" name="slug" value="revised-slug-in-draft-only" data-controller="w-slug" data-action="blur-&gt;w-slug#slugify w-sync:check-&gt;w-slug#compare w-sync:apply-&gt;w-slug#urlify:prevent" data-w-slug-allow-unicode-value maxlength="255" aria-describedby="panel-child-promote-child-for_search_engines-child-slug-helptext" required id="id_slug">'
-        input_field_for_live_slug = '<input type="text" name="slug" value="hello-world" maxlength="255" aria-describedby="panel-child-promote-child-for_search_engines-child-slug-helptext" required id="id_slug" />'
+        input_field_for_draft_slug = '<input type="text" name="slug" value="revised-slug-in-draft-only" data-controller="w-slug" data-action="blur-&gt;w-slug#slugify w-sync:check-&gt;w-slug#compare w-sync:apply-&gt;w-slug#urlify:prevent" data-w-slug-compare-as-param="urlify" data-w-slug-allow-unicode-value maxlength="255" aria-describedby="panel-child-promote-child-for_search_engines-child-slug-helptext" required id="id_slug">'
+        input_field_for_live_slug = '<input type="text" name="slug" value="hello-world" data-controller="w-slug" data-action="blur-&gt;w-slug#slugify w-sync:check-&gt;w-slug#compare w-sync:apply-&gt;w-slug#urlify:prevent" data-w-slug-compare-as-param="urlify" data-w-slug-allow-unicode-value maxlength="255" aria-describedby="panel-child-promote-child-for_search_engines-child-slug-helptext" required id="id_slug" />'
 
         # Status Link should be the live page (not revision)
         self.assertNotContains(
@@ -1605,8 +1797,8 @@ class TestPageEdit(WagtailTestUtils, TestCase):
             reverse("wagtailadmin_pages:edit", args=(self.single_event_page.id,))
         )
 
-        input_field_for_draft_slug = '<input type="text" name="slug" value="revised-slug-in-draft-only" maxlength="255" aria-describedby="panel-child-promote-child-common_page_configuration-child-slug-helptext" required id="id_slug" />'
-        input_field_for_live_slug = '<input type="text" name="slug" value="mars-landing" maxlength="255" aria-describedby="panel-child-promote-child-common_page_configuration-child-slug-helptext" required id="id_slug" />'
+        input_field_for_draft_slug = '<input type="text" name="slug" value="revised-slug-in-draft-only" data-controller="w-slug" data-action="blur-&gt;w-slug#slugify w-sync:check-&gt;w-slug#compare w-sync:apply-&gt;w-slug#urlify:prevent" data-w-slug-compare-as-param="urlify" data-w-slug-allow-unicode-value maxlength="255" aria-describedby="panel-child-promote-child-common_page_configuration-child-slug-helptext" required id="id_slug" />'
+        input_field_for_live_slug = '<input type="text" name="slug" value="mars-landing" data-controller="w-slug" data-action="blur-&gt;w-slug#slugify w-sync:check-&gt;w-slug#compare w-sync:apply-&gt;w-slug#urlify:prevent" data-w-slug-compare-as-param="urlify" data-w-slug-allow-unicode-value maxlength="255" aria-describedby="panel-child-promote-child-common_page_configuration-child-slug-helptext" required id="id_slug" />'
 
         # Status Link should be the live page (not revision)
         self.assertNotContains(
@@ -1734,7 +1926,7 @@ class TestPageEdit(WagtailTestUtils, TestCase):
 
     def test_override_default_action_menu_item(self):
         def hook_func(menu_items, request, context):
-            for (index, item) in enumerate(menu_items):
+            for index, item in enumerate(menu_items):
                 if item.name == "action-publish":
                     # move to top of list
                     menu_items.pop(index)
@@ -1746,28 +1938,29 @@ class TestPageEdit(WagtailTestUtils, TestCase):
                 reverse("wagtailadmin_pages:edit", args=(self.single_event_page.id,))
             )
 
-        publish_button = """
-            <button type="submit" name="action-publish" value="action-publish" class="button button-longrunning " data-controller="w-progress" data-action="w-progress#activate" data-w-progress-active-value="Publishing…">
-                <svg class="icon icon-upload button-longrunning__icon" aria-hidden="true"><use href="#icon-upload"></use></svg>
+        soup = self.get_soup(response.content)
 
-                <svg class="icon icon-spinner icon" aria-hidden="true"><use href="#icon-spinner"></use></svg><em data-w-progress-target="label">Publish</em>
-            </button>
-        """
-        save_button = """
-            <button type="submit" class="button action-save button-longrunning " data-controller="w-progress" data-action="w-progress#activate" data-w-progress-active-value="Saving…" >
-                <svg class="icon icon-draft button-longrunning__icon" aria-hidden="true"><use href="#icon-draft"></use></svg>
+        # save button should be inside "More actions" toggle.
+        save_button = soup.select_one(".w-dropdown__content .action-save")
+        self.assertIsNotNone(save_button)
+        # publish button should be directly inside "Dropdown button".
+        publish_button = soup.select_one('.w-dropdown-button > [name="action-publish"]')
+        self.assertIsNotNone(publish_button)
 
-                <svg class="icon icon-spinner icon" aria-hidden="true"><use href="#icon-spinner"></use></svg>
-                <em data-w-progress-target="label">Save draft</em>
-            </button>
-        """
+    def test_override_publish_action_menu_item_label(self):
+        def hook_func(menu_items, request, context):
+            for item in menu_items:
+                if item.name == "action-publish":
+                    item.label = "Foobar"
+                    break
 
-        # save button should be in a <li>
-        self.assertContains(response, "<li>%s</li>" % save_button, html=True)
+        with self.register_hook("construct_page_action_menu", hook_func):
+            response = self.client.get(
+                reverse("wagtailadmin_pages:edit", args=(self.single_event_page.id,))
+            )
 
-        # publish button should be present, but not in a <li>
-        self.assertContains(response, publish_button, html=True)
-        self.assertNotContains(response, "<li>%s</li>" % publish_button, html=True)
+        # publish button should have another label
+        self.assertContains(response, "Foobar")
 
     def test_edit_alias_page(self):
         alias_page = self.event_page.create_alias(update_slug="new-event-page")
@@ -1871,12 +2064,25 @@ class TestPageEdit(WagtailTestUtils, TestCase):
             response, reverse("wagtailadmin_pages:edit", args=(self.child_page.id,))
         )
 
-    def test_page_edit_num_queries(self):
+    def test_page_edit_num_queries_as_superuser(self):
         # Warm up cache so that result is the same when running this test in isolation
         # as when running it within the full test suite
         self.client.get(reverse("wagtailadmin_pages:edit", args=(self.event_page.id,)))
 
-        with self.assertNumQueries(41):
+        with self.assertNumQueries(35):
+            self.client.get(
+                reverse("wagtailadmin_pages:edit", args=(self.event_page.id,))
+            )
+
+    def test_page_edit_num_queries_as_editor(self):
+        editor = self.create_user("editor", password="password")
+        editor.groups.add(Group.objects.get(name="Editors"))
+        self.login(username="editor")
+
+        # Warm up the cache as above.
+        self.client.get(reverse("wagtailadmin_pages:edit", args=(self.event_page.id,)))
+
+        with self.assertNumQueries(39):
             self.client.get(
                 reverse("wagtailadmin_pages:edit", args=(self.event_page.id,))
             )
@@ -2132,7 +2338,7 @@ class TestChildRelationsOnSuperclass(WagtailTestUtils, TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "This field is required.")
         # form should be marked as having unsaved changes
-        self.assertContains(response, "alwaysDirty: true")
+        self.assertContains(response, 'data-w-unsaved-force-value="true"')
 
     def test_get_edit_form(self):
         response = self.client.get(
@@ -2204,7 +2410,7 @@ class TestChildRelationsOnSuperclass(WagtailTestUtils, TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "This field is required.")
         # form should be marked as having unsaved changes
-        self.assertContains(response, "alwaysDirty: true")
+        self.assertContains(response, 'data-w-unsaved-force-value="true"')
 
 
 class TestIssue2492(WagtailTestUtils, TestCase):
@@ -2267,7 +2473,7 @@ class TestIssue2492(WagtailTestUtils, TestCase):
 
         # The "View Live" button should have the custom URL.
         for message in response.context["messages"]:
-            self.assertIn('"{}"'.format(new_url), message.message)
+            self.assertIn(f'"{new_url}"', message.message)
             break
 
 
@@ -2369,58 +2575,6 @@ class TestIssue3982(WagtailTestUtils, TestCase):
         not have a "View live" button.
         """
         response, page = self._edit_page(Page.objects.get(pk=1))
-        self.assertIsNone(page.url)
-        self.assertFalse(
-            any(
-                "View live" in message.message
-                for message in response.context["messages"]
-            )
-        )
-
-    def _approve_page(self, parent):
-        self.client.post(
-            reverse("wagtailadmin_pages:add", args=("tests", "simplepage", parent.pk)),
-            {
-                "title": "Hello, world!",
-                "content": "Some content",
-                "slug": "hello-world",
-            },
-            follow=True,
-        )
-        page = SimplePage.objects.get()
-        self.assertFalse(page.live)
-        revision = Revision.page_revisions.get(object_id=page.id)
-        revision.submitted_for_moderation = True
-        revision.save()
-        response = self.client.post(
-            reverse("wagtailadmin_pages:approve_moderation", args=(revision.pk,)),
-            follow=True,
-        )
-        page = SimplePage.objects.get()
-        self.assertTrue(page.live)
-        self.assertRedirects(response, reverse("wagtailadmin_home"))
-        return response, page
-
-    def test_approve_accessible(self):
-        """
-        Edit a page under the site root, check the flash message has a valid
-        "View live" button.
-        """
-        response, page = self._approve_page(Page.objects.get(pk=2))
-        self.assertIsNotNone(page.url)
-        self.assertTrue(
-            any(
-                "View live" in message.message and page.url in message.message
-                for message in response.context["messages"]
-            )
-        )
-
-    def test_approve_inaccessible(self):
-        """
-        Edit a page outside of the site root, check the flash message does
-        not have a "View live" button.
-        """
-        response, page = self._approve_page(Page.objects.get(pk=1))
         self.assertIsNone(page.url)
         self.assertFalse(
             any(
@@ -2894,7 +3048,7 @@ class TestLocaleSelector(WagtailTestUtils, TestCase):
         GroupPagePermission.objects.create(
             group=group,
             page=en_events_index,
-            permission_type="edit",
+            permission_type="change",
         )
         self.user.is_superuser = False
         self.user.user_permissions.add(
@@ -2936,7 +3090,7 @@ class TestPageSubscriptionSettings(WagtailTestUtils, TestCase):
         # Login
         self.user = self.login()
 
-    def test_commment_notifications_switched_off(self):
+    def test_comment_notifications_switched_off(self):
         response = self.client.get(
             reverse("wagtailadmin_pages:edit", args=[self.child_page.id])
         )
@@ -2946,8 +3100,13 @@ class TestPageSubscriptionSettings(WagtailTestUtils, TestCase):
             response,
             '<input type="checkbox" name="comment_notifications" id="id_comment_notifications">',
         )
+        self.assertTrue(
+            PageSubscription.objects.filter(
+                page=self.child_page, user=self.user, comment_notifications=False
+            ).exists()
+        )
 
-    def test_commment_notifications_switched_on(self):
+    def test_comment_notifications_switched_on(self):
         PageSubscription.objects.create(
             page=self.child_page, user=self.user, comment_notifications=True
         )
@@ -3089,6 +3248,33 @@ class TestCommenting(WagtailTestUtils, TestCase):
             self.never_emailed_user.email,
             [to for email in mail.outbox for to in email.to],
         )
+
+    def test_comments_enabled_by_default(self):
+        response = self.client.get(
+            reverse("wagtailadmin_pages:edit", args=[self.child_page.id])
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        soup = self.get_soup(response.content)
+        form = soup.select_one("[data-edit-form]")
+        self.assertEqual("page-edit-form", form["id"])
+        self.assertIn("w-init", form["data-controller"])
+        self.assertEqual("w-comments:init", form["data-w-init-event-value"])
+
+    @override_settings(WAGTAILADMIN_COMMENTS_ENABLED=False)
+    def test_comments_disabled(self):
+        response = self.client.get(
+            reverse("wagtailadmin_pages:edit", args=[self.child_page.id])
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        soup = self.get_soup(response.content)
+        form = soup.select_one("[data-edit-form]")
+        self.assertEqual("page-edit-form", form["id"])
+        self.assertIn("w-init", form["data-controller"])
+        self.assertEqual("", form["data-w-init-event-value"])
 
     def test_new_comment(self):
         post_data = {
@@ -3673,3 +3859,67 @@ class TestCommenting(WagtailTestUtils, TestCase):
 
         # No emails should be submitted because subscriber is inactive
         self.assertEqual(len(mail.outbox), 0)
+
+
+class TestCommentOutput(WagtailTestUtils, TestCase):
+    """
+    Test that the correct set of comments is output on the edit page view
+    """
+
+    def setUp(self):
+        # Find root page
+        self.root_page = Page.objects.get(id=2)
+
+        # Add child page
+        self.child_page = StreamPage(
+            title="Hello world!",
+            body=[
+                {
+                    "id": "234",
+                    "type": "product",
+                    "value": {"name": "Cuddly toy", "price": "$9.95"},
+                },
+            ],
+        )
+        self.root_page.add_child(instance=self.child_page)
+        self.child_page.save_revision().publish()
+
+        # Login
+        self.user = self.login()
+
+    def test_only_comments_with_valid_paths_are_shown(self):
+        # add some comments on self.child_page
+        Comment.objects.create(
+            user=self.user,
+            page=self.child_page,
+            text="A test comment",
+            contentpath="title",
+        )
+        Comment.objects.create(
+            user=self.user,
+            page=self.child_page,
+            text="A comment on a field that doesn't exist",
+            contentpath="sillytitle",
+        )
+        Comment.objects.create(
+            user=self.user,
+            page=self.child_page,
+            text="This is quite expensive",
+            contentpath="body.234.price",
+        )
+        Comment.objects.create(
+            user=self.user,
+            page=self.child_page,
+            text="A comment on a block that doesn't exist",
+            contentpath="body.234.colour",
+        )
+
+        response = self.client.get(
+            reverse("wagtailadmin_pages:edit", args=[self.child_page.id])
+        )
+        soup = self.get_soup(response.content)
+        comments_data_json = soup.select_one("#comments-data").string
+        comments_data = json.loads(comments_data_json)
+        comment_text = [comment["text"] for comment in comments_data["comments"]]
+        comment_text.sort()
+        self.assertEqual(comment_text, ["A test comment", "This is quite expensive"])

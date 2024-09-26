@@ -7,6 +7,7 @@ from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.functional import cached_property
 from django.utils.safestring import mark_safe
+from django.utils.text import capfirst
 from django.utils.translation import gettext_lazy as _
 
 from wagtail.admin.admin_url_finder import AdminURLFinder
@@ -32,6 +33,7 @@ class BaseChooser(widgets.Input):
     classname = None
     model = None
     js_constructor = "Chooser"
+    linked_fields = {}
 
     # when looping over form fields, this one should appear in visible_fields, not hidden_fields
     # despite the underlying input being type="hidden"
@@ -39,21 +41,19 @@ class BaseChooser(widgets.Input):
     is_hidden = False
 
     def __init__(self, **kwargs):
-        # allow choose_one_text / choose_another_text to be overridden per-instance
-        if "choose_one_text" in kwargs:
-            self.choose_one_text = kwargs.pop("choose_one_text")
-        if "choose_another_text" in kwargs:
-            self.choose_another_text = kwargs.pop("choose_another_text")
-        if "clear_choice_text" in kwargs:
-            self.clear_choice_text = kwargs.pop("clear_choice_text")
-        if "link_to_chosen_text" in kwargs:
-            self.link_to_chosen_text = kwargs.pop("link_to_chosen_text")
-        if "show_edit_link" in kwargs:
-            self.show_edit_link = kwargs.pop("show_edit_link")
-        if "show_clear_link" in kwargs:
-            self.show_clear_link = kwargs.pop("show_clear_link")
-        if "icon" in kwargs:
-            self.icon = kwargs.pop("icon")
+        # allow attributes to be overridden by kwargs
+        for var in [
+            "choose_one_text",
+            "choose_another_text",
+            "clear_choice_text",
+            "link_to_chosen_text",
+            "show_edit_link",
+            "show_clear_link",
+            "icon",
+            "linked_fields",
+        ]:
+            if var in kwargs:
+                setattr(self, var, kwargs.pop(var))
         super().__init__(**kwargs)
 
     @cached_property
@@ -164,16 +164,19 @@ class BaseChooser(widgets.Input):
         widget_html = self.render_html(name, value_data, attrs)
 
         js = self.render_js_init(id_, name, value_data)
-        out = "{0}<script>{1}</script>".format(widget_html, js)
+        out = f"{widget_html}<script>{js}</script>"
         return mark_safe(out)
 
     @property
     def base_js_init_options(self):
         """The set of options to pass to the JS initialiser that are constant every time this widget
         instance is rendered (i.e. do not vary based on id / name / value)"""
-        return {
+        opts = {
             "modalUrl": self.get_chooser_modal_url(),
         }
+        if self.linked_fields:
+            opts["linkedFields"] = self.linked_fields
+        return opts
 
     def get_js_init_options(self, id_, name, value_data):
         return {**self.base_js_init_options}
@@ -248,7 +251,7 @@ class AdminPageChooser(BaseChooser):
             cleaned_target_models = [Page]
 
         if len(cleaned_target_models) == 1 and cleaned_target_models[0] is not Page:
-            model_name = cleaned_target_models[0]._meta.verbose_name.title()
+            model_name = capfirst(cleaned_target_models[0]._meta.verbose_name)
             self.choose_one_text += " (" + model_name + ")"
 
         self.user_perms = user_perms

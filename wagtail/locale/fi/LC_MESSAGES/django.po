@@ -6,7 +6,7 @@
 # Aarni Koskela, 2016
 # Aarni Koskela, 2016
 # Glen Somerville <glen.somerville@gmail.com>, 2015
-# Jiri Grönroos <jiri.gronroos@iki.fi>, 2020-2023
+# Jiri Grönroos <jiri.gronroos@iki.fi>, 2020-2024
 # Rauli Laine <rauli.laine@iki.fi>, 2016
 # Rauli Laine <rauli.laine@iki.fi>, 2016
 # Valter Maasalo <vmaasalo@gmail.com>, 2020
@@ -14,9 +14,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Wagtail\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-04-20 11:47+0100\n"
+"POT-Creation-Date: 2024-08-07 10:05+0100\n"
 "PO-Revision-Date: 2014-02-21 15:51+0000\n"
-"Last-Translator: Jiri Grönroos <jiri.gronroos@iki.fi>, 2020-2023\n"
+"Last-Translator: Jiri Grönroos <jiri.gronroos@iki.fi>, 2020-2024\n"
 "Language-Team: Finnish (http://app.transifex.com/torchbox/wagtail/language/"
 "fi/)\n"
 "MIME-Version: 1.0\n"
@@ -73,6 +73,9 @@ msgstr "Wagtailin käyttöliittymän välimuisti"
 msgid "Wagtail sitemaps"
 msgstr "Wagtailin sivukartat"
 
+msgid "Unknown content type"
+msgstr "Tuntematon sisältötyyppi"
+
 msgid "Password"
 msgstr "Salasana"
 
@@ -85,16 +88,72 @@ msgstr "Kommentti"
 msgid "Locked"
 msgstr "Lukittu"
 
+#, python-format
+msgid "No one can make changes while the %(model_name)s is locked"
+msgstr "Kukaan ei voi tehdä muutoksia, kun %(model_name)s on lukittu"
+
+#, python-brace-format
+msgid "<b>'{title}' was locked</b> by <b>you</b> on <b>{datetime}</b>."
+msgstr "<b>'{title}' lukittiin</b> <b>sinun</b> toimesta <b>{datetime}</b>."
+
+#, python-brace-format
+msgid "<b>'{title}' is locked</b> by <b>you</b>."
+msgstr "<b>'{title}' lukittiin</b> <b>sinun</b> toimesta."
+
+#, python-brace-format
+msgid "<b>'{title}' was locked</b> by <b>{user}</b> on <b>{datetime}</b>."
+msgstr ""
+"<b>'{title}' lukittiin</b> käyttäjän <b>{user}</b> toimesta <b>{datetime}</"
+"b>."
+
 #, python-brace-format
 msgid "<b>'{title}' is locked</b>."
 msgstr "<b>'{title}' on lukittu</b>."
+
+msgid "Locked by you"
+msgstr "Lukittu sinun toimesta"
+
+msgid "Locked by another user"
+msgstr "Lukittu toisen käyttäjän toimesta"
+
+#, python-format
+msgid "Only you can make changes while the %(model_name)s is locked"
+msgstr "Vain sinä voit tehdä muutoksia kun %(model_name)s on lukittu"
+
+#, python-format
+msgid "Only %(user)s can make changes while the %(model_name)s is locked"
+msgstr "Vain %(user)s voi tehdä muutoksia kun %(model_name)s on lukittu"
 
 #, python-format
 msgid "This %(model_name)s is currently awaiting moderation."
 msgstr "Tämä %(model_name)s odottaa parhaillaan tarkastusta."
 
+#, python-brace-format
+msgid ""
+"This {model_name} is awaiting <b>'{task_name}'</b> in the "
+"<b>'{workflow_name}'</b> workflow."
+msgstr ""
+"Tämä {model_name} odottaa tehtävää <b>'{task_name}'</b> työnkulussa "
+"<b>'{workflow_name}'</b>."
+
 msgid "Unlocked"
 msgstr "Ei lukittu"
+
+msgid "Locked by workflow"
+msgstr "Lukittu työnkulun toimesta"
+
+#, python-brace-format
+msgid ""
+"{model_name} '{title}' is locked and has been scheduled to go live at "
+"{datetime}"
+msgstr ""
+"{model_name} '{title}' on lukittu ja se on ajastettu julkiseksi {datetime}"
+
+msgid "Locked by schedule"
+msgstr "Lukittu aikataulun toimesta"
+
+msgid "Currently locked and will go live on the scheduled date"
+msgstr "Parhaillaan lukittu ja julkaistaan ajastettuna päiväyksenä"
 
 msgid "live"
 msgstr "julkaistu"
@@ -149,6 +208,39 @@ msgstr "tarkastettavana"
 
 msgid "live + in moderation"
 msgstr "esillä + tarkastettavana"
+
+msgid "Add/edit pages you own"
+msgstr "Lisää/muokkaa sivuja jota omistat"
+
+msgid "Bulk delete"
+msgstr "Poista useita"
+
+msgid "Delete pages with children"
+msgstr "Poista sivut, joilla alasivuja"
+
+msgid "Edit"
+msgstr "Muokkaa"
+
+msgid "Edit any page"
+msgstr "Muokkaa mitä vain sivua"
+
+msgid "Lock"
+msgstr "Lukitse"
+
+msgid "Lock/unlock pages you've locked"
+msgstr "Lukitse tai avaa lukitsemiasi sivuja"
+
+msgid "Publish"
+msgstr "Julkaise"
+
+msgid "Publish any page"
+msgstr "Julkaise kaikkia sivuja"
+
+msgid "Unlock"
+msgstr "Avaa lukitus"
+
+msgid "Unlock any page"
+msgstr "Avaa minkä tahansa sivun lukitus"
 
 msgid "title"
 msgstr "otsikko"
@@ -207,9 +299,6 @@ msgstr "sivu"
 msgid "pages"
 msgstr "sivut"
 
-msgid "submitted for moderation"
-msgstr "lähetetty tarkastettavaksi"
-
 msgid "created at"
 msgstr "luotu"
 
@@ -222,44 +311,11 @@ msgstr "sisältö-JSON"
 msgid "approved go live at"
 msgstr "hyväksytty julkistus"
 
-msgid "Add/edit pages you own"
-msgstr "Lisää/muokkaa sivuja jota omistat"
-
-msgid "Edit"
-msgstr "Muokkaa"
-
-msgid "Edit any page"
-msgstr "Muokkaa mitä vain sivua"
-
-msgid "Publish"
-msgstr "Julkaise"
-
-msgid "Publish any page"
-msgstr "Julkaise kaikkia sivuja"
-
-msgid "Bulk delete"
-msgstr "Poista useita"
-
-msgid "Delete pages with children"
-msgstr "Poista sivut, joilla alasivuja"
-
-msgid "Lock"
-msgstr "Lukitse"
-
-msgid "Lock/unlock pages you've locked"
-msgstr "Lukitse tai avaa lukitsemiasi sivuja"
-
-msgid "Unlock"
-msgstr "Avaa lukitus"
-
-msgid "Unlock any page"
-msgstr "Avaa minkä tahansa sivun lukitus"
-
 msgid "group"
 msgstr "ryhmä"
 
-msgid "permission type"
-msgstr "oikeustyyppi"
+msgid "permission"
+msgstr "oikeudet"
 
 msgid "group page permission"
 msgstr "ryhmä/sivu-oikeus"
@@ -294,6 +350,14 @@ msgstr ""
 
 msgid "tasks"
 msgstr "tehtävät"
+
+msgid ""
+"Active workflows can be added to pages/snippets. Deactivating a workflow "
+"does not remove it from existing pages/snippets."
+msgstr ""
+"Aktiivisia työnkulkuja on mahdollista lisätä sivuihin/pätkiin. Työnkulun "
+"aktivoinnin poistaminen ei poista työnkulkua olemassa olevasta sivusta/"
+"pätkästä."
 
 msgid "workflows"
 msgstr "työnkulut"
@@ -370,6 +434,9 @@ msgstr "valmistanut"
 msgid "Task state"
 msgstr "Tehtävän tila"
 
+msgid "Task states"
+msgstr "Tehtävän tilat"
+
 msgid "Draft saved"
 msgstr "Luonnos tallennettu"
 
@@ -423,14 +490,27 @@ msgstr "kokoelman rajoitukset"
 msgid "collections"
 msgstr "kokoelmat"
 
-msgid "permission"
-msgstr "oikeudet"
-
 msgid "group collection permission"
 msgstr "ryhmä/kokoelma-oikeus"
 
 msgid "group collection permissions"
 msgstr "ryhmän oikeudet kokoelmaan"
+
+msgid "uploaded by user"
+msgstr "lähettänyt käyttäjä"
+
+#, python-format
+msgid "the %(model_name)s will also be deleted"
+msgstr "%(model_name)s poistetaan myös"
+
+msgid "prevents deletion"
+msgstr "estää poistamisen"
+
+msgid "will do nothing"
+msgstr "ei tee mitään"
+
+msgid "may prevent deletion"
+msgstr "saattaa estää poistamisen"
 
 msgid "hostname"
 msgstr "isäntäosoite"
@@ -486,17 +566,24 @@ msgstr ""
 msgid "Public"
 msgstr "Julkinen"
 
-msgid "Private, accessible to logged-in users"
-msgstr "Yksityinen, näkyy kirjautuneille käyttäjille"
+msgid "Private, accessible with a shared password"
+msgstr "Yksityinen, nähtävissä jaetulla salasanalla"
 
-msgid "Private, accessible with the following password"
-msgstr "Yksityinen, nähtävissä tällä salasanalla"
+msgid "Private, accessible to any logged-in users"
+msgstr "Yksityinen, näkyy kirjautuneille käyttäjille"
 
 msgid "Private, accessible to users in specific groups"
 msgstr "Yksityinen, näkyy tiettyjen ryhmien käyttäjille"
 
-msgid "password"
-msgstr "salasana"
+msgid "shared password"
+msgstr "jaettu salasana"
+
+msgid ""
+"Shared passwords should not be used to protect sensitive content. Anyone who "
+"has this password will be able to view the content."
+msgstr ""
+"Jaettuja salasanoja ei tule käyttää arkaluonteisen tiedon suojaamiseen. Kuka "
+"tahansa, jolla on tämä salasana, voi nähdä sisällön."
 
 msgid "view restriction"
 msgstr "näyttörajoitus"
@@ -524,6 +611,12 @@ msgstr "Tarvitset salasanan päästäksesi tälle sivulle"
 
 msgid "Continue"
 msgstr "Jatka"
+
+#, python-format
+msgid "%(count)s descendant collection"
+msgid_plural "%(count)s descendant collections"
+msgstr[0] "%(count)s alikokoelma"
+msgstr[1] "%(count)s alikokoelmaa"
 
 msgid "Create"
 msgstr "Luo"
@@ -586,6 +679,10 @@ msgstr "Palautettu aiempaan versioon"
 
 msgid "Copy"
 msgstr "Kopioi"
+
+#, python-format
+msgid "Copied from %(title)s"
+msgstr "Kopioitu kohteesta %(title)s"
 
 msgid "Copied"
 msgstr "Kopioitu"
@@ -653,6 +750,10 @@ msgstr "Lisätty katselurajoitus"
 msgid "Update view restrictions"
 msgstr "Päivitä katselurajoitukset"
 
+#, python-format
+msgid "Updated the view restriction to '%(restriction)s'"
+msgstr "Päivitetty näkymärajoitukseksi '%(restriction)s'"
+
 msgid "Updated view restriction"
 msgstr "Päivitetty katselurajoitus"
 
@@ -660,8 +761,8 @@ msgid "Remove view restrictions"
 msgstr "Poista katselurajoitukset"
 
 #, python-format
-msgid "Removed the '%(restriction)s' view restriction"
-msgstr "Poistettu näkymärajoitus '%(restriction)s'"
+msgid "Removed the '%(restriction)s' view restriction. The page is public."
+msgstr "Poistettu näkymärajoitus '%(restriction)s'. Tämä sivu on julkinen."
 
 msgid "Removed view restriction"
 msgstr "Poistettu katselurajoitus"
@@ -704,6 +805,10 @@ msgstr "Selvitetty kommentti"
 
 msgid "Reply to comment"
 msgstr "Vastaa kommenttiin"
+
+#, python-format
+msgid "Replied to comment on field %(field)s: \"%(text)s\""
+msgstr "Vastattu kommenttiin kentässä %(field)s: \"%(text)s\""
 
 msgid "Replied to a comment"
 msgstr "Vastattu kommenttiin"
@@ -753,6 +858,16 @@ msgstr "Hylätty tehtävässä '%(task)s'. Muutoksia pyydetty"
 
 msgid "Workflow task rejected. Workflow complete"
 msgstr "Työnkulun tehtävä hylätty. Työnkulku valmistui"
+
+msgid "Workflow: resume task"
+msgstr "Työnkulku: palauta tehtävä"
+
+#, python-format
+msgid "Resubmitted '%(task)s'. Workflow resumed"
+msgstr "Lähetetty uudelleen '%(task)s'. Työnkulku palautettu"
+
+msgid "Workflow task resubmitted. Workflow resumed"
+msgstr "Työnkulun tehtävä lähetetty uudelleen. Työnkulku palautettu"
 
 msgid "Workflow: cancel"
 msgstr "Työnkulku: peruttu"

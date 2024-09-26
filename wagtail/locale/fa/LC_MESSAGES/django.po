@@ -12,7 +12,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Wagtail\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-04-20 11:47+0100\n"
+"POT-Creation-Date: 2024-08-07 10:05+0100\n"
 "PO-Revision-Date: 2014-02-21 15:51+0000\n"
 "Last-Translator: pyzenberg <pyzenberg@gmail.com>, 2017\n"
 "Language-Team: Persian (http://app.transifex.com/torchbox/wagtail/language/"
@@ -54,6 +54,9 @@ msgstr "رمزعبور"
 
 msgid "The password you have entered is not correct. Please try again."
 msgstr "رمزعبور وارد شده درست نیست. لطفا مجددا سعی کنید."
+
+msgid "Comment"
+msgstr "نظر"
 
 msgid "Locked"
 msgstr "قفل شده"
@@ -97,6 +100,33 @@ msgstr "پیشفرض"
 msgid "locked"
 msgstr "قفل شده"
 
+msgid "Add/edit pages you own"
+msgstr "افزودن/ویرایش صفحه های خودتان"
+
+msgid "Bulk delete"
+msgstr "حذف فله‌ای"
+
+msgid "Delete pages with children"
+msgstr "حذف صفحه ها با زیرصفحه ها"
+
+msgid "Edit"
+msgstr "ویرایش"
+
+msgid "Edit any page"
+msgstr "ویرایش صفحه"
+
+msgid "Lock"
+msgstr "قفل"
+
+msgid "Publish"
+msgstr "انتشار"
+
+msgid "Publish any page"
+msgstr "انتشار هر صفحه ای"
+
+msgid "Unlock"
+msgstr "حذف قفل"
+
 msgid "title"
 msgstr "عنوان"
 
@@ -139,9 +169,6 @@ msgstr "صفحه"
 msgid "pages"
 msgstr "صفحه ها"
 
-msgid "submitted for moderation"
-msgstr "فرستاده شده برای نظارت"
-
 msgid "created at"
 msgstr "ایجادشده در"
 
@@ -154,38 +181,11 @@ msgstr "محتوای JSON"
 msgid "approved go live at"
 msgstr "تایید انتقال به حالت زنده در"
 
-msgid "Add/edit pages you own"
-msgstr "افزودن/ویرایش صفحه های خودتان"
-
-msgid "Edit"
-msgstr "ویرایش"
-
-msgid "Edit any page"
-msgstr "ویرایش صفحه"
-
-msgid "Publish"
-msgstr "انتشار"
-
-msgid "Publish any page"
-msgstr "انتشار هر صفحه ای"
-
-msgid "Bulk delete"
-msgstr "حذف فله‌ای"
-
-msgid "Delete pages with children"
-msgstr "حذف صفحه ها با زیرصفحه ها"
-
-msgid "Lock"
-msgstr "قفل"
-
-msgid "Unlock"
-msgstr "حذف قفل"
-
 msgid "group"
 msgstr "گروه"
 
-msgid "permission type"
-msgstr "نوع مجوز"
+msgid "permission"
+msgstr "مجوز"
 
 msgid "group page permission"
 msgstr "مجوز گروه صفحه"
@@ -229,11 +229,11 @@ msgstr "محدودیت‌های دیدن مجموعه"
 msgid "collections"
 msgstr "مجموعه ها"
 
-msgid "permission"
-msgstr "مجوز"
-
 msgid "group collection permission"
 msgstr "مجوز مجموعه گروه"
+
+msgid "uploaded by user"
+msgstr "آپلود‌شده توسط کاربر"
 
 msgid "hostname"
 msgstr "نام میزبان"
@@ -289,17 +289,8 @@ msgstr ""
 msgid "Public"
 msgstr "عمومی"
 
-msgid "Private, accessible to logged-in users"
-msgstr "خصوصی، تنها برای اعضای وارد شده قابل دسترسی است"
-
-msgid "Private, accessible with the following password"
-msgstr "خصوصی، تنها با رمزعبور قابل دسترسی است"
-
 msgid "Private, accessible to users in specific groups"
 msgstr "خصوصی، تنها برای اعضای گروه های خاصی قابل دسترسی است"
-
-msgid "password"
-msgstr "رمزعبور"
 
 msgid "view restriction"
 msgstr "دیدن محدودیت"

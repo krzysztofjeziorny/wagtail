@@ -3,8 +3,8 @@
 # This file is distributed under the same license as the PACKAGE package.
 #
 # Translators:
-# Andrey <talkerbox@live.com>, 2016
-# Andrey <talkerbox@live.com>, 2016
+# Andrei “Talkerbox” Audzei <bigtalkerbox@gmail.com>, 2016
+# Andrei “Talkerbox” Audzei <bigtalkerbox@gmail.com>, 2016
 # Eugene <eugene.mechanism@gmail.com>, 2014-2015
 # Никита Викторович <hnknta@gmail.com>, 2014
 # Никита Викторович <hnknta@gmail.com>, 2014
@@ -17,7 +17,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Wagtail\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-04-20 11:47+0100\n"
+"POT-Creation-Date: 2024-08-07 10:06+0100\n"
 "PO-Revision-Date: 2014-02-19 21:18+0000\n"
 "Last-Translator: Никита Викторович <hnknta@gmail.com>, 2014\n"
 "Language-Team: Russian (http://app.transifex.com/torchbox/wagtail/language/"
@@ -33,29 +33,8 @@ msgstr ""
 msgid "Wagtail search"
 msgstr "Поиск Wagtail"
 
-msgid "Query Daily Hits"
-msgstr "Запрос Ежедневных Хитов"
-
 msgid "index entry"
 msgstr "индексная запись"
 
 msgid "index entries"
 msgstr "индексные записи"
-
-msgid "Popular search terms"
-msgstr "Популярные поисковые запросы"
-
-msgid "Search"
-msgstr "Поиск"
-
-msgid "Terms"
-msgstr "Критерии"
-
-msgid "Views (past week)"
-msgstr "Просмотров (прошлая неделя)"
-
-msgid "No results found"
-msgstr "Ничего не найдено"
-
-msgid "Choose from popular search terms"
-msgstr "Выбрать из популярных поисковых запросов"

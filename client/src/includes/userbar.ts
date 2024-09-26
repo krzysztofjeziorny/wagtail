@@ -1,6 +1,16 @@
-import axe, { ElementContext, NodeResult, Result, RunOptions } from 'axe-core';
+import axe from 'axe-core';
 
-import { dialog } from './dialog';
+import A11yDialog from 'a11y-dialog';
+import { Application } from '@hotwired/stimulus';
+import {
+  getAxeConfiguration,
+  getA11yReport,
+  renderA11yResults,
+} from './a11y-result';
+import { wagtailPreviewPlugin } from './previewPlugin';
+import { contentMetricsPluginInstance } from './contentMetrics';
+import { DialogController } from '../controllers/DialogController';
+import { TeleportController } from '../controllers/TeleportController';
 
 /*
 This entrypoint is not bundled with any polyfills to keep it as light as possible
@@ -10,35 +20,6 @@ More background can be found in webpack.config.js
 This component implements a roving tab index for keyboard navigation
 Learn more about roving tabIndex: https://w3c.github.io/aria-practices/#kbd_roving_tabindex
 */
-
-/**
- * Wagtail's Axe configuration object. This should reflect what's returned by
- * `wagtail.admin.userbar.AccessibilityItem.get_axe_configuration()`.
- */
-interface WagtailAxeConfiguration {
-  context: ElementContext;
-  options: RunOptions;
-  messages: Record<string, string>;
-}
-
-const sortAxeNodes = (nodeResultA?: NodeResult, nodeResultB?: NodeResult) => {
-  if (!nodeResultA || !nodeResultB) return 0;
-  const nodeA = document.querySelector<HTMLElement>(nodeResultA.target[0]);
-  const nodeB = document.querySelector<HTMLElement>(nodeResultB.target[0]);
-  if (!nodeA || !nodeB) return 0;
-  // Method works with bitwise https://developer.mozilla.org/en-US/docs/Web/API/Node/compareDocumentPosition
-  // eslint-disable-next-line no-bitwise
-  return nodeA.compareDocumentPosition(nodeB) & Node.DOCUMENT_POSITION_PRECEDING
-    ? 1
-    : -1;
-};
-
-export const sortAxeViolations = (violations: Result[]) =>
-  violations.sort((violationA, violationB) => {
-    const earliestNodeA = violationA.nodes.sort(sortAxeNodes)[0];
-    const earliestNodeB = violationB.nodes.sort(sortAxeNodes)[0];
-    return sortAxeNodes(earliestNodeA, earliestNodeB);
-  });
 
 export class Userbar extends HTMLElement {
   declare trigger: HTMLElement;
@@ -51,7 +32,9 @@ export class Userbar extends HTMLElement {
     const shadowRoot = this.attachShadow({
       mode: 'open',
     });
-    shadowRoot.appendChild(template.content.cloneNode(true));
+    shadowRoot.appendChild(
+      (template.content.firstElementChild as HTMLElement).cloneNode(true),
+    );
     // Removes the template from html after it's being used
     template.remove();
 
@@ -68,7 +51,7 @@ export class Userbar extends HTMLElement {
     }
 
     const listItems = list.querySelectorAll('li');
-    const isActiveClass = 'is-active';
+    const isActiveClass = 'w-userbar--active';
 
     this.trigger = trigger;
 
@@ -324,43 +307,19 @@ export class Userbar extends HTMLElement {
   See documentation: https://github.com/dequelabs/axe-core/tree/develop/doc
   */
 
-  getAxeConfiguration(): WagtailAxeConfiguration | null {
-    const script = this.shadowRoot?.querySelector<HTMLScriptElement>(
-      '#accessibility-axe-configuration',
-    );
-
-    if (!script || !script.textContent) return null;
-
-    try {
-      return JSON.parse(script.textContent);
-    } catch (err) {
-      // eslint-disable-next-line no-console
-      console.error('Error loading Axe config');
-      // eslint-disable-next-line no-console
-      console.error(err);
-    }
-
-    // Skip initialization of Axe if config fails to load
-    return null;
-  }
-
-  // Initialise axe accessibility checker
+  // Initialise Axe
   async initialiseAxe() {
+    // Collect content data from the live preview via Axe plugin for content metrics calculation
+    axe.registerPlugin(wagtailPreviewPlugin);
+    axe.plugins.wagtailPreview.add(contentMetricsPluginInstance);
+
     const accessibilityTrigger = this.shadowRoot?.getElementById(
       'accessibility-trigger',
     );
-
-    const config = this.getAxeConfiguration();
-
+    const config = getAxeConfiguration(this.shadowRoot);
     if (!this.shadowRoot || !accessibilityTrigger || !config) return;
 
-    // Initialise Axe based on the configurable context (whole page body by default) and options ('empty-heading', 'p-as-heading' and 'heading-order' rules by default)
-    const results = await axe.run(config.context, config.options);
-
-    const a11yErrorsNumber = results.violations.reduce(
-      (sum, violation) => sum + violation.nodes.length,
-      0,
-    );
+    const { results, a11yErrorsNumber } = await getA11yReport(config);
 
     if (results.violations.length) {
       const a11yErrorBadge = document.createElement('span');
@@ -369,43 +328,46 @@ export class Userbar extends HTMLElement {
       this.trigger.appendChild(a11yErrorBadge);
     }
 
-    const dialogTemplates =
-      this.shadowRoot.querySelectorAll<HTMLTemplateElement>(
-        '[data-wagtail-dialog]',
-      );
-    const dialogs = dialog(
-      dialogTemplates,
-      this.shadowRoot as unknown as HTMLElement,
+    const stimulus = Application.start(
+      this.shadowRoot.firstElementChild as Element,
     );
-    if (!dialogs.length) return;
 
-    const modal = dialogs[0];
+    stimulus.register('w-dialog', DialogController);
+    stimulus.register('w-teleport', TeleportController);
+
+    const modalReady = new Promise<{ body: HTMLElement; dialog: A11yDialog }>(
+      (resolve) => {
+        this.shadowRoot?.addEventListener(
+          'w-dialog:ready',
+          (({
+            detail,
+          }: CustomEvent<{ body: HTMLElement; dialog: A11yDialog }>) => {
+            const { body, dialog } = detail;
+            resolve({ body, dialog });
+          }) as EventListener,
+          { once: true, passive: true },
+        );
+      },
+    );
+
+    const { body: modalBody, dialog: modal } = await modalReady;
+
     // Disable TS linter check for legacy code in 3rd party `A11yDialog` element
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    const modalBody = modal.$el.querySelector(
-      '[data-dialog-body]',
-    ) as HTMLDivElement;
-    const accessibilityResultsBox =
-      this.shadowRoot.querySelector<HTMLDivElement>('#accessibility-results');
+    const accessibilityResultsBox = this.shadowRoot.querySelector(
+      '#accessibility-results',
+    );
+
     const a11yRowTemplate = this.shadowRoot.querySelector<HTMLTemplateElement>(
       '#w-a11y-result-row-template',
     );
-    const a11ySelectorTemplate =
-      this.shadowRoot.querySelector<HTMLTemplateElement>(
-        '#w-a11y-result-selector-template',
-      );
     const a11yOutlineTemplate =
       this.shadowRoot.querySelector<HTMLTemplateElement>(
         '#w-a11y-result-outline-template',
       );
 
-    if (
-      !accessibilityResultsBox ||
-      !a11yRowTemplate ||
-      !a11ySelectorTemplate ||
-      !a11yOutlineTemplate
-    ) {
+    if (!accessibilityResultsBox || !a11yRowTemplate || !a11yOutlineTemplate) {
       return;
     }
 
@@ -415,136 +377,83 @@ export class Userbar extends HTMLElement {
     innerErrorBadges.forEach((badge) => {
       // eslint-disable-next-line no-param-reassign
       badge.textContent = String(a11yErrorsNumber) || '0';
-      if (results.violations.length) {
-        badge.classList.add('has-errors');
-      } else {
-        badge.classList.remove('has-errors');
-      }
+      badge.classList.toggle('has-errors', results.violations.length > 0);
     });
 
-    const showAxeResults = () => {
-      modal.show();
-      // Reset modal contents to support multiple runs of Axe checks in the preview panel
-      modalBody.innerHTML = '';
-
-      if (results.violations.length) {
-        const sortedViolations = sortAxeViolations(results.violations);
-        sortedViolations.forEach((violation, violationIndex) => {
-          modalBody.appendChild(a11yRowTemplate.content.cloneNode(true));
-          const currentA11yRow = modalBody.querySelectorAll<HTMLDivElement>(
-            '[data-a11y-result-row]',
-          )[violationIndex];
-
-          const a11yErrorName = currentA11yRow.querySelector(
-            '[data-a11y-result-name]',
-          ) as HTMLSpanElement;
-          a11yErrorName.id = `w-a11y-result__name-${violationIndex}`;
-          // Display custom error messages supplied by Wagtail if available,
-          // fallback to default error message from Axe
-          a11yErrorName.textContent =
-            config.messages[violation.id] || violation.help;
-          const a11yErrorCount = currentA11yRow.querySelector(
-            '[data-a11y-result-count]',
-          ) as HTMLSpanElement;
-          a11yErrorCount.textContent = `${violation.nodes.length}`;
-
-          const a11yErrorContainer = currentA11yRow.querySelector(
-            '[data-a11y-result-container]',
-          ) as HTMLDivElement;
-
-          violation.nodes.forEach((node, nodeIndex) => {
-            a11yErrorContainer.appendChild(
-              a11ySelectorTemplate.content.cloneNode(true),
-            );
-            const currentA11ySelector =
-              a11yErrorContainer.querySelectorAll<HTMLButtonElement>(
-                '[data-a11y-result-selector]',
-              )[nodeIndex];
-
-            currentA11ySelector.setAttribute(
-              'aria-describedby',
-              a11yErrorName.id,
-            );
-            const currentA11ySelectorText = currentA11ySelector.querySelector(
-              '[data-a11y-result-selector-text]',
-            ) as HTMLSpanElement;
-            const selectorName = node.target[0];
-            // Remove unnecessary details before displaying selectors to the user
-            currentA11ySelectorText.textContent = selectorName.replace(
-              /\[data-block-key="\w{5}"\]/,
-              '',
-            );
-            currentA11ySelector.addEventListener('click', () => {
-              const inaccessibleElement =
-                document.querySelector<HTMLElement>(selectorName);
-              const a11yOutlineContainer =
-                this.shadowRoot?.querySelector<HTMLElement>(
-                  '[data-a11y-result-outline-container]',
-                );
-              if (a11yOutlineContainer?.firstElementChild) {
-                a11yOutlineContainer.removeChild(
-                  a11yOutlineContainer.firstElementChild,
-                );
-              }
-              a11yOutlineContainer?.appendChild(
-                a11yOutlineTemplate.content.cloneNode(true),
-              );
-              const currentA11yOutline =
-                this.shadowRoot?.querySelector<HTMLElement>(
-                  '[data-a11y-result-outline]',
-                );
-              if (
-                !this.shadowRoot ||
-                !inaccessibleElement ||
-                !currentA11yOutline ||
-                !a11yOutlineContainer
-              )
-                return;
-
-              const styleA11yOutline = () => {
-                const rect = inaccessibleElement.getBoundingClientRect();
-                currentA11yOutline.style.cssText = `
-                top: ${
-                  rect.height < 5
-                    ? `${rect.top + window.scrollY - 2.5}px`
-                    : `${rect.top + window.scrollY}px`
-                };
-                left: ${
-                  rect.width < 5
-                    ? `${rect.left + window.scrollX - 2.5}px`
-                    : `${rect.left + window.scrollX}px`
-                };
-                width: ${Math.max(rect.width, 5)}px;
-                height: ${Math.max(rect.height, 5)}px;
-                position: absolute;
-                z-index: 129;
-                outline: 1px solid #CD4444;
-                box-shadow: 0px 0px 12px 1px #FF0000;
-                `;
-              };
-
-              styleA11yOutline();
-
-              window.addEventListener('resize', styleA11yOutline);
-
-              inaccessibleElement.style.scrollMargin = '6.25rem';
-              inaccessibleElement.scrollIntoView();
-              inaccessibleElement.focus();
-
-              accessibilityResultsBox.addEventListener('hide', () => {
-                currentA11yOutline.style.cssText = '';
-
-                window.removeEventListener('resize', styleA11yOutline);
-              });
-            });
-          });
-        });
+    const onClickSelector = (selectorName: string) => {
+      const inaccessibleElement =
+        document.querySelector<HTMLElement>(selectorName);
+      const a11yOutlineContainer = this.shadowRoot?.querySelector<HTMLElement>(
+        '[data-a11y-result-outline-container]',
+      );
+      if (a11yOutlineContainer?.firstElementChild) {
+        a11yOutlineContainer.removeChild(
+          a11yOutlineContainer.firstElementChild,
+        );
       }
+      a11yOutlineContainer?.appendChild(
+        a11yOutlineTemplate.content.cloneNode(true),
+      );
+      const currentA11yOutline = this.shadowRoot?.querySelector<HTMLElement>(
+        '[data-a11y-result-outline]',
+      );
+      if (
+        !this.shadowRoot ||
+        !inaccessibleElement ||
+        !currentA11yOutline ||
+        !a11yOutlineContainer
+      )
+        return;
+
+      const styleA11yOutline = () => {
+        const rect = inaccessibleElement.getBoundingClientRect();
+        currentA11yOutline.style.cssText = `
+        top: ${
+          rect.height < 5
+            ? `${rect.top + window.scrollY - 2.5}px`
+            : `${rect.top + window.scrollY}px`
+        };
+        left: ${
+          rect.width < 5
+            ? `${rect.left + window.scrollX - 2.5}px`
+            : `${rect.left + window.scrollX}px`
+        };
+        width: ${Math.max(rect.width, 5)}px;
+        height: ${Math.max(rect.height, 5)}px;
+        position: absolute;
+        z-index: 129;
+        outline: 1px solid #CD4444;
+        box-shadow: 0px 0px 12px 1px #FF0000;
+        pointer-events: none;
+        `;
+      };
+
+      styleA11yOutline();
+
+      window.addEventListener('resize', styleA11yOutline);
+
+      inaccessibleElement.style.scrollMargin = '6.25rem';
+      inaccessibleElement.scrollIntoView();
+      inaccessibleElement.focus();
+
+      accessibilityResultsBox.addEventListener('hide', () => {
+        currentA11yOutline.style.cssText = '';
+
+        window.removeEventListener('resize', styleA11yOutline);
+      });
     };
 
     const toggleAxeResults = () => {
       if (accessibilityResultsBox.getAttribute('aria-hidden') === 'true') {
-        showAxeResults();
+        modal.show();
+
+        renderA11yResults(
+          modalBody,
+          results,
+          config,
+          a11yRowTemplate,
+          onClickSelector,
+        );
       } else {
         modal.hide();
       }

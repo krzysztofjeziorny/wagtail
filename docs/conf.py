@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Wagtail documentation build configuration file, created by
 # sphinx-quickstart on Tue Jan 14 17:38:55 2014.
@@ -18,8 +17,12 @@ from datetime import datetime
 
 import django
 import sphinx_wagtail_theme
+from sphinx.builders.html import StandaloneHTMLBuilder
 
 from wagtail import VERSION, __version__
+
+# use png images as fallback, required to build pdf
+StandaloneHTMLBuilder.supported_image_types = ["image/gif", "image/png"]
 
 # on_rtd is whether we are on readthedocs.org, this line of code grabbed from docs.readthedocs.org
 on_rtd = os.environ.get("READTHEDOCS", None) == "True"
@@ -61,6 +64,25 @@ extensions = [
     "sphinx_wagtail_theme",
 ]
 
+autodoc_type_aliases = {
+    "File": "django.core.files.File",
+}
+
+# Silence warnings that are not due to missing references:
+nitpick_ignore = [
+    # Sphinx currently cannot resolve type hint names, warns "target not found":
+    ("py:class", "wagtail.images.models.Filter"),
+    ("py:class", "HttpRequest"),
+    ("py:class", "RouteResult"),
+    ("py:class", "wagtail.blocks.base.Block"),
+    ("py:class", "wagtail.blocks.field_block.BaseChoiceBlock"),
+    ("py:class", "wagtail.blocks.field_block.ChooserBlock"),
+    # Warnings due factors other than type hints:
+    ("py:class", "wagtail.documents.views.chooser.BaseDocumentChooserBlock"),
+    ("py:class", "wagtail.blocks.struct_block.BaseStructBlock"),
+    ("py:class", "wagtail.blocks.stream_block.BaseStreamBlock"),
+]
+
 if not on_rtd:
     extensions.append("sphinxcontrib.spelling")
 
@@ -78,14 +100,14 @@ master_doc = "index"
 
 # General information about the project.
 project = "Wagtail Documentation"
-copyright = f"{datetime.now().year}, Torchbox and contributors"
+copyright = f"{datetime.now().year}, Torchbox and contributors. BSD license"
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 
 # The short X.Y version.
-version = "{}.{}".format(VERSION[0], VERSION[1])
+version = f"{VERSION[0]}.{VERSION[1]}"
 # The full version, including alpha/beta/rc tags.
 release = __version__
 
@@ -138,6 +160,12 @@ intersphinx_mapping = {
         "https://docs.djangoproject.com/en/stable/",
         "https://docs.djangoproject.com/en/stable/_objects/",
     )
+}
+
+myst_url_schemes = {
+    "https": None,
+    "http": None,
+    "mailto": None,
 }
 
 # -- Options for HTML output ----------------------------------------------
@@ -221,6 +249,9 @@ html_use_index = False
 htmlhelp_basename = "Wagtaildoc"
 
 # -- Options for LaTeX output ---------------------------------------------
+
+# Xelatex engine is required to include unicode characters in the doc
+latex_engine = "xelatex"
 
 latex_elements = {
     # The paper size ('letterpaper' or 'a4paper').

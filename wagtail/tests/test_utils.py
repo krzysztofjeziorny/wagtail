@@ -1,6 +1,7 @@
-# -*- coding: utf-8 -*
+import hashlib
 import pickle
-from io import BytesIO, StringIO
+import unittest
+from io import BytesIO
 from pathlib import Path
 
 from django.contrib.contenttypes.models import ContentType
@@ -27,7 +28,8 @@ from wagtail.coreutils import (
 )
 from wagtail.models import Page, Site
 from wagtail.utils.file import hash_filelike
-from wagtail.utils.utils import deep_update
+from wagtail.utils.utils import deep_update, flatten_choices
+from wagtail.utils.version import get_main_version
 
 
 class TestCamelCaseToUnderscore(TestCase):
@@ -37,7 +39,7 @@ class TestCamelCaseToUnderscore(TestCase):
             ("longValueWithVarious subStrings", "long_value_with_various sub_strings"),
         ]
 
-        for (original, expected_result) in test_cases:
+        for original, expected_result in test_cases:
             self.assertEqual(camelcase_to_underscore(original), expected_result)
 
 
@@ -58,7 +60,7 @@ class TestStringToAscii(TestCase):
             ("〔山脈〕", "[ShanMai]"),
         ]
 
-        for (original, expected_result) in test_cases:
+        for original, expected_result in test_cases:
             self.assertEqual(string_to_ascii(original), expected_result)
 
 
@@ -77,7 +79,7 @@ class TestCautiousSlugify(TestCase):
             ("Hello☃world", "helloworld"),
         ]
 
-        for (original, expected_result) in test_cases:
+        for original, expected_result in test_cases:
             self.assertEqual(slugify(original), expected_result)
             self.assertEqual(cautious_slugify(original), expected_result)
 
@@ -88,7 +90,7 @@ class TestCautiousSlugify(TestCase):
             ("〔山脈〕", "u5c71u8108"),
         ]
 
-        for (original, expected_result) in test_cases:
+        for original, expected_result in test_cases:
             self.assertEqual(cautious_slugify(original), expected_result)
 
 
@@ -117,7 +119,7 @@ class TestSafeSnakeCase(TestCase):
             ),
         ]
 
-        for (original, expected_result) in test_cases:
+        for original, expected_result in test_cases:
             self.assertEqual(safe_snake_case(original), expected_result)
 
     def test_strings_with__non_latin_chars(self):
@@ -126,7 +128,7 @@ class TestSafeSnakeCase(TestCase):
             ("Сп орт!", "u0421u043f_u043eu0440u0442"),
         ]
 
-        for (original, expected_result) in test_cases:
+        for original, expected_result in test_cases:
             self.assertEqual(safe_snake_case(original), expected_result)
 
 
@@ -175,16 +177,16 @@ class TestInvokeViaAttributeShortcut(SimpleTestCase):
     def test_pickleability(self):
         try:
             pickled = pickle.dumps(self.test_object, -1)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             raise AssertionError(
-                "An error occured when attempting to pickle %r: %s"
+                "An error occurred when attempting to pickle %r: %s"
                 % (self.test_object, e)
             )
         try:
             self.test_object = pickle.loads(pickled)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             raise AssertionError(
-                "An error occured when attempting to unpickle %r: %s"
+                "An error occurred when attempting to unpickle %r: %s"
                 % (self.test_object, e)
             )
 
@@ -478,6 +480,12 @@ class TestGetDummyRequest(TestCase):
         request = get_dummy_request(site=site)
         self.assertEqual(request.get_host(), "other.example.com:8888")
 
+    def test_server_name_for_wildcard_allowed_hosts(self):
+        # Django's test runner adds "testserver" at the end of ALLOWED_HOSTS.
+        with self.settings(ALLOWED_HOSTS=["*", "testserver"]):
+            request = get_dummy_request()
+            self.assertEqual(request.get_host(), "example.com")
+
 
 class TestDeepUpdate(TestCase):
     def test_deep_update(self):
@@ -521,12 +529,9 @@ class HashFileLikeTestCase(SimpleTestCase):
         self.assertEqual(
             hash_filelike(BytesIO(b"test")), "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3"
         )
-        self.assertEqual(
-            hash_filelike(StringIO("test")), "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3"
-        )
 
     def test_hashes_file(self):
-        with self.test_file.open(mode="r") as f:
+        with self.test_file.open(mode="rb") as f:
             self.assertEqual(
                 hash_filelike(f), "9e58400061ca660ef7b5c94338a5205627c77eda"
             )
@@ -547,6 +552,10 @@ class HashFileLikeTestCase(SimpleTestCase):
             "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3",
         )
 
+    @unittest.skipIf(
+        hasattr(hashlib, "file_digest"),
+        reason="`file_digest` doesn't support this interface",
+    )
     def test_hashes_large_file(self):
         class FakeLargeFile:
             """
@@ -554,7 +563,7 @@ class HashFileLikeTestCase(SimpleTestCase):
             """
 
             def __init__(self):
-                self.iterations = 20000
+                self.iterations = 5000
 
             def read(self, bytes):
                 self.iterations -= 1
@@ -565,5 +574,45 @@ class HashFileLikeTestCase(SimpleTestCase):
 
         self.assertEqual(
             hash_filelike(FakeLargeFile()),
-            "187cc1db32624dccace20d042f6d631f1a483020",
+            "bd36f0c5a02cd6e9e34202ea3ff8db07b533e025",
+        )
+
+
+class TestVersion(SimpleTestCase):
+    def test_get_main_version(self):
+        cases = [
+            ((6, 2, 0, "final", 0), False, "6.2"),
+            ((6, 2, 1, "final", 0), False, "6.2"),
+            ((6, 2, 0, "final", 0), True, "6.2"),
+            ((6, 2, 1, "final", 0), True, "6.2.1"),
+        ]
+        for version, include_patch, expected in cases:
+            with self.subTest(version=version, include_patch=include_patch):
+                self.assertEqual(get_main_version(version, include_patch), expected)
+
+
+class TestFlattenChoices(SimpleTestCase):
+    def test_tuple_choices(self):
+        choices = [(1, "1st"), (2, "2nd")]
+        self.assertEqual(flatten_choices(choices), {"1": "1st", "2": "2nd"})
+
+    def test_grouped_tuple_choices(self):
+        choices = [("Group", [(1, "1st"), (2, "2nd")])]
+        self.assertEqual(flatten_choices(choices), {"1": "1st", "2": "2nd"})
+
+    def test_dictionary_choices(self):
+        choices = {
+            "Martial Arts": {"judo": "Judo", "karate": "Karate"},
+            "Racket": {"badminton": "Badminton", "tennis": "Tennis"},
+            "unknown": "Unknown",
+        }
+        self.assertEqual(
+            flatten_choices(choices),
+            {
+                "judo": "Judo",
+                "karate": "Karate",
+                "badminton": "Badminton",
+                "tennis": "Tennis",
+                "unknown": "Unknown",
+            },
         )

@@ -68,11 +68,10 @@ class TestSnippetUsageView(WagtailTestUtils, TestCase):
             )
         )
 
-        # Should use the latest draft title in the header subtitle
-        self.assertContains(
-            response,
-            '<span class="w-header__subtitle">Draft-enabled Bar, In Draft</span>',
-        )
+        soup = self.get_soup(response.content)
+        sublabel = soup.select_one(".w-breadcrumbs__sublabel")
+        # Should use the latest draft title in the breadcrumbs sublabel
+        self.assertEqual(sublabel.get_text(strip=True), "Draft-enabled Bar, In Draft")
 
     def test_usage(self):
         # resave so that usage count gets updated
@@ -98,6 +97,11 @@ class TestSnippetUsageView(WagtailTestUtils, TestCase):
         self.assertContains(response, "<th>Field</th>", html=True)
         self.assertNotContains(response, "<th>If you confirm deletion</th>", html=True)
         self.assertContains(response, "Snippet content object")
+        self.assertContains(
+            response,
+            reverse("wagtailadmin_pages:edit", args=[gfk_page.id])
+            + "#:w:contentpath=snippet_content_object",
+        )
 
     def test_usage_without_edit_permission_on_snippet(self):
         # Create a user with basic admin backend access

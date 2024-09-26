@@ -1,6 +1,6 @@
+from django.conf import settings
 from django.core.files.base import ContentFile
-from django.test import TestCase
-from django.test.utils import override_settings
+from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from wagtail.documents import models
@@ -14,7 +14,10 @@ class TestCorrectDownloadUrlSerialization(TestCase):
 
     def setUp(self):
         self.document = models.Document(title="Test document", file_hash="123456")
-        self.document.file.save("example.doc", ContentFile("A boring example document"))
+        self.document.file.save(
+            "serialization.doc",
+            ContentFile("A boring example document"),
+        )
 
     def tearDown(self):
         # delete the FieldFile directly because the TestCase does not commit
@@ -28,7 +31,12 @@ class TestCorrectDownloadUrlSerialization(TestCase):
 
     @override_settings(
         WAGTAILDOCS_SERVE_METHOD="redirect",
-        DEFAULT_FILE_STORAGE="wagtail.test.dummy_external_storage.DummyExternalStorage",
+        STORAGES={
+            **settings.STORAGES,
+            "default": {
+                "BACKEND": "wagtail.test.dummy_external_storage.DummyExternalStorage"
+            },
+        },
         WAGTAILAPI_BASE_URL="http://example.com/",
     )
     def test_serializer_wagtaildocs_serve_redirect(self):
@@ -38,12 +46,19 @@ class TestCorrectDownloadUrlSerialization(TestCase):
         meta = data["meta"]
         self.assertIn("download_url", meta)
         download_url = meta["download_url"]
-        expected_url = "http://example.com/documents/%d/example.doc" % self.document.pk
+        expected_url = (
+            f"http://example.com/documents/{self.document.pk}/serialization.doc"
+        )
         self.assertEqual(download_url, expected_url)
 
     @override_settings(
         WAGTAILDOCS_SERVE_METHOD="direct",
-        DEFAULT_FILE_STORAGE="wagtail.test.dummy_external_storage.DummyExternalStorage",
+        STORAGES={
+            **settings.STORAGES,
+            "default": {
+                "BACKEND": "wagtail.test.dummy_external_storage.DummyExternalStorage"
+            },
+        },
         MEDIA_URL="http://remotestorage.com/media/",
         WAGTAILAPI_BASE_URL="http://example.com/",
     )
@@ -55,5 +70,6 @@ class TestCorrectDownloadUrlSerialization(TestCase):
         self.assertIn("download_url", meta)
         download_url = meta["download_url"]
         self.assertEqual(
-            download_url, "http://remotestorage.com/media/documents/example.doc"
+            download_url,
+            "http://remotestorage.com/media/documents/serialization.doc",
         )

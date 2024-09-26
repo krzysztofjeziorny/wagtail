@@ -1,10 +1,7 @@
-from django import forms
 from django.conf import settings
-from django.utils.text import format_lazy
 from django.utils.translation import gettext_lazy
 
 from wagtail.admin.forms.pages import WagtailAdminPageForm
-from wagtail.admin.widgets.slug import SlugInput
 from wagtail.models import Page
 from wagtail.utils.decorators import cached_classmethod
 
@@ -12,31 +9,18 @@ from .comment_panel import CommentPanel
 from .field_panel import FieldPanel
 from .group import MultiFieldPanel, ObjectList, TabbedInterface
 from .publishing_panel import PublishingPanel
+from .title_field_panel import TitleFieldPanel
 
 
 def set_default_page_edit_handlers(cls):
     cls.content_panels = [
-        FieldPanel(
-            "title",
-            classname="title",
-            widget=forms.TextInput(
-                attrs={
-                    "placeholder": format_lazy(
-                        "{title}*", title=gettext_lazy("Page title")
-                    ),
-                    "data-controller": "w-sync",
-                    "data-action": "focus->w-sync#check blur->w-sync#apply",
-                    # ensure that if the page is live, the slug field does not receive updates from changes to the title field
-                    "data-w-sync-target-value": "body:not(.page-is-live) [data-edit-form] #id_slug",
-                }
-            ),
-        ),
+        TitleFieldPanel("title"),
     ]
 
     cls.promote_panels = [
         MultiFieldPanel(
             [
-                FieldPanel("slug", widget=SlugInput),
+                FieldPanel("slug"),
                 FieldPanel("seo_title"),
                 FieldPanel("search_description"),
             ],

@@ -7,15 +7,12 @@ Wagtail maintains a reference index, which records references between objects wh
 ## Configuration
 
 By default, the index will store references between objects managed within the Wagtail admin, specifically:
-- all Page types
-- Images
-- Documents
-- models registered as Snippets
-- models registered with ModelAdmin
 
-```{versionchanged} 5.0
-When introduced in Wagtail 4.1, the Reference Index recorded references in all application models by default. Wagtail 5.0 reduced the scope of the default models to those specifically linked with Wagtail.
-```
+-   all Page types
+-   Images
+-   Documents
+-   models registered as [Snippets](snippets)
+-   models registered with [`ModelViewSet`](../extending/generic_views)
 
 The reference index does not require any further configuration. However there are circumstances where it may be necessary to add or remove models from the index.
 
@@ -43,8 +40,8 @@ class SprocketAppConfig(AppConfig):
 
 The `wagtail_reference_index_ignore` attribute can be used to prevent indexing with a particular model or model field.
 
-- set the `wagtail_reference_index_ignore` attribute to `True` within any model class where you want to prevent indexing of all fields in the model; or
-- set the `wagtail_reference_index_ignore` attribute to `True` within any model field, to prevent that field or the related model field from being indexed:
+-   set the `wagtail_reference_index_ignore` attribute to `True` within any model class where you want to prevent indexing of all fields in the model; or
+-   set the `wagtail_reference_index_ignore` attribute to `True` within any model field, to prevent that field or the related model field from being indexed:
 
 ```python
 class CentralPage(Page):

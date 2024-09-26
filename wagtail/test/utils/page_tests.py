@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 from unittest import mock
 
 from django.conf import settings
@@ -115,7 +115,7 @@ class WagtailPageTestCase(WagtailTestUtils, TestCase):
                 raise self.failureException(msg)
 
             errors = "\n".join(
-                "  %s:\n    %s" % (field, "\n    ".join(errors))
+                "  {}:\n    {}".format(field, "\n    ".join(errors))
                 for field, errors in sorted(form.errors.items())
             )
             msg = self._formatMessage(
@@ -217,8 +217,8 @@ class WagtailPageTestCase(WagtailTestUtils, TestCase):
         self,
         page: Page,
         route_path: Optional[str] = "/",
-        query_data: Optional[Dict[str, Any]] = None,
-        post_data: Optional[Dict[str, Any]] = None,
+        query_data: Optional[dict[str, Any]] = None,
+        post_data: Optional[dict[str, Any]] = None,
         user: Optional[AbstractBaseUser] = None,
         accept_404: Optional[bool] = False,
         accept_redirect: Optional[bool] = False,
@@ -257,7 +257,7 @@ class WagtailPageTestCase(WagtailTestUtils, TestCase):
                 resp = self.client.get(path, data=query_data)
             else:
                 resp = self.client.post(path, **post_kwargs)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             msg = self._formatMessage(
                 msg,
                 'Failed to render route "%(route_path)s" for %(page_type)s "%(page)s":\n%(exc)s'
@@ -297,7 +297,7 @@ class WagtailPageTestCase(WagtailTestUtils, TestCase):
     def assertPageIsEditable(
         self,
         page: Page,
-        post_data: Optional[Dict[str, Any]] = None,
+        post_data: Optional[dict[str, Any]] = None,
         user: Optional[AbstractBaseUser] = None,
         msg: Optional[str] = None,
     ):
@@ -333,7 +333,7 @@ class WagtailPageTestCase(WagtailTestUtils, TestCase):
         path = reverse("wagtailadmin_pages:edit", kwargs={"page_id": page.id})
         try:
             response = self.client.get(path)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             self.client.logout()
             msg = self._formatMessage(
                 msg,
@@ -364,7 +364,7 @@ class WagtailPageTestCase(WagtailTestUtils, TestCase):
 
         try:
             self.client.post(path, data_to_post)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             msg = self._formatMessage(
                 msg,
                 'Failed to load edit view via POST for %(page_type)s "%(page)s":\n%(exc)s'
@@ -379,7 +379,7 @@ class WagtailPageTestCase(WagtailTestUtils, TestCase):
         self,
         page: Page,
         mode: Optional[str] = "",
-        post_data: Optional[Dict[str, Any]] = None,
+        post_data: Optional[dict[str, Any]] = None,
         user: Optional[AbstractBaseUser] = None,
         msg: Optional[str] = None,
     ):
@@ -419,7 +419,7 @@ class WagtailPageTestCase(WagtailTestUtils, TestCase):
                 response.content.decode(),
                 {"is_valid": True, "is_available": True},
             )
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             self.client.logout()
             msg = self._formatMessage(
                 msg,
@@ -435,7 +435,7 @@ class WagtailPageTestCase(WagtailTestUtils, TestCase):
 
         try:
             self.client.get(preview_path, data={"mode": mode})
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             msg = self._formatMessage(
                 msg,
                 'Failed to load preview for %(page_type)s "%(page)s" with mode="%(mode)s":\n%(exc)s'

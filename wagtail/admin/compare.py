@@ -14,7 +14,6 @@ from wagtail.fields import RichTextField, StreamField
 from wagtail.utils.registry import ModelFieldRegistry
 from wagtail.utils.text import text_from_html
 
-
 comparison_class_registry = ModelFieldRegistry()
 
 
@@ -295,9 +294,7 @@ class BaseSequenceBlockComparison(BlockComparison):
                 block_rendered = comparison.htmlvalue(comparison.val_a)
 
             classes = " ".join(classes)
-            comparisons_html.append(
-                '<div class="{0}">{1}</div>'.format(classes, block_rendered)
-            )
+            comparisons_html.append(f'<div class="{classes}">{block_rendered}</div>')
 
         return mark_safe("\n".join(comparisons_html))
 
@@ -514,7 +511,7 @@ class ChildRelationComparison:
             # Relations don't have a verbose_name
             if self.label:
                 # If the panel has a label, we set it instead.
-                # See InlinePanel.get_comparision for usage
+                # See InlinePanel.get_comparison for usage
                 verbose_name = self.label
             else:
                 verbose_name = self.field.name.replace("_", " ")

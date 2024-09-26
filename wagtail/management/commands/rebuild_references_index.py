@@ -3,6 +3,7 @@ from django.core.management.base import BaseCommand
 from django.db import transaction
 
 from wagtail.models import ReferenceIndex
+from wagtail.signal_handlers import disable_reference_index_auto_update
 
 DEFAULT_CHUNK_SIZE = 1000
 
@@ -36,7 +37,10 @@ class Command(BaseCommand):
         self.write("Rebuilding reference index")
 
         with transaction.atomic():
-            ReferenceIndex.objects.all().delete()
+            with disable_reference_index_auto_update():
+                # Use `_raw_delete` to avoid loading instances into memory
+                all_references = ReferenceIndex.objects.all()
+                all_references._raw_delete(using=all_references.db)
 
             for model in apps.get_models():
                 if not ReferenceIndex.is_indexed(model):

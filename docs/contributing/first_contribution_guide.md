@@ -14,7 +14,7 @@ This is a long guide - do not worry about following all the steps in one go or d
 Each section has an introduction with an overview and a checklist that can be copied and pasted for you to check through one by one. Get ready to read, there is a lot of reading ahead.
 
 ```{note}
-Avoid 'claiming' any issues before completing Steps 0-7. This helps you not over-promise what you can contribute and helps the community support you when you are actually ready to contribute.
+Avoid 'claiming' any issues before completing Steps 0-6. This helps you not over-promise what you can contribute and helps the community support you when you are actually ready to contribute.
 Do not worry about issues 'running out' - software development is an endless fractal, there is always more to help with.
 ```
 
@@ -32,7 +32,7 @@ One thing to keep in mind is that "scratching your own itch" can be a great moti
 
 Before you start contributing to Wagtail, it's important to understand what it is and how it works. Wagtail is a content management system (CMS) used for building websites. Unlike other CMSs, it requires some development time to build up the models and supporting code to use as a CMS. Additionally, Wagtail is built on top of another framework called Django, which is a Python web framework. This might be confusing at first, but it provides a powerful way to create custom systems for developers to build with.
 
-To get started, we recommend reading the [the Zen of Wagtail](../getting_started/the_zen_of_wagtail), which provides a good introduction to the project. You might also want to read the [Django overview](django:intro/overview) to understand what Django provides. To get a sense of how Wagtail fits into the CMS landscape, you can search online for articles that compare WordPress to Wagtail or list the top open source CMSs. Finally, reading some of the [Wagtail Guide](https://guide.wagtail.org/) will give you a better understanding of how the CMS works for everyday users.
+To get started, we recommend reading the [the Zen of Wagtail](../getting_started/the_zen_of_wagtail), which provides a good introduction to the project. You might also want to read the [Django overview](inv:django#intro/overview) to understand what Django provides. To get a sense of how Wagtail fits into the CMS landscape, you can search online for articles that compare WordPress to Wagtail or list the top open source CMSs. Finally, reading some of the [Wagtail Guide](https://guide.wagtail.org/) will give you a better understanding of how the CMS works for everyday users.
 
 ```{note}
 Below is a checklist. There are many like these you can copy for yourself as you progress through this guide.
@@ -66,7 +66,7 @@ You may also want to join StackOverflow and [follow the Wagtail tag](https://sta
 
 ### 3. Before contributing code
 
-Firstly, it is important to be able to understand how to **build with** Wagtail before you can understand how to contribute **to** Wagtail. Take the time to do the full [Wagtail getting started tutorial](../getting_started/index) without focusing yet on how to contribute code but instead how to use Wagtail to build your own basic demo website. This will require you to have Python and other dependencies installed on your machine and may not be easy the first time, but keep at it and ask questions if you get stuck.
+Firstly, it is important to be able to understand how to **build with** Wagtail before you can understand how to contribute **to** Wagtail. Take the time to do the full [Wagtail getting started tutorial](../getting_started/index) without focusing yet on how to contribute code but instead on how to use Wagtail to build your own basic demo website. This will require you to have Python and other dependencies installed on your machine and may not be easy the first time, but keep at it and ask questions if you get stuck.
 
 Remember that there are many other ways to contribute, such as answering questions in StackOverflow or `#support`, contributing to one of the [other packages](https://github.com/wagtail/) or even the [Wagtail user guide](https://guide.wagtail.org/en-latest/contributing/). Sometimes, it's best to get started with a non-code contribution to get a feel for Wagtail's code or the CMS interface.
 
@@ -80,12 +80,12 @@ Take the time to **read** the issue and links before adding new comments or ques
 
 ```
 - [ ] Do the Wagtail tutorial
-- [ ] Look at the Wagtail organisation on GitHub, take note of any interesting projects
+- [ ] Look at the Wagtail organization on GitHub, take note of any interesting projects
 - [ ] Read through the Issue Tracking section in the docs
 - [ ] Give a go at a non-code contribution
 ```
 
-### 5. Setting up your development environment
+### 4. Setting up your development environment
 
 <!--
 Important: This section should not go too deep into development setup. Instead we should solidify the content on the development page.
@@ -132,7 +132,7 @@ How to clone a remote repository and what that actually even means:
 -   See the [GitHub docs explain forking](https://docs.github.com/en/get-started/quickstart/contributing-to-projects).
 -   See [Atlassian’s docs on git clone](https://www.atlassian.com/git/tutorials/setting-up-a-repository/git-clone) for more details.
 
-### 6. Finding an issue
+### 5. Finding an issue
 
 Hopefully, at this point, you have a good sense of the purpose of the project and are still keen to contribute.
 
@@ -149,14 +149,14 @@ Finally, before 'claiming' check you can do the following;
 #### Checklist (for a candidate issue)
 
 ```markdown
--   [ ] Confirm that there is not someone actively working on it (e.g. PR or comments in the last ~2 months)
+-   [ ] Confirm that there is not someone actively working on it (no recent PR or comments in the last ~2 months)
 -   [ ] Ensure you can reproduce the problem/scenario in your local version of Wagtail
 -   [ ] Ensure that you feel confident to write a unit test (if it's a code change) to validate that the solution **is** implemented
 ```
 
-### 7. Contributing a solution
+### 6. Contributing a solution
 
-**Important:** We only use GitHub's issue assignment feature to members of the Wagtail core team. If an issue is not assigned to anyone, feel free to work on it, **no need to ask "please assign me this issue"**.
+**Important:** If an issue is not assigned to anyone and doesn’t already have a pull request, feel free to work on it, **no need to ask "please assign me this issue"**. We only use GitHub's issue assignment feature to assign certain issues to members of the Wagtail core team.
 
 If you feel ready to contribute a solution, now is a good time to add a comment to the issue describing your intention to do so, to prevent duplicating efforts. Instead of asking "please assign me this issue", write something similar to the following:
 
@@ -170,7 +170,7 @@ If it's just a documentation request, you may refine this comment to explain whe
 
 Before writing any code, take a moment to get your `git` hat on. When you clone the project locally, you will be checked out at the `main` branch. This branch is not suitable for you to make your changes on. It is meant to be the branch that tracks the core development of the project.
 
-Instead, take a moment to create a [new branch](https://www.atlassian.com/git/tutorials/using-branches). You can use the command line or install one of the many great git GUI tools. Don't listen to anyone that says you're not doing it right unless you use the command line. Reduce the things you need to learn today and focus on the `git` command line interface later. If you have a Mac, I recommend [Fork](https://git-fork.com/), otherwise, the [Github GUI](https://desktop.github.com/) is good enough.
+Instead, take a moment to create a [new branch](https://www.atlassian.com/git/tutorials/using-branches). You can use the command line or install one of the many great git GUI tools. Don't listen to anyone that says you're not doing it right unless you use the command line. Reduce the things you need to learn today and focus on the `git` command line interface later. If you have a Mac, I recommend [Fork](https://git-fork.com/), otherwise, the [GitHub GUI](https://desktop.github.com/) is good enough.
 
 This new branch name should have some context as to what you are fixing and if possible the issue number being fixed. For example `git checkout -b 'feature/1234-add-unit-tests-for-inline-panel'`. This branch name uses `/` to represent a folder and also has the issue number `1234`, finally, it uses `lower-kebab-case` with a short description of the issue.
 
@@ -217,7 +217,7 @@ A pull request that just adds unit tests to some core functionality that does no
 - [ ] Write unit tests
 ```
 
-### 8. Submitting a Pull Request
+### 7. Submitting a Pull Request
 
 A pull request that has the title 'fixes issue' is unhelpful at best, and spammy at worst. Take a few moments to think about how to give your change a title. Communicate (in a few words) the problem solved or feature added or bug fixed. Instead of 'Fixes 10423', use words and write a title 'Fixes documentation dark mode refresh issue'. No one in a project knows that issue `10423` is that one about the documentation dark mode refresh issue.
 
@@ -244,7 +244,7 @@ It is often good to write yourself a checklist for any pull request and fill in 
 -   [ ] Browser and accessibility checks done, or not done. Added to the description.
 ```
 
-#### 8a. Review & fix the CI failures
+#### 7a. Review & fix the CI failures
 
 Once you have created your pull request, there will often be a series of [build/check/CI](https://about.gitlab.com/topics/ci-cd/) steps that run.
 
@@ -258,7 +258,7 @@ The most important thing is to not just ignore CI failures. Read through each er
 GitHub will not run the CI automatically for new contributors in some projects. This is an intentional security feature and a core contributor will need to approve your initial CI run.
 ```
 
-#### 8b. Push to the same branch with fixes and do not open a new pull request
+#### 7b. Push to the same branch with fixes and do not open a new pull request
 
 Finally, after you have fixed the failing linting and tests locally, you will want to push those changes to your remote branch. You do not need to open a new pull request. This creates more noise and confusion. Instead, push your changes up to your branch, and the CI will run automatically on those changes.
 
@@ -266,9 +266,9 @@ You can add a comment if you want to the pull request that you have updated, but
 
 **Avoid opening multiple pull requests for the same fix.** Doing that means all the comments and discussion from the previous pull request will get lost and reviewers will have trouble finding them.
 
-### 9. Next steps
+### 8. Next steps
 
-When you take time to contribute out of your own personal time, or even that from your paid employer, it can be very frustrating when a pull request does not get reviewed. It is best to temper your expectations with this process and remember that many people on the other side of this are also volunteers or have limited time to prioritise.
+When you take time to contribute out of your own personal time, or even that from your paid employer, it can be very frustrating when a pull request does not get reviewed. It is best to temper your expectations with this process and remember that many people on the other side of this are also volunteers or have limited time to prioritize.
 
 It is best to celebrate your accomplishment at this point even if your pull request never gets merged. It's good to balance that with an eagerness about getting your amazing fix in place to help people who use the project. Balancing this tension is hard, but the unhelpful thing to do is give up and never contribute or decide that you won’t respond to feedback because it came too late.
 
@@ -309,19 +309,19 @@ If you have done all of that and think you can give it a go just a comment with 
 0. The fix or feature you are working on
 1. Tests
 2. Linted code (we make use of [pre-commit](https://pre-commit.com/). You can run all formatting with `make format`)
-3. Updated documentation where relevant (e.g. when adding a new feature)
+3. Updated documentation where relevant (such as when adding a new feature)
 
 ### What if I fix multiple issues in the same pull request (PR)
 
-It is best to avoid fixing more than one issue in a single pull request, unless you are a core contributor or there is a clear plan that involves fixing multiple things at once. Even then, it is usually a bad idea as it makes it harder for your pull request to be reviewed and it may never get merged as it's too complex. This is especially true for completely unrelated issues (e.g. a documentation fix for translators and a bug fix for StreamField), it is always best to create two branches and then two separate pull requests.
+It is best to avoid fixing more than one issue in a single pull request, unless you are a core contributor or there is a clear plan that involves fixing multiple things at once. Even then, it is usually a bad idea as it makes it harder for your pull request to be reviewed and it may never get merged as it's too complex. This is especially true for completely unrelated issues such as a documentation fix for translators and a bug fix for StreamField. It is always best to create two branches and then two separate pull requests.
 
 ### When do I need to write unit tests for a pull request (PR)?
 
 Unless you are updating the documentation or only making visual style changes, your Pull Request should contain tests.
 
-If you are new to writing tests in Django, start by reading the [Django documentation on testing](django:topics/testing/overview). Re-read the [Wagtail documentation notes on testing](testing) and have a look at [existing tests](https://cs.github.com/?scopeName=All+repos&scope=&q=repo%3Awagtail%2Fwagtail+path%3A**%2Ftests%2F**).
+If you are new to writing tests in Django, start by reading the [Django documentation on testing](inv:django#topics/testing/overview). Re-read the [Wagtail documentation notes on testing](testing) and have a look at [existing tests](https://cs.github.com/?scopeName=All+repos&scope=&q=repo%3Awagtail%2Fwagtail+path%3A**%2Ftests%2F**).
 
-Note that the JavaScript testing is not as robust as the Python testing, if possible at least attempt to add some basic JS tests to new behaviour.
+Note that the JavaScript testing is not as robust as the Python testing, if possible at least attempt to add some basic JS tests to new behavior.
 
 ### Where can I get help with my pull request (PR)?
 
@@ -337,14 +337,14 @@ Be sure to always read the issue in full and review all links, sometimes there m
 
 While Gitpod is great for some small scale Pull Requests, it will not be a suitable tool for complex contributions and it's best to take the time to set up a fully functional development environment so you can manage branches and ongoing commits to one branch.
 
-Here are some links for using GitPod with the Wagtail packages:
+Here are some links for using Gitpod with the Wagtail packages:
 
 -   [Bakerydemo Gitpod instructions](https://github.com/wagtail/bakerydemo#setup-with-gitpod)
 -   [Wagtail Gitpod – Wagtail development setup in one click](https://wagtail.org/blog/gitpod/)
 
 ### How can I be assigned an issue to contribute to
 
-We only use GitHub's issue assignment feature to members of the Wagtail core team for when tasks are being planned as part of core roadmap features or when being used for a specific internship program. If an issue is not assigned to anyone, feel free to work on it, there is no need to ask to be assigned the issue.
+We only use GitHub's issue assignment feature for members of the Wagtail core team when tasks are being planned as part of core roadmap features or when being used for a specific internship program. If an issue is not assigned to anyone, feel free to work on it, there is no need to ask to be assigned the issue.
 
 Instead, review the issue, understand it and if you feel you can contribute you can just raise a Pull Request, or add a comment that you are taking a look at this. There are no strict claiming or reserving rules in place, anyone is free to work on any issue, but try to avoid double effort if someone has already got a Pull Request underway.
 
@@ -353,7 +353,7 @@ Instead, review the issue, understand it and if you feel you can contribute you 
 -   [Django's contributor guide](https://docs.djangoproject.com/en/dev/internals/contributing/) is a helpful resource for contributors, even those not contributing to Wagtail.
 -   [MDN's open source etiquette](https://developer.mozilla.org/en-US/docs/MDN/Community/Open_source_etiquette) is a great guideline for how to be a great contributor.
 -   [Learning Git Branching](https://learngitbranching.js.org/) a solid interactive guide to understand how git branching works.
--   [Hacktoberfest](https://hacktoberfest.com/) every October, join in the fun and submit pull requests for a t-shirt.
+-   [Hacktoberfest](https://hacktoberfest.com/) every October, join in the fun and submit pull requests.
 -   [21 Pull Requests](https://24pullrequests.com/) a December community effort to contribute to open source.
 -   [Windows step by step guide to getting bakerydemo running with local Wagtail](https://juliet.hashnode.dev/a-step-by-step-guide-for-manually-setting-up-bakery-demo-with-wagtail)
 

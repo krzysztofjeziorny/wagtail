@@ -1,17 +1,23 @@
 import csv
 import datetime
 from collections import OrderedDict
+from functools import partial
 from io import BytesIO
 
+from django.contrib.admin.utils import label_for_field
 from django.core.exceptions import FieldDoesNotExist
 from django.http import FileResponse, StreamingHttpResponse
 from django.utils import timezone
 from django.utils.dateformat import Formatter
 from django.utils.encoding import force_str
 from django.utils.formats import get_format
+from django.utils.functional import cached_property
+from django.utils.text import capfirst
+from django.utils.translation import gettext as _
 from openpyxl import Workbook
 from openpyxl.cell import WriteOnlyCell
 
+from wagtail.admin.widgets.button import Button
 from wagtail.coreutils import multigetattr
 
 
@@ -152,9 +158,22 @@ class SpreadsheetExportMixin:
     # A dictionary of column heading overrides in the format {field: heading}
     export_headings = {}
 
+    export_buttons_template_name = "wagtailadmin/shared/export_buttons.html"
+
+    export_filename = "spreadsheet-export"
+
+    def setup(self, request, *args, **kwargs):
+        super().setup(request, *args, **kwargs)
+        self.is_export = request.GET.get("export") in self.FORMATS
+
+    def get_paginate_by(self, queryset):
+        if self.is_export:
+            return None
+        return super().get_paginate_by(queryset)
+
     def get_filename(self):
         """Gets the base filename for the exported spreadsheet, without extensions"""
-        return "spreadsheet-export"
+        return self.export_filename
 
     def to_row_dict(self, item):
         """Returns an OrderedDict (in the order given by list_export) of the exportable information for a model instance"""
@@ -177,7 +196,7 @@ class SpreadsheetExportMixin:
                 return format_dict[export_format]
 
         # Finally resort to force_str to prevent encoding errors
-        return force_str
+        return partial(force_str, strings_only=True)
 
     def preprocess_field_value(self, field, value, export_format):
         """Preprocesses a field value before writing it to the spreadsheet"""
@@ -211,7 +230,7 @@ class SpreadsheetExportMixin:
         if heading_override:
             return force_str(heading_override)
         try:
-            return force_str(queryset.model._meta.get_field(field).verbose_name.title())
+            return capfirst(force_str(label_for_field(field, queryset.model)))
         except (AttributeError, FieldDoesNotExist):
             return force_str(field)
 
@@ -285,3 +304,30 @@ class SpreadsheetExportMixin:
     @property
     def csv_export_url(self):
         return self.get_export_url("csv")
+
+    @cached_property
+    def show_export_buttons(self):
+        return bool(self.list_export)
+
+    @cached_property
+    def header_more_buttons(self):
+        buttons = super().header_more_buttons.copy()
+        if self.show_export_buttons:
+            buttons.append(
+                Button(
+                    _("Download XLSX"),
+                    url=self.xlsx_export_url,
+                    icon_name="download",
+                    priority=90,
+                )
+            )
+            buttons.append(
+                Button(
+                    _("Download CSV"),
+                    url=self.csv_export_url,
+                    icon_name="download",
+                    priority=100,
+                )
+            )
+
+        return buttons

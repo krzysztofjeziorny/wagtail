@@ -71,12 +71,12 @@ class TestBulkPublish(WagtailTestUtils, TestCase):
 
     def test_publish_view(self):
         """
-        This tests that the publish view responds with an publish confirm page
+        This tests that the publish view responds with a publish confirm page
         """
         # Request confirm publish page
         response = self.client.get(self.url)
 
-        # # Check that the user received an publish confirm page
+        # # Check that the user received a publish confirm page
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(
             response, "wagtailadmin/pages/bulk_actions/confirm_bulk_publish.html"
@@ -130,9 +130,7 @@ class TestBulkPublish(WagtailTestUtils, TestCase):
         )
 
         for child_page in self.pages_to_be_published:
-            self.assertInHTML(
-                "<li>{page_title}</li>".format(page_title=child_page.title), html
-            )
+            self.assertInHTML(f"<li>{child_page.title}</li>", html)
 
     def test_publish_view_post(self):
         """
@@ -208,12 +206,12 @@ class TestBulkPublish(WagtailTestUtils, TestCase):
 
     def test_publish_descendants_view(self):
         """
-        This tests that the publish view responds with an publish confirm page that does not contain the form field 'include_descendants'
+        This tests that the publish view responds with a publish confirm page that does not contain the form field 'include_descendants'
         """
         # Get publish page for page with no descendants
         response = self.client.get(self.url)
 
-        # Check that the user received an publish confirm page
+        # Check that the user received a publish confirm page
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(
             response, "wagtailadmin/pages/bulk_actions/confirm_bulk_publish.html"
@@ -317,12 +315,12 @@ class TestBulkPublishIncludingDescendants(WagtailTestUtils, TestCase):
 
     def test_publish_descendants_view(self):
         """
-        This tests that the publish view responds with an publish confirm page that contains the form field 'include_descendants'
+        This tests that the publish view responds with a publish confirm page that contains the form field 'include_descendants'
         """
         # Get publish page
         response = self.client.get(self.url)
 
-        # Check that the user received an publish confirm page
+        # Check that the user received a publish confirm page
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(
             response, "wagtailadmin/pages/bulk_actions/confirm_bulk_publish.html"

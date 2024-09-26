@@ -10,7 +10,7 @@
 ./manage.py publish_scheduled
 ```
 
-This command publishes, updates or unpublishes objects that have had these actions scheduled by an editor. We recommend running this command once an hour.
+This command publishes, updates, or unpublishes objects that have had these actions scheduled by an editor. We recommend running this command once an hour.
 
 (fixtree)=
 
@@ -45,12 +45,17 @@ Options:
 ## purge_revisions
 
 ```sh
-manage.py purge_revisions [--days=<number of days>]
+manage.py purge_revisions [--days=<number of days>] [--pages] [--non-pages]
 ```
 
-This command deletes old page revisions which are not in moderation, live, approved to go live, or the latest
-revision for a page. If the `days` argument is supplied, only revisions older than the specified number of
+This command deletes old revisions which are not in moderation, live, approved to go live, or the latest
+revision. If the `days` argument is supplied, only revisions older than the specified number of
 days will be deleted.
+
+To prevent deleting important revisions when they become stale, you can refer to such revisions in a model using a `ForeignKey` with {attr}`on_delete=models.PROTECT <django.db.models.PROTECT>`.
+
+If the `pages` argument is supplied, only revisions of page models will be deleted. If the `non-pages` argument is supplied, only revisions of non-page models will be deleted. If both or neither arguments are supplied, revisions of all models will be deleted.
+If deletion of a revision is not desirable, mark `Revision` with `on_delete=models.PROTECT`.
 
 (purge_embeds)=
 
@@ -118,15 +123,13 @@ If this is omitted or provided with any number above 0 it will produce the same 
 
 An alias for the `update_index` command that can be used when another installed package (such as [Haystack](https://haystacksearch.org/)) provides a command named `update_index`. In this case, the other package's entry in `INSTALLED_APPS` should appear above `wagtail.search` so that its `update_index` command takes precedence over Wagtail's.
 
-(search_garbage_collect)=
-
 ## rebuild_references_index
 
 ```sh
 ./manage.py rebuild_references_index
 ```
 
-This command populates the table that tracks cross-references between objects, used for the usage reports on images, documents and snippets. This table is updated automatically saving objects, but it is recommended to run this command periodically to ensure that the data remains consistent.
+This command populates the table that tracks cross-references between objects, used for the usage reports on images, documents, and snippets. This table is updated automatically saving objects, but it is recommended to run this command periodically to ensure that the data remains consistent.
 
 ### Silencing the command
 
@@ -142,15 +145,7 @@ python manage.py rebuild_references_index --verbosity 0
 ./manage.py show_references_index
 ```
 
-Displays a summary of the contents of the references index. This shows the number of objects indexed against each model type, and can be useful to identify which models are being indexed without rebuilding the index itself.
-
-## search_garbage_collect
-
-```sh
-./manage.py search_garbage_collect
-```
-
-Wagtail keeps a log of search queries that are popular on your website. On high traffic websites, this log may get big and you may want to clean out old search queries. This command cleans out all search query logs that are more than one week old (or a number of days configurable through the [`WAGTAILSEARCH_HITS_MAX_AGE`](wagtailsearch_hits_max_age) setting).
+Displays a summary of the contents of the references index. This shows the number of objects indexed against each model type and can be useful to identify which models are being indexed without rebuilding the index itself.
 
 (wagtail_update_image_renditions)=
 
@@ -161,11 +156,21 @@ Wagtail keeps a log of search queries that are popular on your website. On high 
 ```
 
 This command provides the ability to regenerate image renditions.
-This is useful if you have deployed to a server where the image renditions have not yet been generated or you have changed the underlying image rendition behaviour and need to ensure all renditions are created again.
+This is useful if you have deployed to a server where the image renditions have not yet been generated or you have changed the underlying image rendition behavior and need to ensure all renditions are created again.
 
-This does not remove rendition images that are unused, this can be done by clearing the folder using `rm -rf` or similar, once this is done you can then use the management command to generate the renditions.
+This does not remove unused rendition images, this can be done by clearing the folder using `rm -rf` or similar, once this is done you can then use the management command to generate the renditions.
 
 Options:
 
--   **--purge-only** :
+-   `--purge-only` :
     This argument will purge all image renditions without regenerating them. They will be regenerated when next requested.
+
+(convert_mariadb_uuids)=
+
+## convert_mariadb_uuids
+
+```sh
+./manage.py convert_mariadb_uuids
+```
+
+For sites using MariaDB, this command must be run once when upgrading to Django 5.0 and MariaDB 10.7 from any earlier version of Django or MariaDB. This is necessary because Django 5.0 introduces support for MariaDB's native UUID type, breaking backwards compatibility with `CHAR`-based UUIDs used in earlier versions of Django and MariaDB. New sites created under Django 5.0+ and MariaDB 10.7+ are unaffected.

@@ -43,7 +43,7 @@ Wagtail automatically creates permanent redirects for pages (and their descendan
 
 If your project uses `RoutablePageMixin` to create pages with alternative routes, you might want to consider overriding the `get_route_paths()` method for those page types. Adding popular route paths to this list will result in the creation of additional redirects; helping visitors to alternative routes to get to the right place also.
 
-For more information, please see :meth:`~wagtail.models.Page.get_route_paths`.
+For more information, please see {meth}`~wagtail.models.Page.get_route_paths`.
 
 ### Disabling automatic redirect creation
 
@@ -79,7 +79,7 @@ Options:
 | **permanent** | If the redirects imported should be **permanent** (True) or not (False). It's True by default. |
 | **from**      | The column index you want to use as redirect from value.                                       |
 | **to**        | The column index you want to use as redirect to value.                                         |
-| **dry_run**   | Lets you run a import without doing any changes.                                               |
+| **dry_run**   | Lets you run an import without doing any changes.                                              |
 | **ask**       | Lets you inspect and approve each redirect before it is created.                               |
 
 ## The `Redirect` class
@@ -93,3 +93,24 @@ Options:
 
     .. automethod:: add_redirect
 ```
+
+(redirects_api_endpoint)=
+
+## API
+
+You can create an API endpoint to retrieve redirects or find specific redirects by path.
+
+See the [](api_v2_configuration) documentation on how to configure the Wagtail API.
+
+Add the following code to add the redirects endpoint:
+
+```python
+from wagtail.contrib.redirects.api import RedirectsAPIViewSet
+
+api_router.register_endpoint('redirects', RedirectsAPIViewSet)
+```
+
+With this configuration, redirects will be available at `/api/v2/redirects/`.
+
+Specific redirects by path can be resolved with `/api/v2/redirects/find/?html_path=<path>`,
+which will return either a `200` response with the redirects detail, or a `404` not found response.

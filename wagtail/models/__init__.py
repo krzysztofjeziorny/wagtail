@@ -1,7 +1,7 @@
 """
 wagtail.models is split into submodules for maintainability. All definitions intended as
-public should be imported here (with 'noqa' comments as required) and outside code should continue
-to import them from wagtail.models (e.g. `from wagtail.models import Site`, not
+public should be imported here (with 'noqa: F401' comments as required) and outside code should
+continue to import them from wagtail.models (e.g. `from wagtail.models import Site`, not
 `from wagtail.models.sites import Site`.)
 
 Submodules should take care to keep the direction of dependencies consistent; where possible they
@@ -9,20 +9,25 @@ should implement low-level generic functionality which is then imported by highe
 as Page.
 """
 
+from __future__ import annotations
+
 import functools
 import logging
+import posixpath
 import uuid
-import warnings
 from io import StringIO
-from urllib.parse import urlparse
+from typing import TYPE_CHECKING
+from urllib.parse import urlsplit
+from warnings import warn
 
 from django import forms
 from django.conf import settings
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.core import checks
 from django.core.exceptions import (
+    FieldDoesNotExist,
     ImproperlyConfigured,
     PermissionDenied,
     ValidationError,
@@ -31,9 +36,9 @@ from django.core.handlers.base import BaseHandler
 from django.core.handlers.wsgi import WSGIRequest
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models, transaction
-from django.db.models import DEFERRED, Q, Value
+from django.db.models import Q, Value
 from django.db.models.expressions import OuterRef, Subquery
-from django.db.models.functions import Cast, Concat, Substr
+from django.db.models.functions import Concat, Substr
 from django.dispatch import receiver
 from django.http import Http404
 from django.template.response import TemplateResponse
@@ -41,8 +46,8 @@ from django.urls import NoReverseMatch, reverse
 from django.utils import timezone
 from django.utils import translation as translation
 from django.utils.cache import patch_cache_control
-from django.utils.encoding import force_str
-from django.utils.functional import cached_property
+from django.utils.encoding import force_bytes, force_str
+from django.utils.functional import Promise, cached_property
 from django.utils.module_loading import import_string
 from django.utils.text import capfirst, slugify
 from django.utils.translation import gettext_lazy as _
@@ -69,12 +74,13 @@ from wagtail.coreutils import (
     get_content_type_label,
     get_supported_content_language_variant,
     resolve_model_string,
+    safe_md5,
 )
 from wagtail.fields import StreamField
 from wagtail.forms import TaskStateCommentForm
 from wagtail.locks import BasicLock, ScheduledForPublishLock, WorkflowLock
 from wagtail.log_actions import log
-from wagtail.query import PageQuerySet
+from wagtail.query import PageQuerySet, SpecificQuerySetMixin
 from wagtail.search import index
 from wagtail.signals import (
     page_published,
@@ -90,26 +96,17 @@ from wagtail.signals import (
     workflow_submitted,
 )
 from wagtail.url_routing import RouteResult
-from wagtail.utils.deprecation import RemovedInWagtail60Warning
+from wagtail.utils.deprecation import RemovedInWagtail70Warning
+from wagtail.utils.timestamps import ensure_utc
 
-from .audit_log import (  # noqa
+from .audit_log import (  # noqa: F401
     BaseLogEntry,
     BaseLogEntryManager,
     LogEntryQuerySet,
     ModelLogEntry,
 )
-from .collections import (  # noqa
-    BaseCollectionManager,
-    Collection,
-    CollectionManager,
-    CollectionMember,
-    CollectionViewRestriction,
-    GroupCollectionPermission,
-    GroupCollectionPermissionManager,
-    get_root_collection_id,
-)
-from .copying import _copy, _copy_m2m_relations, _extract_field_data  # noqa
-from .i18n import (  # noqa
+from .copying import _copy, _copy_m2m_relations, _extract_field_data  # noqa: F401
+from .i18n import (  # noqa: F401
     BootstrapTranslatableMixin,
     BootstrapTranslatableModel,
     Locale,
@@ -118,9 +115,24 @@ from .i18n import (  # noqa
     bootstrap_translatable_model,
     get_translatable_models,
 )
-from .reference_index import ReferenceIndex  # noqa
-from .sites import Site, SiteManager, SiteRootPath  # noqa
+from .media import (  # noqa: F401
+    BaseCollectionManager,
+    Collection,
+    CollectionManager,
+    CollectionMember,
+    CollectionViewRestriction,
+    GroupCollectionPermission,
+    GroupCollectionPermissionManager,
+    UploadedFile,
+    get_root_collection_id,
+)
+from .reference_index import ReferenceIndex  # noqa: F401
+from .sites import Site, SiteManager, SiteRootPath  # noqa: F401
+from .specific import SpecificMixin
 from .view_restrictions import BaseViewRestriction
+
+if TYPE_CHECKING:
+    from django.http import HttpRequest
 
 logger = logging.getLogger("wagtail")
 
@@ -156,7 +168,21 @@ def get_page_models():
     """
     Returns a list of all non-abstract Page model classes defined in this project.
     """
-    return PAGE_MODEL_CLASSES
+    return PAGE_MODEL_CLASSES.copy()
+
+
+def get_page_content_types(include_base_page_type=True):
+    """
+    Returns a queryset of all ContentType objects corresponding to Page model classes.
+    """
+    models = get_page_models()
+    if not include_base_page_type:
+        models.remove(Page)
+
+    content_type_ids = [
+        ct.pk for ct in ContentType.objects.get_for_models(*models).values()
+    ]
+    return ContentType.objects.filter(pk__in=content_type_ids).order_by("model")
 
 
 def get_default_page_content_type():
@@ -167,7 +193,7 @@ def get_default_page_content_type():
     return ContentType.objects.get_for_model(Page)
 
 
-@functools.lru_cache(maxsize=None)
+@functools.cache
 def get_streamfield_names(model_class):
     return tuple(
         field.name
@@ -180,6 +206,65 @@ class BasePageManager(models.Manager):
     def get_queryset(self):
         return self._queryset_class(self.model).order_by("path")
 
+    def first_common_ancestor_of(self, pages, include_self=False, strict=False):
+        """
+        This is similar to `PageQuerySet.first_common_ancestor` but works
+        for a list of pages instead of a queryset.
+        """
+        if not pages:
+            if strict:
+                raise self.model.DoesNotExist("Can not find ancestor of empty list")
+            return self.model.get_first_root_node()
+
+        if include_self:
+            paths = list({page.path for page in pages})
+        else:
+            paths = list({page.path[: -self.model.steplen] for page in pages})
+
+        # This method works on anything, not just file system paths.
+        common_parent_path = posixpath.commonprefix(paths)
+        extra_chars = len(common_parent_path) % self.model.steplen
+        if extra_chars != 0:
+            common_parent_path = common_parent_path[:-extra_chars]
+
+        if common_parent_path == "":
+            if strict:
+                raise self.model.DoesNotExist("No common ancestor found!")
+
+            return self.model.get_first_root_node()
+
+        return self.get(path=common_parent_path)
+
+    def annotate_parent_page(self, pages):
+        """
+        Annotates each page with its parent page. This is implemented as a
+        manager-only method instead of a QuerySet method so it can be used with
+        search results.
+
+        If given a QuerySet, this method will evaluate it. Only use this method
+        when you are ready to consume the queryset, e.g. after pagination has
+        been applied. This is typically done in the view's `get_context_data`
+        using `context["object_list"]`.
+
+        This method does not return a new queryset, but modifies the existing one,
+        to ensure any references to the queryset in the view's context are updated
+        (e.g. when using `context_object_name`).
+        """
+        parent_page_paths = {
+            Page._get_parent_path_from_path(page.path) for page in pages
+        }
+        parent_pages_by_path = {
+            page.path: page
+            for page in Page.objects.filter(path__in=parent_page_paths).specific(
+                defer=True
+            )
+        }
+        for page in pages:
+            parent_page = parent_pages_by_path.get(
+                Page._get_parent_path_from_path(page.path)
+            )
+            page._parent_page = parent_page
+
 
 PageManager = BasePageManager.from_queryset(PageQuerySet)
 
@@ -188,11 +273,11 @@ class PageBase(models.base.ModelBase):
     """Metaclass for Page"""
 
     def __init__(cls, name, bases, dct):
-        super(PageBase, cls).__init__(name, bases, dct)
+        super().__init__(name, bases, dct)
 
         if "template" not in dct:
             # Define a default template path derived from the app name and model name
-            cls.template = "%s/%s.html" % (
+            cls.template = "{}/{}.html".format(
                 cls._meta.app_label,
                 camelcase_to_underscore(name),
             )
@@ -335,7 +420,6 @@ class RevisionMixin(models.Model):
     def save_revision(
         self,
         user=None,
-        submitted_for_moderation=False,
         approved_go_live_at=None,
         changed=True,
         log_action=False,
@@ -346,10 +430,9 @@ class RevisionMixin(models.Model):
         Creates and saves a revision.
 
         :param user: The user performing the action.
-        :param submitted_for_moderation: Indicates whether the object was submitted for moderation.
         :param approved_go_live_at: The date and time the revision is approved to go live.
         :param changed: Indicates whether there were any content changes.
-        :param log_action: Flag for logging the action. Pass ``False`` to skip logging. Can be passed an action string.
+        :param log_action: Flag for logging the action. Pass ``True`` to also create a log entry. Can be passed an action string.
             Defaults to ``"wagtail.edit"`` when no ``previous_revision`` param is passed, otherwise ``"wagtail.revert"``.
         :param previous_revision: Indicates a revision reversal. Should be set to the previous revision instance.
         :type previous_revision: Revision
@@ -362,7 +445,6 @@ class RevisionMixin(models.Model):
         revision = Revision.objects.create(
             content_object=self,
             base_content_type=self.get_base_content_type(),
-            submitted_for_moderation=submitted_for_moderation,
             user=user,
             approved_go_live_at=approved_go_live_at,
             content=self.serializable_data(),
@@ -395,9 +477,7 @@ class RevisionMixin(models.Model):
                     data={
                         "revision": {
                             "id": previous_revision.id,
-                            "created": previous_revision.created_at.strftime(
-                                "%d %b %Y %H:%M"
-                            ),
+                            "created": ensure_utc(previous_revision.created_at),
                         }
                     },
                     revision=revision,
@@ -592,7 +672,7 @@ class DraftStateMixin(models.Model):
 
     def get_lock(self):
         # Scheduled publishing lock should take precedence over other locks
-        if self.scheduled_revision:
+        if self.approved_schedule:
             return ScheduledForPublishLock(self)
         return super().get_lock()
 
@@ -652,7 +732,7 @@ class PreviewableMixin:
         """
         url = self._get_dummy_header_url(original_request)
         if url:
-            url_info = urlparse(url)
+            url_info = urlsplit(url)
             hostname = url_info.hostname
             path = url_info.path
             port = url_info.port or (443 if url_info.scheme == "https" else 80)
@@ -674,7 +754,7 @@ class PreviewableMixin:
 
         http_host = hostname
         if port != (443 if scheme == "https" else 80):
-            http_host = "%s:%s" % (http_host, port)
+            http_host = f"{http_host}:{port}"
         dummy_values = {
             "REQUEST_METHOD": "GET",
             "PATH_INFO": path,
@@ -1051,6 +1131,7 @@ class AbstractPage(
     LockableMixin,
     RevisionMixin,
     TranslatableMixin,
+    SpecificMixin,
     MP_Node,
 ):
     """
@@ -1064,6 +1145,24 @@ class AbstractPage(
 
     class Meta:
         abstract = True
+
+
+# Make sure that this list is sorted by the codename (first item in the tuple)
+# so that we can follow the same order when querying the Permission objects.
+PAGE_PERMISSION_TYPES = [
+    ("add_page", _("Add"), _("Add/edit pages you own")),
+    ("bulk_delete_page", _("Bulk delete"), _("Delete pages with children")),
+    ("change_page", _("Edit"), _("Edit any page")),
+    ("lock_page", _("Lock"), _("Lock/unlock pages you've locked")),
+    ("publish_page", _("Publish"), _("Publish any page")),
+    ("unlock_page", _("Unlock"), _("Unlock any page")),
+]
+
+PAGE_PERMISSION_TYPE_CHOICES = [
+    (identifier[:-5], long_label) for identifier, _, long_label in PAGE_PERMISSION_TYPES
+]
+
+PAGE_PERMISSION_CODENAMES = [identifier for identifier, *_ in PAGE_PERMISSION_TYPES]
 
 
 class Page(AbstractPage, index.Indexed, ClusterableModel, metaclass=PageBase):
@@ -1144,6 +1243,20 @@ class Page(AbstractPage, index.Indexed, ClusterableModel, metaclass=PageBase):
         for_concrete_model=False,
     )
 
+    # When using a specific queryset, accessing the _workflow_states GenericRelation
+    # will yield no results. This is because the _workflow_states GenericRelation
+    # uses the base_content_type as the content_type_field, which is not the same
+    # as the content type of the specific queryset. To work around this, we define
+    # a second GenericRelation that uses the specific content_type to be used
+    # when working with specific querysets.
+    _specific_workflow_states = GenericRelation(
+        "wagtailcore.WorkflowState",
+        content_type_field="content_type",
+        object_id_field="object_id",
+        related_query_name="page",
+        for_concrete_model=False,
+    )
+
     # If non-null, this page is an alias of the linked page
     # This means the page is kept in sync with the live version
     # of the linked pages and is not editable by users.
@@ -1185,11 +1298,13 @@ class Page(AbstractPage, index.Indexed, ClusterableModel, metaclass=PageBase):
     # Define the maximum number of instances this page can have under a specific parent. Default to unlimited.
     max_count_per_parent = None
 
+    # Set the default order for child pages to be shown in the Page index listing
+    admin_default_ordering = "-latest_revision_created_at"
+
     # An array of additional field names that will not be included when a Page is copied.
     exclude_fields_in_copy = []
     default_exclude_fields_in_copy = [
         "id",
-        "path",
         "depth",
         "numchild",
         "url_path",
@@ -1205,6 +1320,46 @@ class Page(AbstractPage, index.Indexed, ClusterableModel, metaclass=PageBase):
     content_panels = []
     promote_panels = []
     settings_panels = []
+
+    # Privacy options for page
+    private_page_options = ["password", "groups", "login"]
+
+    @staticmethod
+    def route_for_request(request: HttpRequest, path: str) -> RouteResult | None:
+        """
+        Find the page route for the given HTTP request object, and URL path. The route
+        result (`page`, `args`, and `kwargs`) will be cached via
+        `request._wagtail_route_for_request`.
+        """
+        if not hasattr(request, "_wagtail_route_for_request"):
+            try:
+                # we need a valid Site object for this request in order to proceed
+                if site := Site.find_for_request(request):
+                    path_components = [
+                        component for component in path.split("/") if component
+                    ]
+                    request._wagtail_route_for_request = (
+                        site.root_page.localized.specific.route(
+                            request, path_components
+                        )
+                    )
+                else:
+                    request._wagtail_route_for_request = None
+            except Http404:
+                # .route() can raise Http404
+                request._wagtail_route_for_request = None
+
+        return request._wagtail_route_for_request
+
+    @staticmethod
+    def find_for_request(request: HttpRequest, path: str) -> Page | None:
+        """
+        Find the page for the given HTTP request object, and URL path. The full
+        page route will be cached via `request._wagtail_route_for_request`
+        """
+        result = Page.route_for_request(request, path)
+        if result is not None:
+            return result[0]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -1301,6 +1456,13 @@ class Page(AbstractPage, index.Indexed, ClusterableModel, metaclass=PageBase):
             )
 
         return super().get_default_locale()
+
+    def get_admin_default_ordering(self):
+        """
+        Determine the default ordering for child pages in the admin index listing.
+        Returns a string (e.g. 'latest_revision_created_at, title, ord' or 'live').
+        """
+        return self.admin_default_ordering
 
     def full_clean(self, *args, **kwargs):
         # Apply fixups that need to happen before per-field validation occurs
@@ -1449,7 +1611,7 @@ class Page(AbstractPage, index.Indexed, ClusterableModel, metaclass=PageBase):
 
     @classmethod
     def check(cls, **kwargs):
-        errors = super(Page, cls).check(**kwargs)
+        errors = super().check(**kwargs)
 
         # Check that foreign keys from pages are not configured to cascade
         # This is the default Django behaviour which must be explicitly overridden
@@ -1523,123 +1685,6 @@ class Page(AbstractPage, index.Indexed, ClusterableModel, metaclass=PageBase):
             )
         )
 
-    def get_specific(self, deferred=False, copy_attrs=None, copy_attrs_exclude=None):
-        """
-        Return this page in its most specific subclassed form.
-
-        By default, a database query is made to fetch all field values for the
-        specific object. If you only require access to custom methods or other
-        non-field attributes on the specific object, you can use
-        ``deferred=True`` to avoid this query. However, any attempts to access
-        specific field values from the returned object will trigger additional
-        database queries.
-
-        By default, references to all non-field attribute values are copied
-        from current object to the returned one. This includes:
-
-        * Values set by a queryset, for example: annotations, or values set as
-          a result of using ``select_related()`` or ``prefetch_related()``.
-        * Any ``cached_property`` values that have been evaluated.
-        * Attributes set elsewhere in Python code.
-
-        For fine-grained control over which non-field values are copied to the
-        returned object, you can use ``copy_attrs`` to specify a complete list
-        of attribute names to include. Alternatively, you can use
-        ``copy_attrs_exclude`` to specify a list of attribute names to exclude.
-
-        If called on a page object that is already an instance of the most
-        specific class (e.g. an ``EventPage``), the object will be returned
-        as is, and no database queries or other operations will be triggered.
-
-        If the page was originally created using a page type that has since
-        been removed from the codebase, a generic ``Page`` object will be
-        returned (without any custom field values or other functionality
-        present on the original class). Usually, deleting these pages is the
-        best course of action, but there is currently no safe way for Wagtail
-        to do that at migration time.
-        """
-        model_class = self.specific_class
-
-        if model_class is None:
-            # The codebase and database are out of sync (e.g. the model exists
-            # on a different git branch and migrations were not applied or
-            # reverted before switching branches). So, the best we can do is
-            # return the page in it's current form.
-            return self
-
-        if isinstance(self, model_class):
-            # self is already an instance of the most specific class.
-            return self
-
-        if deferred:
-            # Generate a tuple of values in the order expected by __init__(),
-            # with missing values substituted with DEFERRED ()
-            values = tuple(
-                getattr(self, f.attname, self.pk if f.primary_key else DEFERRED)
-                for f in model_class._meta.concrete_fields
-            )
-            # Create object from known attribute values
-            specific_obj = model_class(*values)
-            specific_obj._state.adding = self._state.adding
-        else:
-            # Fetch object from database
-            specific_obj = model_class._default_manager.get(id=self.id)
-
-        # Copy non-field attribute values
-        if copy_attrs is not None:
-            for attr in (attr for attr in copy_attrs if attr in self.__dict__):
-                setattr(specific_obj, attr, getattr(self, attr))
-        else:
-            exclude = copy_attrs_exclude or ()
-            for k, v in ((k, v) for k, v in self.__dict__.items() if k not in exclude):
-                # only set values that haven't already been set
-                specific_obj.__dict__.setdefault(k, v)
-
-        return specific_obj
-
-    @cached_property
-    def specific(self):
-        """
-        Returns this page in its most specific subclassed form with all field
-        values fetched from the database. The result is cached in memory.
-        """
-        return self.get_specific()
-
-    @cached_property
-    def specific_deferred(self):
-        """
-        Returns this page in its most specific subclassed form without any
-        additional field values being fetched from the database. The result
-        is cached in memory.
-        """
-        return self.get_specific(deferred=True)
-
-    @cached_property
-    def specific_class(self):
-        """
-        Return the class that this page would be if instantiated in its
-        most specific form.
-
-        If the model class can no longer be found in the codebase, and the
-        relevant ``ContentType`` has been removed by a database migration,
-        the return value will be ``None``.
-
-        If the model class can no longer be found in the codebase, but the
-        relevant ``ContentType`` is still present in the database (usually a
-        result of switching between git branches without running or reverting
-        database migrations beforehand), the return value will be ``None``.
-        """
-        return self.cached_content_type.model_class()
-
-    @property
-    def cached_content_type(self):
-        """
-        Return this page's ``content_type`` value from the ``ContentType``
-        model's cached manager, which will avoid a database query if the
-        object is already in memory.
-        """
-        return ContentType.objects.get_for_id(self.content_type_id)
-
     @property
     def page_type_display_name(self):
         """
@@ -1658,6 +1703,11 @@ class Page(AbstractPage, index.Indexed, ClusterableModel, metaclass=PageBase):
 
             try:
                 subpage = self.get_children().get(slug=child_slug)
+                # Cache the parent page on the subpage to avoid another db query
+                # Treebeard's get_parent will use the `_cached_parent_obj` attribute if it exists
+                # And update = False
+                setattr(subpage, "_cached_parent_obj", self)
+
             except Page.DoesNotExist:
                 raise Http404
 
@@ -1683,7 +1733,6 @@ class Page(AbstractPage, index.Indexed, ClusterableModel, metaclass=PageBase):
     def save_revision(
         self,
         user=None,
-        submitted_for_moderation=False,
         approved_go_live_at=None,
         changed=True,
         log_action=False,
@@ -1715,7 +1764,6 @@ class Page(AbstractPage, index.Indexed, ClusterableModel, metaclass=PageBase):
         revision = Revision.objects.create(
             content_object=self,
             base_content_type=self.get_base_content_type(),
-            submitted_for_moderation=submitted_for_moderation,
             user=user,
             approved_go_live_at=approved_go_live_at,
             content=self.serializable_data(),
@@ -1769,22 +1817,12 @@ class Page(AbstractPage, index.Indexed, ClusterableModel, metaclass=PageBase):
                     data={
                         "revision": {
                             "id": previous_revision.id,
-                            "created": previous_revision.created_at.strftime(
-                                "%d %b %Y %H:%M"
-                            ),
+                            "created": ensure_utc(previous_revision.created_at),
                         }
                     },
                     revision=revision,
                     content_changed=changed,
                 )
-
-        if submitted_for_moderation:
-            logger.info(
-                'Page submitted for moderation: "%s" id=%d revision_id=%d',
-                self.title,
-                self.id,
-                revision.id,
-            )
 
         return revision
 
@@ -1805,18 +1843,14 @@ class Page(AbstractPage, index.Indexed, ClusterableModel, metaclass=PageBase):
         else:
             return self.specific
 
-    def update_aliases(
-        self, *, revision=None, user=None, _content=None, _updated_ids=None
-    ):
+    def update_aliases(self, *, revision=None, _content=None, _updated_ids=None):
         """
         Publishes all aliases that follow this page with the latest content from this page.
 
         This is called by Wagtail whenever a page with aliases is published.
 
-        :param revision: The revision of the original page that we are updating to (used for logging purposes).
-        :type revision: Revision, optional
-        :param user: The user who is publishing (used for logging purposes).
-        :type user: User, optional
+        :param revision: The revision of the original page that we are updating to (used for logging purposes)
+        :type revision: Revision, Optional
         """
         specific_self = self.specific
 
@@ -1905,13 +1939,6 @@ class Page(AbstractPage, index.Indexed, ClusterableModel, metaclass=PageBase):
                 instance=alias_updated,
                 revision=revision,
                 alias=True,
-            )
-
-            # Log the publish of the alias
-            log(
-                instance=alias_updated,
-                action="wagtail.publish",
-                user=user,
             )
 
             # Update any aliases of that alias
@@ -2188,7 +2215,7 @@ class Page(AbstractPage, index.Indexed, ClusterableModel, metaclass=PageBase):
     @classmethod
     def get_indexed_objects(cls):
         content_type = ContentType.objects.get_for_model(cls)
-        return super(Page, cls).get_indexed_objects().filter(content_type=content_type)
+        return super().get_indexed_objects().filter(content_type=content_type)
 
     def get_indexed_instance(self):
         # This is accessed on save by the wagtailsearch signal handler, and in edge
@@ -2346,7 +2373,7 @@ class Page(AbstractPage, index.Indexed, ClusterableModel, metaclass=PageBase):
         # make sure that page_description is actually a string rather than a model field
         if isinstance(description, str):
             return description
-        elif getattr(description, "_delegate_text", None):
+        elif isinstance(description, Promise):
             # description is a lazy object (e.g. the result of gettext_lazy())
             return str(description)
         else:
@@ -2393,8 +2420,8 @@ class Page(AbstractPage, index.Indexed, ClusterableModel, metaclass=PageBase):
     ):
         """
         Copies a given page
-        :param log_action flag for logging the action. Pass None to skip logging.
-            Can be passed an action string. Defaults to 'wagtail.copy'
+
+        :param log_action: flag for logging the action. Pass None to skip logging. Can be passed an action string. Defaults to 'wagtail.copy'
         """
         return CopyPageAction(
             self,
@@ -2457,8 +2484,18 @@ class Page(AbstractPage, index.Indexed, ClusterableModel, metaclass=PageBase):
         """
         Return a PagePermissionsTester object defining what actions the user can perform on this page
         """
-        user_perms = UserPagePermissionsProxy(user)
-        return user_perms.for_page(self)
+        # Allow specific classes to override this method, but only cast to the
+        # specific instance if it's not already specific and if the method has
+        # been overridden. This helps improve performance when working with
+        # base Page querysets.
+        is_overridden = (
+            self.specific_class
+            and self.specific_class.permissions_for_user
+            != type(self).permissions_for_user
+        )
+        if is_overridden and not isinstance(self, self.specific_class):
+            return self.specific_deferred.permissions_for_user(user)
+        return PagePermissionTester(user, self)
 
     def is_previewable(self):
         """Returns True if at least one preview mode is specified"""
@@ -2499,6 +2536,34 @@ class Page(AbstractPage, index.Indexed, ClusterableModel, metaclass=PageBase):
         This returns a list of paths to invalidate in a frontend cache
         """
         return ["/"]
+
+    def get_cache_key_components(self):
+        """
+        The components of a :class:`Page` which make up the :attr:`cache_key`. Any change to a
+        page should be reflected in a change to at least one of these components.
+        """
+
+        return [
+            self.id,
+            self.url_path,
+            self.last_published_at.isoformat() if self.last_published_at else None,
+        ]
+
+    @property
+    def cache_key(self):
+        """
+        A generic cache key to identify a page in its current state.
+        Should the page change, so will the key.
+
+        Customizations to the cache key should be made in :attr:`get_cache_key_components`.
+        """
+
+        hasher = safe_md5()
+
+        for component in self.get_cache_key_components():
+            hasher.update(force_bytes(component))
+
+        return hasher.hexdigest()
 
     def get_sitemap_urls(self, request=None):
         return [
@@ -2567,9 +2632,7 @@ class Page(AbstractPage, index.Indexed, ClusterableModel, metaclass=PageBase):
 
         return PageViewRestriction.objects.filter(page_id__in=page_ids_to_check)
 
-    password_required_template = getattr(
-        settings, "PASSWORD_REQUIRED_TEMPLATE", "wagtailcore/password_required.html"
-    )
+    password_required_template = None
 
     def serve_password_required_response(self, request, form, action_url):
         """
@@ -2579,10 +2642,32 @@ class Page(AbstractPage, index.Indexed, ClusterableModel, metaclass=PageBase):
             (and zero or more hidden fields that also need to be output on the template)
         action_url = URL that this form should be POSTed to
         """
+
+        password_required_template = self.password_required_template
+
+        if not password_required_template:
+            password_required_template = getattr(
+                settings,
+                "WAGTAIL_PASSWORD_REQUIRED_TEMPLATE",
+                "wagtailcore/password_required.html",
+            )
+
+            if hasattr(settings, "PASSWORD_REQUIRED_TEMPLATE"):
+                warn(
+                    "The `PASSWORD_REQUIRED_TEMPLATE` setting is deprecated - use `WAGTAIL_PASSWORD_REQUIRED_TEMPLATE` instead.",
+                    category=RemovedInWagtail70Warning,
+                )
+
+                password_required_template = getattr(
+                    settings,
+                    "PASSWORD_REQUIRED_TEMPLATE",
+                    password_required_template,
+                )
+
         context = self.get_context(request)
         context["form"] = form
         context["action_url"] = action_url
-        return TemplateResponse(request, self.password_required_template, context)
+        return TemplateResponse(request, password_required_template, context)
 
     def with_content_json(self, content):
         """
@@ -2708,6 +2793,13 @@ class Page(AbstractPage, index.Indexed, ClusterableModel, metaclass=PageBase):
         verbose_name = _("page")
         verbose_name_plural = _("pages")
         unique_together = [("translation_key", "locale")]
+        # Make sure that we auto-create Permission objects that are defined in
+        # PAGE_PERMISSION_TYPES, skipping the default_permissions from Django.
+        permissions = [
+            (codename, name)
+            for codename, _, name in PAGE_PERMISSION_TYPES
+            if codename not in {"add_page", "change_page", "delete_page", "view_page"}
+        ]
 
 
 class Orderable(models.Model):
@@ -2720,40 +2812,62 @@ class Orderable(models.Model):
 
 
 class RevisionQuerySet(models.QuerySet):
+    def page_revisions_q(self):
+        return Q(base_content_type=get_default_page_content_type())
+
     def page_revisions(self):
-        return self.filter(base_content_type=get_default_page_content_type())
+        return self.filter(self.page_revisions_q())
 
-    def submitted(self):
-        return self.filter(submitted_for_moderation=True)
+    def not_page_revisions(self):
+        return self.exclude(self.page_revisions_q())
 
     def for_instance(self, instance):
-        return self.filter(
-            content_type=ContentType.objects.get_for_model(
-                instance, for_concrete_model=False
-            ),
-            object_id=str(instance.pk),
+        try:
+            # Use RevisionMixin.get_base_content_type() if available
+            return self.filter(
+                base_content_type=instance.get_base_content_type(),
+                object_id=str(instance.pk),
+            )
+        except AttributeError:
+            # Fallback to ContentType for the model
+            return self.filter(
+                content_type=ContentType.objects.get_for_model(
+                    instance, for_concrete_model=False
+                ),
+                object_id=str(instance.pk),
+            )
+
+
+class RevisionsManager(models.Manager.from_queryset(RevisionQuerySet)):
+    def previous_revision_id_subquery(self, revision_fk_name="revision"):
+        """
+        Returns a Subquery that can be used to annotate a queryset with the ID
+        of the previous revision, based on the revision_fk_name field. Useful
+        to avoid N+1 queries when generating comparison links between revisions.
+
+        The logic is similar to Revision.get_previous().pk.
+        """
+        fk = revision_fk_name
+        return Subquery(
+            Revision.objects.filter(
+                base_content_type_id=OuterRef(f"{fk}__base_content_type_id"),
+                object_id=OuterRef(f"{fk}__object_id"),
+            )
+            .filter(
+                Q(
+                    created_at=OuterRef(f"{fk}__created_at"),
+                    pk__lt=OuterRef(f"{fk}__pk"),
+                )
+                | Q(created_at__lt=OuterRef(f"{fk}__created_at"))
+            )
+            .order_by("-created_at", "-pk")
+            .values_list("pk", flat=True)[:1]
         )
-
-
-class RevisionsManager(models.Manager):
-    def get_queryset(self):
-        return RevisionQuerySet(self.model, using=self._db)
-
-    def for_instance(self, instance):
-        return self.get_queryset().for_instance(instance)
 
 
 class PageRevisionsManager(RevisionsManager):
     def get_queryset(self):
         return RevisionQuerySet(self.model, using=self._db).page_revisions()
-
-    def submitted(self):
-        return self.get_queryset().submitted()
-
-
-class SubmittedRevisionsManager(models.Manager):
-    def get_queryset(self):
-        return RevisionQuerySet(self.model, using=self._db).submitted()
 
 
 class Revision(models.Model):
@@ -2766,9 +2880,6 @@ class Revision(models.Model):
     object_id = models.CharField(
         max_length=255,
         verbose_name=_("object id"),
-    )
-    submitted_for_moderation = models.BooleanField(
-        verbose_name=_("submitted for moderation"), default=False, db_index=True
     )
     created_at = models.DateTimeField(db_index=True, verbose_name=_("created at"))
     user = models.ForeignKey(
@@ -2789,7 +2900,6 @@ class Revision(models.Model):
 
     objects = RevisionsManager()
     page_revisions = PageRevisionsManager()
-    submitted_revisions = SubmittedRevisionsManager()
 
     content_object = GenericForeignKey(
         "content_type", "object_id", for_concrete_model=False
@@ -2815,12 +2925,6 @@ class Revision(models.Model):
             self.base_content_type_id = self.content_type_id
 
         super().save(*args, **kwargs)
-        if self.submitted_for_moderation:
-            # ensure that all other revisions of this object have the 'submitted for moderation' flag unset
-            Revision.objects.filter(
-                base_content_type_id=self.base_content_type_id,
-                object_id=self.object_id,
-            ).exclude(id=self.id).update(submitted_for_moderation=False)
 
         if (
             self.approved_go_live_at is None
@@ -2836,8 +2940,8 @@ class Revision(models.Model):
                 data={
                     "revision": {
                         "id": self.id,
-                        "created": self.created_at.strftime("%d %b %Y %H:%M"),
-                        "go_live_at": object.go_live_at.strftime("%d %b %Y %H:%M")
+                        "created": ensure_utc(self.created_at),
+                        "go_live_at": ensure_utc(object.go_live_at)
                         if object.go_live_at
                         else None,
                         "has_live_version": object.live,
@@ -2849,39 +2953,6 @@ class Revision(models.Model):
 
     def as_object(self):
         return self.content_object.with_content_json(self.content)
-
-    def approve_moderation(self, user=None):
-        if self.submitted_for_moderation:
-            logger.info(
-                'Page moderation approved: "%s" id=%d revision_id=%d',
-                self.content_object.title,
-                self.content_object.id,
-                self.id,
-            )
-            log(
-                instance=self.as_object(),
-                action="wagtail.moderation.approve",
-                user=user,
-                revision=self,
-            )
-            self.publish()
-
-    def reject_moderation(self, user=None):
-        if self.submitted_for_moderation:
-            logger.info(
-                'Page moderation rejected: "%s" id=%d revision_id=%d',
-                self.content_object.title,
-                self.content_object.id,
-                self.id,
-            )
-            log(
-                instance=self.as_object(),
-                action="wagtail.moderation.reject",
-                user=user,
-                revision=self,
-            )
-            self.submitted_for_moderation = False
-            self.save(update_fields=["submitted_for_moderation"])
 
     def is_latest_revision(self):
         if self.id is None:
@@ -2961,19 +3032,18 @@ class Revision(models.Model):
         ]
 
 
-PAGE_PERMISSION_TYPES = [
-    ("add", _("Add"), _("Add/edit pages you own")),
-    ("edit", _("Edit"), _("Edit any page")),
-    ("publish", _("Publish"), _("Publish any page")),
-    ("bulk_delete", _("Bulk delete"), _("Delete pages with children")),
-    ("lock", _("Lock"), _("Lock/unlock pages you've locked")),
-    ("unlock", _("Unlock"), _("Unlock any page")),
-]
-
-PAGE_PERMISSION_TYPE_CHOICES = [
-    (identifier, long_label)
-    for identifier, short_label, long_label in PAGE_PERMISSION_TYPES
-]
+class GroupPagePermissionManager(models.Manager):
+    def create(self, **kwargs):
+        # Simplify creation of GroupPagePermission objects by allowing one
+        # of permission or permission_type to be passed in.
+        permission = kwargs.get("permission")
+        permission_type = kwargs.pop("permission_type", None)
+        if not permission and permission_type:
+            kwargs["permission"] = Permission.objects.get(
+                content_type=get_default_page_content_type(),
+                codename=f"{permission_type}_page",
+            )
+        return super().create(**kwargs)
 
 
 class GroupPagePermission(models.Model):
@@ -2989,14 +3059,21 @@ class GroupPagePermission(models.Model):
         related_name="group_permissions",
         on_delete=models.CASCADE,
     )
-    permission_type = models.CharField(
-        verbose_name=_("permission type"),
-        max_length=20,
-        choices=PAGE_PERMISSION_TYPE_CHOICES,
+    permission = models.ForeignKey(
+        Permission,
+        verbose_name=_("permission"),
+        on_delete=models.CASCADE,
     )
 
+    objects = GroupPagePermissionManager()
+
     class Meta:
-        unique_together = ("group", "page", "permission_type")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("group", "page", "permission"),
+                name="unique_permission",
+            ),
+        ]
         verbose_name = _("group page permission")
         verbose_name_plural = _("group page permissions")
 
@@ -3004,169 +3081,27 @@ class GroupPagePermission(models.Model):
         return "Group %d ('%s') has permission '%s' on page %d ('%s')" % (
             self.group.id,
             self.group,
-            self.permission_type,
+            self.permission.codename,
             self.page.id,
             self.page,
         )
 
 
-class UserPagePermissionsProxy:
-    """Helper object that encapsulates all the page permission rules that this user has
-    across the page hierarchy."""
-
-    def __init__(self, user):
-        self.user = user
-
-        if user.is_active and not user.is_superuser:
-            self.permissions = GroupPagePermission.objects.filter(
-                group__user=self.user
-            ).select_related("page")
-
-    def revisions_for_moderation(self):
-        """Return a queryset of page revisions awaiting moderation that this user has publish permission on"""
-
-        # Deal with the trivial cases first...
-        if not self.user.is_active:
-            return Revision.objects.none()
-        if self.user.is_superuser:
-            return Revision.page_revisions.submitted()
-
-        # get the list of pages for which they have direct publish permission
-        # (i.e. they can publish any page within this subtree)
-        publishable_pages_paths = (
-            self.permissions.filter(permission_type="publish")
-            .values_list("page__path", flat=True)
-            .distinct()
-        )
-        if not publishable_pages_paths:
-            return Revision.objects.none()
-
-        # compile a filter expression to apply to the Revision.page_revisions.submitted() queryset:
-        # return only those pages whose paths start with one of the publishable_pages paths
-        only_my_sections = Q(path__startswith=publishable_pages_paths[0])
-        for page_path in publishable_pages_paths[1:]:
-            only_my_sections = only_my_sections | Q(path__startswith=page_path)
-
-        # return the filtered queryset
-        return Revision.page_revisions.submitted().filter(
-            object_id__in=Page.objects.filter(only_my_sections).values_list(
-                Cast("pk", output_field=models.CharField()), flat=True
-            )
-        )
-
-    def for_page(self, page):
-        """Return a PagePermissionTester object that can be used to query whether this user has
-        permission to perform specific tasks on the given page"""
-        return PagePermissionTester(self, page)
-
-    def explorable_pages(self):
-        """Return a queryset of pages that the user has access to view in the
-        explorer (e.g. add/edit/publish permission). Includes all pages with
-        specific group permissions and also the ancestors of those pages (in
-        order to enable navigation in the explorer)"""
-        # Deal with the trivial cases first...
-        if not self.user.is_active:
-            return Page.objects.none()
-        if self.user.is_superuser:
-            return Page.objects.all()
-
-        explorable_pages = Page.objects.none()
-
-        # Creates a union queryset of all objects the user has access to add,
-        # edit and publish
-        for perm in self.permissions.filter(
-            Q(permission_type="add")
-            | Q(permission_type="edit")
-            | Q(permission_type="publish")
-            | Q(permission_type="lock")
-        ):
-            explorable_pages |= Page.objects.descendant_of(perm.page, inclusive=True)
-
-        # For all pages with specific permissions, add their ancestors as
-        # explorable. This will allow deeply nested pages to be accessed in the
-        # explorer. For example, in the hierarchy A>B>C>D where the user has
-        # 'edit' access on D, they will be able to navigate to D without having
-        # explicit access to A, B or C.
-        page_permissions = Page.objects.filter(group_permissions__in=self.permissions)
-        for page in page_permissions:
-            explorable_pages |= page.get_ancestors()
-
-        # Remove unnecessary top-level ancestors that the user has no access to
-        fca_page = page_permissions.first_common_ancestor()
-        explorable_pages = explorable_pages.filter(path__startswith=fca_page.path)
-
-        return explorable_pages
-
-    def editable_pages(self):
-        """Return a queryset of the pages that this user has permission to edit"""
-        # Deal with the trivial cases first...
-        if not self.user.is_active:
-            return Page.objects.none()
-        if self.user.is_superuser:
-            return Page.objects.all()
-
-        editable_pages = Page.objects.none()
-
-        for perm in self.permissions.filter(permission_type="add"):
-            # user has edit permission on any subpage of perm.page
-            # (including perm.page itself) that is owned by them
-            editable_pages |= Page.objects.descendant_of(
-                perm.page, inclusive=True
-            ).filter(owner=self.user)
-
-        for perm in self.permissions.filter(permission_type="edit"):
-            # user has edit permission on any subpage of perm.page
-            # (including perm.page itself) regardless of owner
-            editable_pages |= Page.objects.descendant_of(perm.page, inclusive=True)
-
-        return editable_pages
-
-    def can_edit_pages(self):
-        """Return True if the user has permission to edit any pages"""
-        return self.editable_pages().exists()
-
-    def publishable_pages(self):
-        """Return a queryset of the pages that this user has permission to publish"""
-        # Deal with the trivial cases first...
-        if not self.user.is_active:
-            return Page.objects.none()
-        if self.user.is_superuser:
-            return Page.objects.all()
-
-        publishable_pages = Page.objects.none()
-
-        for perm in self.permissions.filter(permission_type="publish"):
-            # user has publish permission on any subpage of perm.page
-            # (including perm.page itself)
-            publishable_pages |= Page.objects.descendant_of(perm.page, inclusive=True)
-
-        return publishable_pages
-
-    def can_publish_pages(self):
-        """Return True if the user has permission to publish any pages"""
-        return self.publishable_pages().exists()
-
-    def can_remove_locks(self):
-        """Returns True if the user has permission to unlock pages they have not locked"""
-        if self.user.is_superuser:
-            return True
-        if not self.user.is_active:
-            return False
-        else:
-            return self.permissions.filter(permission_type="unlock").exists()
-
-
 class PagePermissionTester:
-    def __init__(self, user_perms, page):
-        self.user = user_perms.user
-        self.user_perms = user_perms
+    def __init__(self, user, page):
+        from wagtail.permissions import page_permission_policy
+
+        self.user = user
+        self.permission_policy = page_permission_policy
         self.page = page
         self.page_is_root = page.depth == 1  # Equivalent to page.is_root()
 
         if self.user.is_active and not self.user.is_superuser:
             self.permissions = {
-                perm.permission_type
-                for perm in user_perms.permissions
+                # Get the 'action' part of the permission codename, e.g.
+                # 'add' instead of 'add_page'
+                perm.permission.codename.rsplit("_", maxsplit=1)[0]
+                for perm in self.permission_policy.get_cached_permissions_for_user(user)
                 if self.page.path.startswith(perm.page.path)
             }
 
@@ -3197,7 +3132,7 @@ class PagePermissionTester:
         if self.user.is_superuser:
             return True
 
-        if "edit" in self.permissions:
+        if "change" in self.permissions:
             return True
 
         if "add" in self.permissions and self.page.owner_id == self.user.pk:
@@ -3231,7 +3166,7 @@ class PagePermissionTester:
         ):
             return False
 
-        if "edit" in self.permissions:
+        if "change" in self.permissions:
             # if the user does not have publish permission, we also need to confirm that there
             # are no published pages here
             if "publish" not in self.permissions:
@@ -3331,10 +3266,13 @@ class PagePermissionTester:
 
     def can_reorder_children(self):
         """
-        Keep reorder permissions the same as publishing, since it immediately affects published pages
-        (and the use-cases for a non-admin needing to do it are fairly obscure...)
+        Reorder permission checking is similar to publishing a subpage, since it immediately
+        affects published pages. However, it shouldn't care about the 'creatability' of
+        page types, because the action only ever updates existing pages.
         """
-        return self.can_publish_subpage()
+        if not self.user.is_active:
+            return False
+        return self.user.is_superuser or ("publish" in self.permissions)
 
     def can_move(self):
         """
@@ -3354,7 +3292,17 @@ class PagePermissionTester:
 
         # reject moves that are forbidden by subpage_types / parent_page_types rules
         # (these rules apply to superusers too)
-        if not self.page.specific.can_move_to(destination):
+        # – but only check this if the page is not already under the target parent.
+        # If it already is, then the user is just reordering the page, and we want
+        # to allow it even if the page currently violates the subpage_type /
+        # parent_page_type rules. This can happen if it was either created before
+        # the rules were specified, or it was done programmatically (e.g. to
+        # predefine a set of pages and disallow the creation of new subpages by
+        # setting subpage_types = []).
+
+        if (not self.page.is_child_of(destination)) and (
+            not self.page.specific.can_move_to(destination)
+        ):
             return False
 
         # shortcut the trivial 'everything' / 'nothing' permissions
@@ -3368,7 +3316,7 @@ class PagePermissionTester:
             return False
 
         # Inspect permissions on the destination
-        destination_perms = self.user_perms.for_page(destination)
+        destination_perms = destination.permissions_for_user(self.user)
 
         # we always need at least add permission in the target
         if "add" not in destination_perms.permissions:
@@ -3402,7 +3350,7 @@ class PagePermissionTester:
             return True
 
         # Inspect permissions on the destination
-        destination_perms = self.user_perms.for_page(destination)
+        destination_perms = destination.permissions_for_user(self.user)
 
         if not destination.specific_class.creatable_subpage_models():
             return False
@@ -3462,10 +3410,12 @@ class PageViewRestriction(BaseViewRestriction):
         """
         Custom delete handler to aid in logging
         :param user: the user removing the view restriction
-        :param specific_instance: the specific model instance the restriction applies to
         """
         specific_instance = self.page.specific
         if specific_instance:
+            removed_restriction_type = PageViewRestriction.objects.filter(
+                id=self.id
+            ).values_list("restriction_type", flat=True)[0]
             log(
                 instance=specific_instance,
                 action="wagtail.view_restriction.delete",
@@ -3474,7 +3424,7 @@ class PageViewRestriction(BaseViewRestriction):
                     "restriction": {
                         "type": self.restriction_type,
                         "title": force_str(
-                            dict(self.RESTRICTION_CHOICES).get(self.restriction_type)
+                            dict(self.RESTRICTION_CHOICES).get(removed_restriction_type)
                         ),
                     }
                 },
@@ -3564,12 +3514,15 @@ class WorkflowTask(Orderable):
         verbose_name_plural = _("workflow task orders")
 
 
-class TaskManager(models.Manager):
+class TaskQuerySet(SpecificQuerySetMixin, models.QuerySet):
     def active(self):
         return self.filter(active=True)
 
 
-class Task(models.Model):
+TaskManager = models.Manager.from_queryset(TaskQuerySet)
+
+
+class Task(SpecificMixin, models.Model):
     name = models.CharField(max_length=255, verbose_name=_("name"))
     content_type = models.ForeignKey(
         ContentType,
@@ -3621,28 +3574,6 @@ class Task(models.Model):
         # except this doesn't convert any characters to lowercase
         return capfirst(cls._meta.verbose_name)
 
-    @cached_property
-    def specific(self):
-        """
-        Return this Task in its most specific subclassed form.
-        """
-        # the ContentType.objects manager keeps a cache, so this should potentially
-        # avoid a database lookup over doing self.content_type. I think.
-        content_type = ContentType.objects.get_for_id(self.content_type_id)
-        model_class = content_type.model_class()
-        if model_class is None:
-            # Cannot locate a model class for this content type. This might happen
-            # if the codebase and database are out of sync (e.g. the model exists
-            # on a different git branch and we haven't rolled back migrations before
-            # switching branches); if so, the best we can do is return the task
-            # unchanged.
-            return self
-        elif isinstance(self, model_class):
-            # self is already the an instance of the most specific class
-            return self
-        else:
-            return content_type.get_object_for_this_type(id=self.id)
-
     task_state_class = None
 
     @classmethod
@@ -3681,14 +3612,6 @@ class Task(models.Model):
         Returns True if the object should be locked to a given user's edits.
         This can be used to prevent editing by non-reviewers.
         """
-        if hasattr(self, "page_locked_for_user"):
-            warnings.warn(
-                "Tasks should use .locked_for_user() instead of "
-                ".page_locked_for_user().",
-                category=RemovedInWagtail60Warning,
-                stacklevel=2,
-            )
-            return self.page_locked_for_user(obj, user)
         return False
 
     def user_can_lock(self, obj, user):
@@ -3745,7 +3668,7 @@ class WorkflowManager(models.Manager):
         return self.filter(active=True)
 
 
-class Workflow(ClusterableModel):
+class AbstractWorkflow(ClusterableModel):
     name = models.CharField(max_length=255, verbose_name=_("name"))
     active = models.BooleanField(
         verbose_name=_("active"),
@@ -3834,9 +3757,14 @@ class Workflow(ClusterableModel):
     class Meta:
         verbose_name = _("workflow")
         verbose_name_plural = _("workflows")
+        abstract = True
 
 
-class GroupApprovalTask(Task):
+class Workflow(AbstractWorkflow):
+    pass
+
+
+class AbstractGroupApprovalTask(Task):
     groups = models.ManyToManyField(
         Group,
         verbose_name=_("groups"),
@@ -3868,24 +3796,37 @@ class GroupApprovalTask(Task):
 
         return super().start(workflow_state, user=user)
 
+    def _user_in_groups(self, user):
+        # Cache the check whether "this user is in any of this
+        # GroupApprovalTask's groups" on the user object, in case we do it
+        # against the same user and task multiple times in a request.
+        # Use a dict to map the task id to the check result, in case we also
+        # check against different GroupApprovalTasks for the same user.
+        cache_attr = "_group_approval_task_checks"
+        if not (checks_cache := getattr(user, cache_attr, {})):
+            setattr(user, cache_attr, checks_cache)
+
+        if self.pk not in checks_cache:
+            checks_cache[self.pk] = self.groups.filter(
+                id__in=user.groups.all()
+            ).exists()
+
+        return checks_cache[self.pk]
+
     def user_can_access_editor(self, obj, user):
-        return (
-            self.groups.filter(id__in=user.groups.all()).exists() or user.is_superuser
-        )
+        return user.is_superuser or self._user_in_groups(user)
 
     def locked_for_user(self, obj, user):
-        return not (
-            self.groups.filter(id__in=user.groups.all()).exists() or user.is_superuser
-        )
+        return not (user.is_superuser or self._user_in_groups(user))
 
     def user_can_lock(self, obj, user):
-        return self.groups.filter(id__in=user.groups.all()).exists()
+        return self._user_in_groups(user)
 
     def user_can_unlock(self, obj, user):
         return False
 
     def get_actions(self, obj, user):
-        if self.groups.filter(id__in=user.groups.all()).exists() or user.is_superuser:
+        if user.is_superuser or self._user_in_groups(user):
             return [
                 ("reject", _("Request changes"), True),
                 ("approve", _("Approve"), False),
@@ -3895,10 +3836,8 @@ class GroupApprovalTask(Task):
         return []
 
     def get_task_states_user_can_moderate(self, user, **kwargs):
-        if self.groups.filter(id__in=user.groups.all()).exists() or user.is_superuser:
-            return TaskState.objects.filter(
-                status=TaskState.STATUS_IN_PROGRESS, task=self.task_ptr
-            )
+        if user.is_superuser or self._user_in_groups(user):
+            return self.task_states.filter(status=TaskState.STATUS_IN_PROGRESS)
         else:
             return TaskState.objects.none()
 
@@ -3907,8 +3846,13 @@ class GroupApprovalTask(Task):
         return _("Members of the chosen Wagtail Groups can approve this task")
 
     class Meta:
+        abstract = True
         verbose_name = _("Group approval task")
         verbose_name_plural = _("Group approval tasks")
+
+
+class GroupApprovalTask(AbstractGroupApprovalTask):
+    pass
 
 
 class WorkflowStateQuerySet(models.QuerySet):
@@ -4341,28 +4285,29 @@ class WorkflowState(models.Model):
         ]
 
 
-class TaskStateManager(models.Manager):
+class BaseTaskStateManager(models.Manager):
     def reviewable_by(self, user):
-        tasks = Task.objects.filter(active=True)
+        tasks = Task.objects.filter(active=True).specific()
         states = TaskState.objects.none()
         for task in tasks:
-            states = states | task.specific.get_task_states_user_can_moderate(user=user)
+            states = states | task.get_task_states_user_can_moderate(user=user)
         return states
 
+
+class TaskStateQuerySet(SpecificQuerySetMixin, models.QuerySet):
     def for_instance(self, instance):
         """
         Filters to only TaskStates for the given instance
         """
-        queryset = self.get_queryset()
         try:
             # Use RevisionMixin.get_base_content_type() if available
-            return queryset.filter(
+            return self.filter(
                 workflow_state__base_content_type=instance.get_base_content_type(),
                 workflow_state__object_id=str(instance.pk),
             )
         except AttributeError:
             # Fallback to ContentType for the model
-            return queryset.filter(
+            return self.filter(
                 workflow_state__content_type=ContentType.objects.get_for_model(
                     instance, for_concrete_model=False
                 ),
@@ -4370,7 +4315,10 @@ class TaskStateManager(models.Manager):
             )
 
 
-class TaskState(models.Model):
+TaskStateManager = BaseTaskStateManager.from_queryset(TaskStateQuerySet)
+
+
+class TaskState(SpecificMixin, models.Model):
     """Tracks the status of a given Task for a particular revision."""
 
     STATUS_IN_PROGRESS = "in_progress"
@@ -4450,28 +4398,6 @@ class TaskState(models.Model):
             "revision_info": self.revision,
             "status": self.status,
         }
-
-    @cached_property
-    def specific(self):
-        """
-        Return this TaskState in its most specific subclassed form.
-        """
-        # the ContentType.objects manager keeps a cache, so this should potentially
-        # avoid a database lookup over doing self.content_type. I think.
-        content_type = ContentType.objects.get_for_id(self.content_type_id)
-        model_class = content_type.model_class()
-        if model_class is None:
-            # Cannot locate a model class for this content type. This might happen
-            # if the codebase and database are out of sync (e.g. the model exists
-            # on a different git branch and we haven't rolled back migrations before
-            # switching branches); if so, the best we can do is return the task state
-            # unchanged.
-            return self
-        elif isinstance(self, model_class):
-            # self is already the an instance of the most specific class
-            return self
-        else:
-            return content_type.get_object_for_this_type(id=self.id)
 
     @transaction.atomic
     def approve(self, user=None, update=True, comment=""):
@@ -4577,7 +4503,7 @@ class TaskState(models.Model):
             next_task_data = {"id": next_task.id, "title": next_task.name}
         log(
             instance=obj,
-            action="wagtail.workflow.{}".format(action),
+            action=f"wagtail.workflow.{action}",
             user=user,
             data={
                 "workflow": {
@@ -4629,11 +4555,10 @@ class PageLogEntryManager(BaseLogEntryManager):
         return super().log_action(instance, action, **kwargs)
 
     def viewable_by_user(self, user):
-        q = Q(
-            page__in=UserPagePermissionsProxy(user)
-            .explorable_pages()
-            .values_list("pk", flat=True)
-        )
+        from wagtail.permissions import page_permission_policy
+
+        explorable_instances = page_permission_policy.explorable_instances(user)
+        q = Q(page__in=explorable_instances.values_list("pk", flat=True))
 
         root_page_permissions = Page.get_first_root_node().permissions_for_user(user)
         if (
@@ -4649,6 +4574,9 @@ class PageLogEntryManager(BaseLogEntryManager):
             )
 
         return PageLogEntry.objects.filter(q)
+
+    def for_instance(self, instance):
+        return self.filter(page=instance)
 
 
 class PageLogEntry(BaseLogEntry):
@@ -4734,7 +4662,7 @@ class Comment(ClusterableModel):
         verbose_name_plural = _("comments")
 
     def __str__(self):
-        return "Comment on Page '{0}', left by {1}: '{2}'".format(
+        return "Comment on Page '{}', left by {}: '{}'".format(
             self.page, self.user, self.text
         )
 
@@ -4789,6 +4717,30 @@ class Comment(ClusterableModel):
     def log_delete(self, **kwargs):
         self._log("wagtail.comments.delete", **kwargs)
 
+    def has_valid_contentpath(self, page):
+        """
+        Return True if this comment's contentpath corresponds to a valid field or
+        StreamField block on the given page object
+        """
+        field_name, *remainder = self.contentpath.split(".")
+        try:
+            field = page._meta.get_field(field_name)
+        except FieldDoesNotExist:
+            return False
+
+        if not remainder:
+            # comment applies to the field as a whole
+            return True
+
+        if not isinstance(field, StreamField):
+            # only StreamField supports content paths that are deeper than one level
+            return False
+
+        stream_value = getattr(page, field_name)
+        block = field.get_block_by_content_path(stream_value, remainder)
+        # content path is valid if this returns a BoundBlock rather than None
+        return bool(block)
+
 
 class CommentReply(models.Model):
     comment = ParentalKey(Comment, on_delete=models.CASCADE, related_name="replies")
@@ -4806,7 +4758,7 @@ class CommentReply(models.Model):
         verbose_name_plural = _("comment replies")
 
     def __str__(self):
-        return "CommentReply left by '{0}': '{1}'".format(self.user, self.text)
+        return f"CommentReply left by '{self.user}': '{self.text}'"
 
     def _log(self, action, page_revision=None, user=None):
         log(

@@ -129,14 +129,14 @@ def get_context_data(self, **kwargs):
     return context
 ```
 
-Thes `check_perm` method can be overridden to check if an object has some permission or not. Objects for which the `check_perm` returns `False` will be available in the context under the key `'items_with_no_access'`.
+The `check_perm` method can be overridden to check if an object has some permission or not. Objects for which the `check_perm` returns `False` will be available in the context under the key `'items_with_no_access'`.
 
 ```python
 def check_perm(self, obj):
     return obj.has_perm('some_perm')  # returns True or False
 ```
 
-The success message shown on the admin can be customised by overriding the `get_success_message` method.
+The success message shown on the admin can be customized by overriding the `get_success_message` method.
 
 ```python
 def get_success_message(self, num_parent_objects, num_child_objects):

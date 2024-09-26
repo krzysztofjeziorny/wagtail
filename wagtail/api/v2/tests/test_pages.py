@@ -12,6 +12,7 @@ from django.urls import reverse
 from rest_framework.test import APIClient
 
 from wagtail.api.v2 import signal_handlers
+from wagtail.api.v2.views import PagesAPIViewSet
 from wagtail.models import Locale, Page, Site
 from wagtail.models.view_restrictions import BaseViewRestriction
 from wagtail.test.demosite import models
@@ -28,6 +29,10 @@ def get_total_page_count():
         .public()
         .count()
     )
+
+
+class Test10411APIViewSet(PagesAPIViewSet):
+    meta_fields = []
 
 
 class TestPageListing(WagtailTestUtils, TestCase):
@@ -192,7 +197,7 @@ class TestPageListing(WagtailTestUtils, TestCase):
         self.assertTrue(blog_page_seen, msg="No blog pages were found in the items")
         self.assertTrue(event_page_seen, msg="No event pages were found in the items")
 
-    def test_non_existant_type_gives_error(self):
+    def test_non_existent_type_gives_error(self):
         response = self.get_response(type="demosite.IDontExist")
         content = json.loads(response.content.decode("UTF-8"))
 
@@ -678,6 +683,16 @@ class TestPageListing(WagtailTestUtils, TestCase):
             },
         )
 
+    def test_slug_field_containing_null_bytes_gives_error(self):
+        response = self.get_response(slug="\0")
+        content = json.loads(response.content.decode("UTF-8"))
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            content,
+            {"message": "field filter error. null characters are not allowed for slug"},
+        )
+
     # CHILD OF FILTER
 
     def test_child_of_filter(self):
@@ -936,6 +951,71 @@ class TestPageListing(WagtailTestUtils, TestCase):
             content, {"message": "cannot order by 'not_a_field' (unknown field)"}
         )
 
+    def test_random_ordering_with_unknown_field_gives_error(self):
+        response = self.get_response(order=["random,id"])
+        content = json.loads(response.content.decode("UTF-8"))
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            content, {"message": "random ordering cannot be combined with other fields"}
+        )
+
+    def test_ordering_by_id_and_slug(self):
+        response = self.get_response(order=["id,slug"])
+        content = json.loads(response.content.decode("UTF-8"))
+
+        page_id_list = self.get_page_id_list(content)
+        expected_order = [
+            2,
+            4,
+            5,
+            6,
+            8,
+            9,
+            10,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23,
+        ]
+        self.assertEqual(page_id_list[:15], expected_order[:15])
+
+    def test_ordering_by_title_and_id_backwards(self):
+        response = self.get_response(order=["title,-id"])
+        content = json.loads(response.content.decode("UTF-8"))
+
+        page_id_list = self.get_page_id_list(content)
+        expected_order = [
+            15,
+            10,
+            6,
+            17,
+            20,
+            13,
+            2,
+            4,
+            9,
+            8,
+            14,
+            12,
+            18,
+            16,
+            5,
+            23,
+            19,
+            22,
+            21,
+        ]
+        self.assertEqual(page_id_list[:5], expected_order[:5])
+
     # LIMIT
 
     def test_limit_only_two_items_returned(self):
@@ -1026,6 +1106,11 @@ class TestPageListing(WagtailTestUtils, TestCase):
         response = self.get_response()
         self.assertEqual(response.status_code, 200)
 
+    def test_issue_10411(self):
+        # Bug with removing meta fields from API
+        response = self.client.get(reverse("wagtailapi_v2:issue_10411:listing"))
+        self.assertEqual(response.status_code, 200)
+
 
 class TestPageListingSearch(WagtailTestUtils, TransactionTestCase):
     fixtures = ["demosite.json"]
@@ -1094,6 +1179,14 @@ class TestPageListingSearch(WagtailTestUtils, TransactionTestCase):
         page_id_list = self.get_page_id_list(content)
 
         self.assertEqual(set(page_id_list), {16, 18, 19})
+
+    def test_search_with_invalid_type(self):
+        # Check that a 400 error is returned when the type doesn't exist
+        response = self.get_response(type="demosite.InvalidPageType", search="blog")
+        content = json.loads(response.content.decode("UTF-8"))
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(content, {"message": "type doesn't exist"})
 
     def test_search_with_filter(self):
         response = self.get_response(
@@ -1765,18 +1858,18 @@ class TestPageDetailWithStreamField(TestCase):
     },
     WAGTAILAPI_BASE_URL="http://api.example.com",
 )
-@mock.patch("wagtail.contrib.frontend_cache.backends.HTTPBackend.purge")
+@mock.patch("wagtail.contrib.frontend_cache.backends.http.HTTPBackend.purge")
 class TestPageCacheInvalidation(TestCase):
     fixtures = ["demosite.json"]
 
     @classmethod
     def setUpClass(cls):
-        super(TestPageCacheInvalidation, cls).setUpClass()
+        super().setUpClass()
         signal_handlers.register_signal_handlers()
 
     @classmethod
     def tearDownClass(cls):
-        super(TestPageCacheInvalidation, cls).tearDownClass()
+        super().tearDownClass()
         signal_handlers.unregister_signal_handlers()
 
     def test_republish_page_purges(self, purge):
@@ -1798,3 +1891,13 @@ class TestPageCacheInvalidation(TestCase):
         Page.objects.get(id=2).specific.save_revision()
 
         purge.assert_not_called()
+
+
+class TestPageViewSetSubclassing(PagesAPIViewSet):
+    model = models.BlogEntryPage
+
+    def test_get_queryset(self):
+        self.assertEqual(
+            self.get_queryset().model,
+            models.BlogEntryPage,
+        )

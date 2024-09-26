@@ -1,8 +1,9 @@
+from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from wagtail.admin.forms.auth import PasswordResetForm
-from wagtail.admin.tests.test_forms import CustomPasswordResetForm
+from wagtail.admin.tests.test_forms import CustomLoginForm, CustomPasswordResetForm
 from wagtail.models import Page
 from wagtail.test.utils import WagtailTestUtils
 
@@ -66,18 +67,29 @@ class TestLoginView(WagtailTestUtils, TestCase):
         response = self.client.get(login_url)
         self.assertRedirects(response, homepage_admin_url)
 
+    @override_settings(WAGTAILADMIN_LOGIN_URL="http://example.com/login/")
+    def test_unauthenticated_redirect_to_custom_login_url(self):
+        response = self.client.get(reverse("wagtailadmin_home"))
+        self.assertRedirects(
+            response,
+            "http://example.com/login/?next=/admin/",
+            fetch_redirect_response=False,
+        )
+
     @override_settings(LANGUAGE_CODE="de")
     def test_language_code(self):
         response = self.client.get(reverse("wagtailadmin_login"))
         self.assertContains(
-            response, '<html lang="de" dir="ltr" class="w-theme-system">'
+            response,
+            '<html lang="de" dir="ltr" class="w-theme-system w-density-default">',
         )
 
     @override_settings(LANGUAGE_CODE="he")
     def test_bidi_language_changes_dir_attribute(self):
         response = self.client.get(reverse("wagtailadmin_login"))
         self.assertContains(
-            response, '<html lang="he" dir="rtl" class="w-theme-system">'
+            response,
+            '<html lang="he" dir="rtl" class="w-theme-system w-density-default">',
         )
 
     @override_settings(
@@ -86,8 +98,53 @@ class TestLoginView(WagtailTestUtils, TestCase):
     def test_login_page_renders_extra_fields(self):
         response = self.client.get(reverse("wagtailadmin_login"))
         self.assertContains(
-            response, '<input type="text" name="captcha" required id="id_captcha">'
+            response,
+            """
+            <input type="text" name="captcha" required
+            aria-describedby="id_captcha-helptext" id="id_captcha">
+            """,
+            html=True,
         )
+        self.assertContains(
+            response,
+            """
+            <div class="w-field__help" id="id_captcha-helptext" data-field-help>
+                <div class="help">should be in extra_fields()</div>
+            </div>
+            """,
+            html=True,
+        )
+
+    @override_settings(
+        WAGTAILADMIN_USER_LOGIN_FORM="wagtail.admin.tests.test_forms.CustomLoginForm"
+    )
+    def test_login_page_renders_custom_form_non_field_errors(self):
+        response = self.client.post(
+            reverse("wagtailadmin_login"),
+            {
+                "username": "test@email.com",
+                "password": "password",
+                "captcha": "unsolved",
+            },
+        )
+        self.assertContains(response, "Captcha is invalid")
+
+    @override_settings(
+        WAGTAILADMIN_USER_LOGIN_FORM="wagtail.admin.tests.test_forms.CustomLoginForm"
+    )
+    def test_login_page_renders_custom_form_login_error(self):
+        response = self.client.post(
+            reverse("wagtailadmin_login"),
+            {
+                "username": "test@email.com",
+                "password": "bad-password",
+                "captcha": "solved",
+            },
+        )
+        msg = CustomLoginForm.error_messages["invalid_login"] % {
+            "username_field": get_user_model().USERNAME_FIELD
+        }
+        self.assertContains(response, msg, html=True)
 
     def test_session_expire_on_browser_close(self):
         self.client.post(
@@ -108,6 +165,29 @@ class TestLoginView(WagtailTestUtils, TestCase):
         self.assertFalse(self.client.session.get_expire_at_browser_close())
         self.assertEqual(self.client.session.get_expiry_age(), 7)
 
+    def test_password_whitespace_not_stripped(self):
+        user_model = get_user_model()
+        # Create a user
+        user_data = {
+            user_model.USERNAME_FIELD: "test2@email.com",
+            "email": "test2@email.com",
+            "password": "  whitespaced_password  ",
+        }
+        for field in user_model.REQUIRED_FIELDS:
+            if field not in user_data:
+                user_data[field] = field
+
+        user_model.objects.create_superuser(**user_data)
+
+        response = self.client.post(
+            reverse("wagtailadmin_login"),
+            {
+                "username": "test2@email.com",
+                "password": "  whitespaced_password  ",
+            },
+        )
+        self.assertRedirects(response, reverse("wagtailadmin_home"))
+
 
 class TestPasswordResetView(TestCase):
     def test_password_reset_view_uses_correct_form(self):
@@ -126,7 +206,21 @@ class TestPasswordResetView(TestCase):
     def test_password_reset_page_renders_extra_fields(self):
         response = self.client.get(reverse("wagtailadmin_password_reset"))
         self.assertContains(
-            response, '<input type="text" name="captcha" required id="id_captcha">'
+            response,
+            """
+            <input type="text" name="captcha" required
+            aria-describedby="id_captcha-helptext" id="id_captcha">
+            """,
+            html=True,
+        )
+        self.assertContains(
+            response,
+            """
+            <div class="w-field__help" id="id_captcha-helptext" data-field-help>
+                <div class="help">should be in extra_fields()</div>
+            </div>
+            """,
+            html=True,
         )
 
 

@@ -37,10 +37,6 @@ If you have disabled auto-update, you must run the [](update_index) command on a
 
 ## `ATOMIC_REBUILD`
 
-```{warning}
-This option may not work on Elasticsearch version 5.4.x, due to [a bug in the handling of aliases](https://github.com/elastic/elasticsearch/issues/24644) - please upgrade to 5.5 or later.
-```
-
 By default (when using the Elasticsearch backend), when the `update_index` command is run, Wagtail deletes the index and rebuilds it from scratch. This causes the search engine to not return results until the rebuild is complete and is also risky as you can't roll back if an error occurs.
 
 Setting the `ATOMIC_REBUILD` setting to `True` makes Wagtail rebuild into a separate index while keeping the old index active until the new one is fully built. When the rebuild is finished, the indexes are swapped atomically and the old index is deleted.
@@ -62,28 +58,19 @@ This backend is intended to be used for development and also should be good enou
 
 ### Elasticsearch Backend
 
-Elasticsearch versions 5, 6 and 7 are supported. Use the appropriate backend for your version:
+Elasticsearch versions 7 and 8 are supported. Use the appropriate backend for your version:
 
--   `wagtail.search.backends.elasticsearch5` (Elasticsearch 5.x)
--   `wagtail.search.backends.elasticsearch6` (Elasticsearch 6.x)
 -   `wagtail.search.backends.elasticsearch7` (Elasticsearch 7.x)
+-   `wagtail.search.backends.elasticsearch8` (Elasticsearch 8.x)
 
 Prerequisites are the [Elasticsearch](https://www.elastic.co/downloads/elasticsearch) service itself and, via pip, the [elasticsearch-py](https://elasticsearch-py.readthedocs.io/) package. The major version of the package must match the installed version of Elasticsearch:
-
-```sh
-pip install "elasticsearch>=5.0.0,<6.0.0"  # for Elasticsearch 5.x
-```
-
-```sh
-pip install "elasticsearch>=6.4.0,<7.0.0"  # for Elasticsearch 6.x
-```
 
 ```sh
 pip install "elasticsearch>=7.0.0,<8.0.0"  # for Elasticsearch 7.x
 ```
 
-```{warning}
-Version 6.3.1 of the Elasticsearch client library is incompatible with Wagtail. Use 6.4.0 or above.
+```sh
+pip install "elasticsearch>=8.0.0,<9.0.0"  # for Elasticsearch 8.x
 ```
 
 The backend is configured in settings:
@@ -91,8 +78,8 @@ The backend is configured in settings:
 ```python
 WAGTAILSEARCH_BACKENDS = {
     'default': {
-        'BACKEND': 'wagtail.search.backends.elasticsearch5',
-        'URLS': ['http://localhost:9200'],
+        'BACKEND': 'wagtail.search.backends.elasticsearch8',
+        'URLS': ['https://localhost:9200'],
         'INDEX': 'wagtail',
         'TIMEOUT': 5,
         'OPTIONS': {},
@@ -109,7 +96,7 @@ A username and password may be optionally supplied to the `URL` field to provide
 WAGTAILSEARCH_BACKENDS = {
     'default': {
         ...
-        'URLS': ['http://username:password@localhost:9200'],
+        'URLS': ['https://username:password@localhost:9200'],
         ...
     }
 }
@@ -145,9 +132,15 @@ If you prefer not to run an Elasticsearch server in development or production, t
 -   Configure `URLS` in the Elasticsearch entry in `WAGTAILSEARCH_BACKENDS` using the Cluster URL from your Bonsai dashboard
 -   Run `./manage.py update_index`
 
-### Amazon AWS Elasticsearch
+(opensearch)=
 
-The Elasticsearch backend is compatible with [Amazon Elasticsearch Service](https://aws.amazon.com/opensearch-service/), but requires additional configuration to handle IAM based authentication. This can be done with the [requests-aws4auth](https://pypi.org/project/requests-aws4auth/) package along with the following configuration:
+### OpenSearch
+
+OpenSearch is a community-driven search engine originally created as a fork of Elasticsearch 7. Wagtail supports OpenSearch through the `wagtail.search.backends.elasticsearch7` backend and version 7.13.4 of the [Elasticsearch Python library](https://pypi.org/project/elasticsearch/). Later versions of the library only permit connecting to Elastic-branded servers, and are not compatible with OpenSearch.
+
+### Amazon AWS OpenSearch
+
+The Elasticsearch backend is compatible with [Amazon OpenSearch Service](https://aws.amazon.com/opensearch-service/), but requires additional configuration to handle IAM based authentication. This can be done with the [requests-aws4auth](https://pypi.org/project/requests-aws4auth/) package along with the following configuration:
 
 ```python
 from elasticsearch import RequestsHttpConnection
@@ -155,7 +148,7 @@ from requests_aws4auth import AWS4Auth
 
 WAGTAILSEARCH_BACKENDS = {
     'default': {
-        'BACKEND': 'wagtail.search.backends.elasticsearch5',
+        'BACKEND': 'wagtail.search.backends.elasticsearch7',
         'INDEX': 'wagtail',
         'TIMEOUT': 5,
         'HOSTS': [{

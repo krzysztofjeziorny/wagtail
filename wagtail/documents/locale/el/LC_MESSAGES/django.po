@@ -18,7 +18,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Wagtail\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-04-20 11:47+0100\n"
+"POT-Creation-Date: 2024-08-07 10:06+0100\n"
 "PO-Revision-Date: 2014-02-20 21:06+0000\n"
 "Last-Translator: 79353a696ad19dc202b261b3067b7640_bec941e, 2015\n"
 "Language-Team: Greek (http://app.transifex.com/torchbox/wagtail/language/"
@@ -74,6 +74,12 @@ msgstr "αρχεία"
 msgid "Add tags to documents"
 msgstr "Προσθήκη ετικετών σε αρχεία"
 
+#, python-format
+msgid "Used %(usage_count)s time"
+msgid_plural "Used %(usage_count)s times"
+msgstr[0] "Χρησιμοποιήθηκε %(usage_count)s φορά/ές"
+msgstr[1] "Χρησιμοποιήθηκε %(usage_count)s φορά/ές"
+
 msgid "Yes, delete"
 msgstr "Ναι, να διαγραφεί"
 
@@ -124,18 +130,6 @@ msgstr "Το αρχείο δεν βρέθηκε"
 
 msgid "Usage"
 msgstr "Χρήση"
-
-msgid "Documents"
-msgstr "Έγγραφα"
-
-msgid "Title"
-msgstr "Τίτλος"
-
-msgid "File"
-msgstr "Αρχείο"
-
-msgid "Created"
-msgstr "Δημιουργήθηκε"
 
 #, python-format
 msgid "Sorry, no documents match \"<em>%(query_string)s</em>\""
@@ -191,6 +185,12 @@ msgstr "Ετικέτες"
 msgid "Delete"
 msgstr "Διαγραφή"
 
+msgid "File"
+msgstr "Αρχείο"
+
+msgid "Created"
+msgstr "Δημιουργήθηκε"
+
 msgid "Choose a document"
 msgstr "Επιλογή εγγράφου"
 
@@ -200,8 +200,11 @@ msgstr "Επιλογή άλλου εγγράφου"
 msgid "Edit this document"
 msgstr "Επεξεργασία αυτού του εγγράφου"
 
-msgid "Search documents"
-msgstr "Αναζήτηση εγγράφων"
+msgid "Documents"
+msgstr "Έγγραφα"
+
+msgid "Title"
+msgstr "Τίτλος"
 
 #, python-format
 msgid "Document '%(document_title)s' added."

@@ -1,12 +1,12 @@
 #
 # Translators:
 # Laszlo Molnar <lazlowmiller@gmail.com>, 2022
-# Loic Teixeira, 2022
 # Istvan Farkas <istvan.farkas@gmail.com>, 2023
+# Loic Teixeira, 2024
 #
 msgid ""
 msgstr ""
-"Last-Translator: Istvan Farkas <istvan.farkas@gmail.com>, 2023\n"
+"Last-Translator: Loic Teixeira, 2024\n"
 "Language-Team: Hungarian (https://app.transifex.com/torchbox/teams/8009/"
 "hu/)\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -21,6 +21,16 @@ msgstr "(1 új elem ebben a menüben)"
 
 msgid "(New)"
 msgstr "(Új)"
+
+msgid "%(num)s error"
+msgid_plural "%(num)s errors"
+msgstr[0] "%(num)s hiba"
+msgstr[1] "%(num)s hiba"
+
+msgid "%(num)s pixel"
+msgid_plural "%(num)s pixels"
+msgstr[0] "%(num)s pixel"
+msgstr[1] "%(num)s pixel"
 
 msgid "Add a comment"
 msgstr "Megjegyzés hozzáadása"
@@ -73,9 +83,6 @@ msgstr "Szerkesztés"
 msgid "Edit '%(title)s'"
 msgstr "'%(title)s' szerkesztése"
 
-msgid "Edit your account"
-msgstr "Fiók szerkesztése"
-
 msgid "Enter your comments..."
 msgstr "Írja be a megjegyzést..."
 
@@ -124,6 +131,9 @@ msgstr "Intéző"
 msgid "Pages"
 msgstr "Oldalak"
 
+msgid "Pin toolbar"
+msgstr "Eszköztár kitűzése"
+
 msgid "Reload saved content"
 msgstr "Mentett tartalom újratöltése"
 
@@ -165,6 +175,9 @@ msgstr "Mentés..."
 msgid "Search"
 msgstr "Keresés"
 
+msgid "Search options…"
+msgstr "Lehetőségek keresése..."
+
 msgid "See all"
 msgstr "Összes megjelenítése"
 
@@ -186,6 +199,12 @@ msgstr ""
 "A szerkesztő összeomlott. A tartalom vissza lett állítva az utolsó mentett "
 "verzióra."
 
+msgid "The maximum number of items is %(max_num)d"
+msgstr "Az elemek maximális száma %(max_num)d"
+
+msgid "The minimum number of items is %(min_num)d"
+msgstr "Az elemek minimális száma %(min_num)d"
+
 msgid "This field is required."
 msgstr "Ennek a mezőnek a megadása kötelező."
 
@@ -197,6 +216,9 @@ msgstr "Oldalsáv kapcsolása"
 
 msgid "Unfocus comment"
 msgstr "Megjegyzés kivétele a fókuszból"
+
+msgid "Unpin toolbar"
+msgstr "Eszköztár elrejtése"
 
 msgid "View child pages of '%(title)s'"
 msgstr "'%(title)s' gyerekoldalainak megtekintése"

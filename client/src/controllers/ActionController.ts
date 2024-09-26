@@ -26,6 +26,11 @@ import { WAGTAIL_CONFIG } from '../config/wagtailConfig';
  *  Enable
  * </button>
  *
+ * @example - triggering a POST request via sendBeacon
+ * <button data-controller="w-action" data-action="blur->w-action#sendBeacon">
+ *  If you move focus away from this button, a POST request will be sent.
+ * </button>
+ *
  * @example - triggering a dynamic redirect
  * // note: a link is preferred normally
  * <form>
@@ -34,9 +39,21 @@ import { WAGTAIL_CONFIG } from '../config/wagtailConfig';
  *     <option value="/path/to/2">2</option>
  *   </select>
  * </form>
+ *
+ * @example - triggering selection of the text in a field
+ * <form>
+ *   <textarea name="url" data-controller="w-action" data-action="click->w-action#select">
+ *     This text will all be selected on focus.
+ *   </textarea>
+ * </form>
+ *
+ * @example - ensuring a button's click does not propagate
+ * <div>
+ *   <button type="button" data-controller="w-action" data-action="w-action#noop:stop">Go</button>
+ * </div>
  */
 export class ActionController extends Controller<
-  HTMLButtonElement | HTMLInputElement
+  HTMLButtonElement | HTMLInputElement | HTMLTextAreaElement
 > {
   static values = {
     continue: { type: Boolean, default: false },
@@ -50,10 +67,16 @@ export class ActionController extends Controller<
     this.element.click();
   }
 
-  post(event: Event) {
-    event.preventDefault();
-    event.stopPropagation();
+  /**
+   * Intentionally does nothing.
+   *
+   * Useful for attaching data-action to leverage the built in
+   * Stimulus options without needing any extra functionality.
+   * e.g. preventDefault (`:prevent`) and stopPropagation (`:stop`).
+   */
+  noop() {}
 
+  private createFormElement() {
     const formElement = document.createElement('form');
 
     formElement.action = this.urlValue;
@@ -76,8 +99,45 @@ export class ActionController extends Controller<
       formElement.appendChild(nextElement);
     }
 
+    return formElement;
+  }
+
+  post(event: Event) {
+    event.preventDefault();
+    event.stopPropagation();
+    const formElement = this.createFormElement();
     document.body.appendChild(formElement);
     formElement.submit();
+  }
+
+  /**
+   * Like post, but uses the Beacon API, which can be used to send data
+   * to a server without waiting for a response. Useful for sending analytics
+   * data or a "release" signal before navigating away from a page.
+   */
+  sendBeacon() {
+    navigator.sendBeacon(this.urlValue, new FormData(this.createFormElement()));
+  }
+
+  /**
+   * Reload the browser.
+   */
+  reload() {
+    window.location.reload();
+  }
+
+  /**
+   * Reload the browser, bypassing the browser dialog triggered by UnsavedController.
+   */
+  forceReload() {
+    window.addEventListener(
+      'w-unsaved:confirm',
+      (event) => {
+        event.preventDefault();
+      },
+      { once: true },
+    );
+    window.location.reload();
   }
 
   /**
@@ -90,5 +150,47 @@ export class ActionController extends Controller<
     const url = event?.params?.url ?? event?.detail?.url ?? this.element.value;
     if (!url) return;
     window.location.assign(url);
+  }
+
+  /**
+   * Reset the field to a supplied or the field's initial value (default).
+   * Only update if the value to change to is different from the current value.
+   */
+  reset(
+    event: CustomEvent<{ value?: string }> & { params?: { value?: string } },
+  ) {
+    const target = this.element;
+    const currentValue = target.value;
+
+    const { value: newValue = '' } = {
+      value: target instanceof HTMLInputElement ? target.defaultValue : '',
+      ...event?.params,
+      ...event?.detail,
+    };
+
+    if (currentValue === newValue) return;
+
+    target.value = newValue;
+    this.dispatch('change', {
+      bubbles: true,
+      cancelable: false,
+      prefix: '',
+      target,
+    });
+  }
+
+  /**
+   * Select all the text in an input or textarea element.
+   */
+  select() {
+    const element = this.element;
+
+    if (
+      element &&
+      (element instanceof HTMLInputElement ||
+        element instanceof HTMLTextAreaElement)
+    ) {
+      element.select();
+    }
   }
 }

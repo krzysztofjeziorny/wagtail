@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Wagtail\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-04-20 11:47+0100\n"
+"POT-Creation-Date: 2024-08-07 10:06+0100\n"
 "PO-Revision-Date: 2014-02-19 21:18+0000\n"
 "Last-Translator: Philip Crisp, 2022\n"
 "Language-Team: Welsh (http://app.transifex.com/torchbox/wagtail/language/"
@@ -25,29 +25,8 @@ msgstr ""
 msgid "Wagtail search"
 msgstr "Ymchwilio Wagtail"
 
-msgid "Query Daily Hits"
-msgstr "Ymholiad Trawiadau Dyddiol"
-
 msgid "index entry"
 msgstr "cofnod mynegai"
 
 msgid "index entries"
 msgstr "cofnodion mynegai"
-
-msgid "Popular search terms"
-msgstr "Termau chwilio poblogaidd"
-
-msgid "Search"
-msgstr "Chwilio"
-
-msgid "Terms"
-msgstr "Termau"
-
-msgid "Views (past week)"
-msgstr "Golygfeydd (yr wythnos ddiwethaf)"
-
-msgid "No results found"
-msgstr "Dim chanfuwyd canlyniadau"
-
-msgid "Choose from popular search terms"
-msgstr "Dewiswch o dermau chwilio poblogaidd"

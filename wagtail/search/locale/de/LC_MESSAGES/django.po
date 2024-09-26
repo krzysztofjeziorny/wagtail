@@ -20,7 +20,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Wagtail\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-04-20 11:47+0100\n"
+"POT-Creation-Date: 2024-08-07 10:06+0100\n"
 "PO-Revision-Date: 2014-02-19 21:18+0000\n"
 "Last-Translator: 79353a696ad19dc202b261b3067b7640_bec941e, 2015\n"
 "Language-Team: German (http://app.transifex.com/torchbox/wagtail/language/"
@@ -34,29 +34,8 @@ msgstr ""
 msgid "Wagtail search"
 msgstr "Wagtail Suche"
 
-msgid "Query Daily Hits"
-msgstr "Nach täglichen Treffern suchen"
-
 msgid "index entry"
 msgstr "Indexeintrag"
 
 msgid "index entries"
 msgstr "Indexeinträge"
-
-msgid "Popular search terms"
-msgstr "Häufige Suchbegriffe"
-
-msgid "Search"
-msgstr "Suche"
-
-msgid "Terms"
-msgstr "Begriffe"
-
-msgid "Views (past week)"
-msgstr "Aufrufe (letze Woche)"
-
-msgid "No results found"
-msgstr "Keine Ergebnisse gefunden"
-
-msgid "Choose from popular search terms"
-msgstr "Wählen Sie aus populären Suchbegriffen"

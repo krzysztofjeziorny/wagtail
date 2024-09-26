@@ -1,14 +1,13 @@
 #
 # Translators:
 # Łukasz Bołdys (Lukasz Boldys), 2022
-# Mateusz <undefined5102@gmail.com>, 2022
 # Miłosz Miśkiewicz, 2022
-# Loic Teixeira, 2022
 # Krzysztof Jeziorny <github@jeziorny.net>, 2023
+# Loic Teixeira, 2024
 #
 msgid ""
 msgstr ""
-"Last-Translator: Krzysztof Jeziorny <github@jeziorny.net>, 2023\n"
+"Last-Translator: Loic Teixeira, 2024\n"
 "Language-Team: Polish (https://app.transifex.com/torchbox/teams/8009/pl/)\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Language: pl\n"
@@ -24,6 +23,20 @@ msgstr "(1 nowa pozycja w tym menu)"
 
 msgid "(New)"
 msgstr "(Nowy)"
+
+msgid "%(num)s error"
+msgid_plural "%(num)s errors"
+msgstr[0] "%(num)s błąd"
+msgstr[1] "%(num)s błędy"
+msgstr[2] "%(num)s błędów"
+msgstr[3] "%(num)s błędy"
+
+msgid "%(num)s pixel"
+msgid_plural "%(num)s pixels"
+msgstr[0] "%(num)s piksel"
+msgstr[1] "%(num)s pikseli"
+msgstr[2] "%(num)s pikseli"
+msgstr[3] "%(num)s piksele"
 
 msgid "Add a comment"
 msgstr "Dodaj komentarz"
@@ -76,9 +89,6 @@ msgstr "Edytuj"
 msgid "Edit '%(title)s'"
 msgstr "Edytuj '%(title)s'"
 
-msgid "Edit your account"
-msgstr "Edytuj swoje konto"
-
 msgid "Enter your comments..."
 msgstr "Dodaj komentarz…"
 
@@ -127,6 +137,9 @@ msgstr "Przeglądarka stron"
 msgid "Pages"
 msgstr "Strony"
 
+msgid "Pin toolbar"
+msgstr "Zakotwicz pasek narzędzi"
+
 msgid "Reload saved content"
 msgstr "Odśwież zapisaną zawartość"
 
@@ -168,6 +181,9 @@ msgstr "Zapisywanie..."
 msgid "Search"
 msgstr "Szukaj"
 
+msgid "Search options…"
+msgstr "Opcje szukania…"
+
 msgid "See all"
 msgstr "Zobacz wszystkie"
 
@@ -189,6 +205,12 @@ msgstr ""
 "Edytor napotkał błąd. Zawartość została cofnięta do ostatniej zapisanej "
 "wersji."
 
+msgid "The maximum number of items is %(max_num)d"
+msgstr "Maksymalna ilość elementów to %(max_num)d"
+
+msgid "The minimum number of items is %(min_num)d"
+msgstr "Minimalna ilość elementów to %(min_num)d"
+
 msgid "This field is required."
 msgstr "To pole jest wymagane."
 
@@ -200,6 +222,9 @@ msgstr "Rozszerzanie bocznej nawigacji"
 
 msgid "Unfocus comment"
 msgstr "Usuń wyróżnienie komentarza"
+
+msgid "Unpin toolbar"
+msgstr "Uwolnij pasek narzędzi"
 
 msgid "View child pages of '%(title)s'"
 msgstr "Wyświetl podstrony dla '%(title)s'"

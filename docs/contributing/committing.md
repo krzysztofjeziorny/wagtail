@@ -9,8 +9,8 @@ If additional code changes are made after the review, it is OK to commit them
 without further review if they are uncontroversial and small enough that
 there is minimal chance of introducing new bugs.
 
-Most code contributions will be in the form of pull requests from Github.
-Pull requests should not be merged from Github, apart from small documentation fixes,
+Most code contributions will be in the form of pull requests from GitHub.
+Pull requests should not be merged from GitHub, apart from small documentation fixes,
 which can be merged with the 'Squash and merge' option. Instead, the code should
 be checked out by a committer locally, the changes examined and rebased,
 the `CHANGELOG.txt` and release notes updated,
@@ -74,8 +74,8 @@ To easily identify the most relevant changes to users, items are grouped togethe
 
 -   Major features (no prefix) - things that will inspire users to upgrade to a new release
 -   Minor enhancements (no prefix) - other improvements to the developer or end user experience
--   Bug fixes (prefixed with "Fix:") - things that address broken behaviour from previous releases
--   Documentation (prefixed with "Docs:") - changes to documentation that do not accompany a specific code change; reorganisations, tutorials, recipes and so on
+-   Bug fixes (prefixed with "Fix:") - things that address broken behavior from previous releases
+-   Documentation (prefixed with "Docs:") - changes to documentation that do not accompany a specific code change; reorganizations, tutorials, recipes and so on
 -   Maintenance (prefixed with "Maintenance:") - cleanup, refactoring and other changes to code or tooling that are not intended to have a visible effect to developers or end users
 
 The name of the contributor should be added at the end of the summary, in brackets.
@@ -91,11 +91,11 @@ Backwards compatibility notes should also be included. See previous release note
 The release notes for each version are found in `docs/releases/x.x.x.md`.
 
 If the contributor is a new person, and this is their first contribution to Wagtail,
-they should be added to the `CONTRIBUTORS.rst` list.
+they should be added to the `CONTRIBUTORS.md` list.
 Contributors are added in chronological order,
 with new contributors added to the bottom of the list.
 Use their preferred name.
-You can usually find the name of a contributor on their Github profile.
+You can usually find the name of a contributor on their GitHub profile.
 If in doubt, or if their name is not on their profile, ask them how they want to be named.
 
 If the changes to be merged are small enough to be a single commit,
@@ -131,7 +131,7 @@ git branch -d pr/xxxx
 
 ## When you have made a mistake
 
-It's ok! Everyone makes mistakes. If you realise that recently merged changes
+It's ok! Everyone makes mistakes. If you realize that recently merged changes
 have a negative impact, create a new pull request with a revert of the changes
 and merge it without waiting for a review. The PR will serve as additional
 documentation for the changes and will run through the CI tests.

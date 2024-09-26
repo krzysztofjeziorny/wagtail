@@ -1,6 +1,9 @@
 <h1 align="center">
-    <img width="343" src=".github/wagtail.svg#gh-light-mode-only" alt="Wagtail">
-    <img width="343" src=".github/wagtail-inverse.svg#gh-dark-mode-only" alt="Wagtail">
+    <picture>
+        <source media="(prefers-color-scheme: light)" srcset=".github/wagtail.svg">
+        <source media="(prefers-color-scheme: dark)" srcset=".github/wagtail-inverse.svg">
+        <img width="343" src=".github/wagtail.svg" alt="Wagtail">
+    </picture>
 </h1>
 <p align="center">
     <br>
@@ -16,8 +19,8 @@
     <a href="https://pypi.python.org/pypi/wagtail/">
         <img src="https://img.shields.io/pypi/dm/wagtail?logo=Downloads" alt="Monthly downloads" />
     </a>
-    <a href="https://twitter.com/WagtailCMS">
-        <img src="https://img.shields.io/twitter/follow/WagtailCMS?style=social&logo=twitter" alt="follow on Twitter">
+    <a href="https://x.com/WagtailCMS">
+        <img src="https://img.shields.io/twitter/follow/WagtailCMS?style=social&logo=twitter" alt="follow on X">
     </a>
 </p>
 
@@ -31,7 +34,7 @@ Wagtail is an open source content management system built on Django, with a stro
 -   Complete control over front-end design and structure
 -   Scales to millions of pages and thousands of editors
 -   Fast out of the box, cache-friendly when you need it
--   Content API for 'headless' sites with de-coupled front-end
+-   Content API for 'headless' sites with decoupled front-end
 -   Runs on a Raspberry Pi or a multi-datacenter cloud platform
 -   StreamField encourages flexible content without compromising structure
 -   Powerful, integrated search, using Elasticsearch or PostgreSQL
@@ -45,7 +48,7 @@ Find out more at [wagtail.org](https://wagtail.org/).
 
 Wagtail works with [Python 3](https://www.python.org/downloads/), on any platform.
 
-To get started with using Wagtail, run the following in a virtual environment:
+To get started with using Wagtail, run the following in a [virtual environment](https://docs.python.org/3/tutorial/venv.html):
 
 ![Installing Wagtail](.github/install-animation.gif)
 
@@ -81,11 +84,11 @@ _(If you are reading this on GitHub, the details here may not be indicative of t
 
 Wagtail supports:
 
--   Django 3.2.x, 4.1.x and 4.2.x
--   Python 3.7, 3.8, 3.9, 3.10 and 3.11
--   PostgreSQL, MySQL and SQLite (with JSON1) as database backends
+-   Django 4.2.x, 5.0.x and 5.1.x
+-   Python 3.9, 3.10, 3.11 and 3.12
+-   PostgreSQL, MySQL, MariaDB and SQLite (with JSON1) as database backends
 
-[Previous versions of Wagtail](https://docs.wagtail.org/en/stable/releases/upgrading.html#compatible-django-python-versions) additionally supported Python 2.7 and earlier Django versions.
+[Previous versions of Wagtail](https://docs.wagtail.org/en/stable/releases/upgrading.html#compatible-django-python-versions) additionally supported Python 2.7, 3.8 and earlier Django versions.
 
 ---
 
@@ -97,7 +100,7 @@ For topics and discussions that do not fit Stack Overflow's question and answer 
 
 [![Join slack community](.github/join-slack-community.png)](https://github.com/wagtail/wagtail/wiki/Slack)
 
-Our [Github discussion boards](https://github.com/wagtail/wagtail/discussions) are open for sharing ideas and plans for the Wagtail project.
+Our [GitHub discussion boards](https://github.com/wagtail/wagtail/discussions) are open for sharing ideas and plans for the Wagtail project.
 
 We maintain a curated list of third party packages, articles and other resources at [Awesome Wagtail](https://github.com/springload/awesome-wagtail).
 
@@ -107,7 +110,7 @@ Wagtail is sponsored by [Torchbox](https://torchbox.com/). If you need help impl
 
 ### 🔐 Security
 
-We take the security of Wagtail, and related packages we maintain, seriously. If you have found a security issue with any of our projects please email us at [security@wagtail.org](mailto:security@wagtail.org) so we can work together to find and patch the issue. We appreciate responsible disclosure with any security related issues, so please contact us first before creating a Github issue.
+We take the security of Wagtail, and related packages we maintain, seriously. If you have found a security issue with any of our projects please email us at [security@wagtail.org](mailto:security@wagtail.org) so we can work together to find and patch the issue. We appreciate responsible disclosure with any security related issues, so please contact us first before creating a GitHub issue.
 
 If you want to send an encrypted email (optional), the public key ID for security@wagtail.org is 0xbed227b4daf93ff9, and this public key is available from most commonly-used keyservers.
 

@@ -31,6 +31,8 @@ Optionally, you may also want to add `rest_framework` to `INSTALLED_APPS`.
 This would make the API browsable when viewed from a web browser but is not
 required for basic JSON-formatted output.
 
+(api_v2_configure_endpoints)=
+
 ### Configure endpoints
 
 Next, it's time to configure which content will be exposed on the API. Each
@@ -38,14 +40,15 @@ content type (such as pages, images and documents) has its own endpoint.
 Endpoints are combined by a router, which provides the url configuration you
 can hook into the rest of your project.
 
-Wagtail provides three endpoint classes you can use:
+Wagtail provides multiple endpoint classes you can use:
 
--   Pages {class}`wagtail.api.v2.views.PagesAPIViewSet`
--   Images {class}`wagtail.images.api.v2.views.ImagesAPIViewSet`
--   Documents {class}`wagtail.documents.api.v2.views.DocumentsAPIViewSet`
+-   Pages `wagtail.api.v2.views.PagesAPIViewSet`
+-   Images `wagtail.images.api.v2.views.ImagesAPIViewSet`
+-   Documents `wagtail.documents.api.v2.views.DocumentsAPIViewSet`
+-   Redirects `wagtail.contrib.redirects.api.RedirectsAPIViewSet` see [](redirects_api_endpoint)
 
-You can subclass any of these endpoint classes to customise their functionality.
-For example, in this case if you need to change the `APIViewSet` by setting a desired renderer class:
+You can subclass any of these endpoint classes to customize their functionality.
+For example, in this case, if you need to change the `APIViewSet` by setting a desired renderer class:
 
 ```python
 from rest_framework.renderers import JSONRenderer
@@ -56,7 +59,21 @@ class CustomPagesAPIViewSet(PagesAPIViewSet):
     renderer_classes = [JSONRenderer]
     name = "pages"
 
-api_router.register_endpoint("pages", ProdPagesAPIViewSet)
+api_router.register_endpoint("pages", CustomPagesAPIViewSet)
+```
+
+Or changing the desired model to use for page results.
+
+```python
+from rest_framework.renderers import JSONRenderer
+
+# ...
+
+class PostPagesAPIViewSet(PagesAPIViewSet):
+    model = models.BlogPage
+
+
+api_router.register_endpoint("posts", PostPagesAPIViewSet)
 ```
 
 Additionally, there is a base endpoint class you can use for adding different
@@ -271,7 +288,7 @@ Note: `download_url` is the original uploaded file path, whereas
 When you are using another storage backend, such as S3, `download_url` will return
 a URL to the image if your media files are properly configured.
 
-For cases where the source image set may contain SVGs, the `ImageRenditionField` constructor takes a `preserve_svg` argument. The behaviour of `ImageRenditionField` when `preserve_svg` is `True` is as described for the `image` template tag's `preserve-svg` argument (see the documentation on [](svg_images)).
+For cases where the source image set may contain SVGs, the `ImageRenditionField` constructor takes a `preserve_svg` argument. The behavior of `ImageRenditionField` when `preserve_svg` is `True` is as described for the `image` template tag's `preserve-svg` argument (see the documentation on [](svg_images)).
 
 ## Additional settings
 
@@ -282,7 +299,7 @@ For cases where the source image set may contain SVGs, the `ImageRenditionField`
 This is used in two places, when generating absolute URLs to document files and
 invalidating the cache.
 
-Generating URLs to documents will fall back the the current request's hostname
+Generating URLs to documents will fall back the current request's hostname
 if this is not set. Cache invalidation cannot do this, however, so this setting
 must be set when using this module alongside the `wagtailfrontendcache` module.
 

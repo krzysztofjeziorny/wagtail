@@ -5,14 +5,14 @@
 # Translators:
 # David Llop, 2014
 # David Llop, 2014
-# Roger Pons <rogerpons@gmail.com>, 2016-2017,2020,2023
+# Roger Pons <rogerpons@gmail.com>, 2016-2017,2020,2023-2024
 msgid ""
 msgstr ""
 "Project-Id-Version: Wagtail\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-04-20 11:47+0100\n"
+"POT-Creation-Date: 2024-08-07 10:05+0100\n"
 "PO-Revision-Date: 2014-02-21 15:51+0000\n"
-"Last-Translator: Roger Pons <rogerpons@gmail.com>, 2016-2017,2020,2023\n"
+"Last-Translator: Roger Pons <rogerpons@gmail.com>, 2016-2017,2020,2023-2024\n"
 "Language-Team: Catalan (http://app.transifex.com/torchbox/wagtail/language/"
 "ca/)\n"
 "MIME-Version: 1.0\n"
@@ -72,6 +72,9 @@ msgstr "Wagtail routablepage"
 msgid "Wagtail sitemaps"
 msgstr "Wagtail sitemaps"
 
+msgid "Unknown content type"
+msgstr "Tipus de contingut desconegut"
+
 msgid "Password"
 msgstr "Contrasenya"
 
@@ -83,6 +86,11 @@ msgstr "Commentari"
 
 msgid "Locked"
 msgstr "Bloquejada"
+
+#, python-format
+msgid "No one can make changes while the %(model_name)s is locked"
+msgstr ""
+"Ningú pot fer modificacions mentre el/la %(model_name)s està bloquejat/da"
 
 #, python-brace-format
 msgid "<b>'{title}' was locked</b> by <b>you</b> on <b>{datetime}</b>."
@@ -101,6 +109,23 @@ msgstr ""
 #, python-brace-format
 msgid "<b>'{title}' is locked</b>."
 msgstr "<b>'{title}' està bloquejada</b>."
+
+msgid "Locked by you"
+msgstr "Bloquejat/da per tu"
+
+msgid "Locked by another user"
+msgstr "Bloquejat per un altre usuari"
+
+#, python-format
+msgid "Only you can make changes while the %(model_name)s is locked"
+msgstr ""
+"Només tu pots fer modificacions mentre el/la %(model_name)s està bloquejat/da"
+
+#, python-format
+msgid "Only %(user)s can make changes while the %(model_name)s is locked"
+msgstr ""
+"Només %(user)s pot fer modificacions mentre el/la %(model_name)s està "
+"bloquejat/da"
 
 #, python-format
 msgid "This %(model_name)s is currently awaiting moderation."
@@ -121,6 +146,21 @@ msgstr "Només els revisar d'aquesta tasca poden editar el/la %(model_name)s."
 msgid "Unlocked"
 msgstr "Desbloquejat"
 
+msgid "Locked by workflow"
+msgstr "Bloquejat/da pel fluxe de treball"
+
+#, python-format
+msgid ""
+"Reviewers can edit this %(model_name)s – lock it to prevent other reviewers "
+"from editing"
+msgstr ""
+"Els revisors poden editar aquest/a %(model_name)s – bloquegeu-lo/la per "
+"evitar que altres revisors pugin editar-lo/la"
+
+#, python-format
+msgid "Only reviewers can edit and approve the %(model_name)s"
+msgstr "Només els revisors poden editar i aprovar el/la %(model_name)s"
+
 #, python-brace-format
 msgid ""
 "{model_name} '{title}' is locked and has been scheduled to go live at "
@@ -128,6 +168,12 @@ msgid ""
 msgstr ""
 "{model_name} '{title}' està bloquedat/da i ha estat programat/da per anar a "
 "En viu el {datetime}"
+
+msgid "Locked by schedule"
+msgstr "Bloquejat/da per programació de publicació"
+
+msgid "Currently locked and will go live on the scheduled date"
+msgstr "Actualment bloquejat i passarà a En viu en la data programada"
 
 msgid "latest revision"
 msgstr "última revisió"
@@ -185,6 +231,39 @@ msgstr "en moderació"
 
 msgid "live + in moderation"
 msgstr "en viu + en moderació"
+
+msgid "Add/edit pages you own"
+msgstr "Afegir/editar pàgines pròpies"
+
+msgid "Bulk delete"
+msgstr "Eliminació en massa"
+
+msgid "Delete pages with children"
+msgstr "Eliminar pàgines amb pàgines filles"
+
+msgid "Edit"
+msgstr "Editar"
+
+msgid "Edit any page"
+msgstr "Editar una pàgina"
+
+msgid "Lock"
+msgstr "Bloquejar"
+
+msgid "Lock/unlock pages you've locked"
+msgstr "Bloqueig i desbloqueig de pàgines que he bloquejat"
+
+msgid "Publish"
+msgstr "Publicar"
+
+msgid "Publish any page"
+msgstr "Publicar una pàgina"
+
+msgid "Unlock"
+msgstr "Desbloquejar"
+
+msgid "Unlock any page"
+msgstr "Desbloquejar alguna pàgina"
 
 msgid "title"
 msgstr "títol"
@@ -259,9 +338,6 @@ msgstr "pàgines"
 msgid "object id"
 msgstr "id d'objecte"
 
-msgid "submitted for moderation"
-msgstr "enviat a moderació"
-
 msgid "created at"
 msgstr "creat el"
 
@@ -280,44 +356,11 @@ msgstr "revisió"
 msgid "revisions"
 msgstr "revisions"
 
-msgid "Add/edit pages you own"
-msgstr "Afegir/editar pàgines pròpies"
-
-msgid "Edit"
-msgstr "Editar"
-
-msgid "Edit any page"
-msgstr "Editar una pàgina"
-
-msgid "Publish"
-msgstr "Publicar"
-
-msgid "Publish any page"
-msgstr "Publicar una pàgina"
-
-msgid "Bulk delete"
-msgstr "Eliminació en massa"
-
-msgid "Delete pages with children"
-msgstr "Eliminar pàgines amb pàgines filles"
-
-msgid "Lock"
-msgstr "Bloquejar"
-
-msgid "Lock/unlock pages you've locked"
-msgstr "Bloqueig i desbloqueig de pàgines que he bloquejat"
-
-msgid "Unlock"
-msgstr "Desbloquejar"
-
-msgid "Unlock any page"
-msgstr "Desbloquejar alguna pàgina"
-
 msgid "group"
 msgstr "grup"
 
-msgid "permission type"
-msgstr "tipus de permís"
+msgid "permission"
+msgstr "permís"
 
 msgid "group page permission"
 msgstr "permís de pàgina de grup"
@@ -524,6 +567,9 @@ msgstr "entrada de registre de model"
 msgid "model log entries"
 msgstr "entrades de registre de models"
 
+msgid "locale"
+msgstr "Localització"
+
 msgid "collection"
 msgstr "col·lecció"
 
@@ -536,14 +582,41 @@ msgstr "Restriccions de visualitzacions de col·leccions"
 msgid "collections"
 msgstr "col·leccions"
 
-msgid "permission"
-msgstr "permís"
-
 msgid "group collection permission"
 msgstr "permís de col·lecció de grups"
 
 msgid "group collection permissions"
-msgstr "Permisos de col·leccions de grups"
+msgstr "permisos de col·leccions de grups"
+
+msgid "for content type"
+msgstr "per tipus de contingut"
+
+msgid "uploaded by user"
+msgstr "pujada per l'usuari"
+
+#, python-format
+msgid "the %(model_name)s will also be deleted"
+msgstr "el/la %(model_name)s serà també esborrat/da"
+
+msgid "prevents deletion"
+msgstr "evita l'esborrat"
+
+#, python-format
+msgid "will be set to the default %(model_name)s"
+msgstr "serà establert al %(model_name)s per defecte"
+
+msgid "will do nothing"
+msgstr "no farà res"
+
+msgid "may prevent deletion"
+msgstr "pot evitar l'esborrat"
+
+#, python-format
+msgid "will be set to a %(model_name)s specified by the system"
+msgstr "serà establert a un/a %(model_name)s especificat/da pel sistema"
+
+msgid "will unset the reference"
+msgstr "anul·larà la referència"
 
 msgid "hostname"
 msgstr "hostname"
@@ -599,17 +672,25 @@ msgstr ""
 msgid "Public"
 msgstr "Pública"
 
-msgid "Private, accessible to logged-in users"
-msgstr "Privada, accessible a usuaris identificats"
+msgid "Private, accessible with a shared password"
+msgstr "Privat, accessible amb una contrasenya compartida"
 
-msgid "Private, accessible with the following password"
-msgstr "Privada, accessible amb la contrasenya següent"
+msgid "Private, accessible to any logged-in users"
+msgstr "Privat, accessible per qualsevol usuari amb sessió iniciada"
 
 msgid "Private, accessible to users in specific groups"
 msgstr "Privada, accessible a usuaris de grups específics"
 
-msgid "password"
-msgstr "contrasenya"
+msgid "shared password"
+msgstr "contrasenya compartida"
+
+msgid ""
+"Shared passwords should not be used to protect sensitive content. Anyone who "
+"has this password will be able to view the content."
+msgstr ""
+"Les contrasenyes compartides no s'han d'utilitzar per protegir contingut "
+"sensible. Qualsevol persona que tingui aquesta contrasenya podrà visualitzar "
+"el contingut."
 
 msgid "view restriction"
 msgstr "restricció de visualització"
@@ -621,7 +702,8 @@ msgid "Log in"
 msgstr "Iniciar sessió"
 
 msgid "Your username and password didn't match. Please try again."
-msgstr "El vostre nom d'usuari i contrasenya no concorden. Torneu-ho a provar."
+msgstr ""
+"El vostre nom d'usuari i contrasenya no coincideixen. Torneu-ho a provar."
 
 msgid ""
 "Your account doesn't have access to this page. To proceed, please log in "
@@ -825,8 +907,10 @@ msgid "Remove view restrictions"
 msgstr "Esborrar restriccions de visualització"
 
 #, python-format
-msgid "Removed the '%(restriction)s' view restriction"
-msgstr "S'ha esborrat la restricció de visualització de '%(restriction)s'"
+msgid "Removed the '%(restriction)s' view restriction. The page is public."
+msgstr ""
+"S'ha esborrat la restricció de visualització '%(restriction)s'. Aquesta "
+"pàgina és pública."
 
 msgid "Removed view restriction"
 msgstr "S'ha esborrat al restricció de visualització"

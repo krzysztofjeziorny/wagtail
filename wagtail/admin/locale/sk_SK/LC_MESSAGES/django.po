@@ -4,6 +4,7 @@
 #
 # Translators:
 # dellax <michalnebbia@gmail.com>, 2015
+# Ivan Waginger <ivan.waginger@gmail.com>, 2024
 # karabellyj <jozefkarabelly@gmail.com>, 2017
 # karabellyj <jozefkarabelly@gmail.com>, 2017
 # karabellyj <jozefkarabelly@gmail.com>, 2017
@@ -16,9 +17,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Wagtail\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-04-20 11:47+0100\n"
+"POT-Creation-Date: 2024-08-07 10:06+0100\n"
 "PO-Revision-Date: 2014-02-21 15:50+0000\n"
-"Last-Translator: Stevo Backor, 2016\n"
+"Last-Translator: Ivan Waginger <ivan.waginger@gmail.com>, 2024\n"
 "Language-Team: Slovak (Slovakia) (http://app.transifex.com/torchbox/wagtail/"
 "language/sk_SK/)\n"
 "MIME-Version: 1.0\n"
@@ -55,6 +56,12 @@ msgstr "Dátum od"
 msgid "Date to"
 msgstr "Dátum do"
 
+msgid "Collection"
+msgstr "Kolekcie"
+
+msgid "Tag"
+msgstr "Tag"
+
 msgid "First Name"
 msgstr "Krstné meno"
 
@@ -66,6 +73,10 @@ msgstr "Email"
 
 msgid "Enter password"
 msgstr "Zadajte heslo"
+
+#, python-format
+msgid "Your %(username_field)s and password didn't match. Please try again."
+msgstr "Vaše %(username_field)s a heslo sú nesprávne. Prosím skúste znovu."
 
 #, python-format
 msgid "Enter your %(username_field_name)s"
@@ -85,9 +96,6 @@ msgstr "Hľadať"
 
 msgid "All collections"
 msgstr "Všetky kolekcie"
-
-msgid "Collection"
-msgstr "Kolekcie"
 
 msgid "Parent"
 msgstr "Rodič"
@@ -177,6 +185,9 @@ msgstr ""
 msgid "You cannot copy a page into itself when copying subpages"
 msgstr "Nemôžete skopírovať stránku do seba samej."
 
+msgid "Parent page"
+msgstr "Rodičovská strana"
+
 msgid "Visibility"
 msgstr "Viditeľnosť"
 
@@ -186,9 +197,6 @@ msgstr "Toto pole je povinné."
 msgid "Please select at least one group."
 msgstr "Prosím, vyberte aspoň jednu skupinu."
 
-msgid "Page title"
-msgstr "Titulok stránky"
-
 msgid "Content"
 msgstr "Obsah"
 
@@ -197,6 +205,12 @@ msgstr "Propagovať"
 
 msgid "Settings"
 msgstr "Nastavenia"
+
+msgid "Title"
+msgstr "Titulok"
+
+msgid "Page title"
+msgstr "Titulok stránky"
 
 msgid "Error 404: Page not found"
 msgstr "Chyba 404: Stránka nebola nájdená"
@@ -271,9 +285,6 @@ msgstr "Prehliadajte podstránky '%(title)s'"
 msgid "Explore"
 msgstr "Prehliadať"
 
-msgid "Collection privacy"
-msgstr "Súkromie kolekcie"
-
 msgid "This collection has been made private by a parent collection."
 msgstr "Táto kolekcia bola zmenená na súkromnú svojou rodičovskou kolekciou."
 
@@ -301,9 +312,6 @@ msgid ""
 "This collection cannot be deleted, because it is not empty. It contains:"
 msgstr "Táto kolekcia nemôže byť zmazaná, pretože nie je prázdna. Obsahuje:"
 
-msgid "Name"
-msgstr "Názov"
-
 #, python-format
 msgid ""
 "No collections have been created. Why not <a "
@@ -315,6 +323,9 @@ msgstr ""
 msgid "Yes, delete"
 msgstr "Áno, zmazať"
 
+msgid "No, don't delete"
+msgstr "Nie, nezmazať"
+
 #, python-format
 msgid "Unpublish %(title)s"
 msgstr "Odpublikovať %(title)s"
@@ -324,6 +335,9 @@ msgstr "Áno, odpublikovať"
 
 msgid "No, don't unpublish"
 msgstr "Nie, nepublikovať"
+
+msgid "Actions"
+msgstr "Akcie"
 
 msgid "Update"
 msgstr "Aktualizovať"
@@ -352,9 +366,6 @@ msgstr ""
 "Toto je vaša nástenka, na ktorej sa budú zobrazovať informácie o obsahu, "
 "ktorý ste vytvorili."
 
-msgid "Title"
-msgstr "Titulok"
-
 msgid "Edit this page"
 msgstr "Upraviť túto stránku"
 
@@ -363,24 +374,6 @@ msgstr "Koncept"
 
 msgid "Live"
 msgstr "Live"
-
-msgid "Pages awaiting moderation"
-msgstr "Stránky čakajúce na moderáciu"
-
-msgid "Type"
-msgstr "Typ"
-
-msgid "Edited"
-msgstr "Upravené"
-
-msgid "Approve"
-msgstr "Schváliť"
-
-msgid "Reject"
-msgstr "Odmietnuť"
-
-msgid "Preview"
-msgstr "Náhľad"
 
 msgid "Your most recent edits"
 msgstr "Vaše posledné úpravy"
@@ -397,15 +390,17 @@ msgstr "Prehľad sídla"
 msgid "Close"
 msgstr "Zavrieť"
 
+msgid "Preview"
+msgstr "Náhľad"
+
+msgid "Compare with live version"
+msgstr "Porovnaj s live verziou"
+
 msgid "Sign in"
 msgstr "Prihlásiť sa"
 
 msgid "Sign in to Wagtail"
 msgstr "Prihlásiť sa do Wagtail"
-
-#, python-format
-msgid "Your %(username_field)s and password didn't match. Please try again."
-msgstr "Vaše %(username_field)s a heslo sú nesprávne. Prosím skúste znovu."
 
 #, python-format
 msgid "The page \"%(title)s\" has been approved."
@@ -436,19 +431,8 @@ msgstr "Tu môžete upraviť stránku:"
 msgid "The page \"%(title)s\" has been rejected"
 msgstr "Stránka \"%(title)s\" bola zamietnutá"
 
-#, python-format
-msgid "The page \"%(page)s\" has been submitted for moderation by %(editor)s."
-msgstr "Stránka \"%(page)s\" bola odoslaná na moderáciu editorom %(editor)s."
-
 msgid "You can preview the page here:"
 msgstr "Tu môžete vidieť stránku:"
-
-#, python-format
-msgid "The page \"%(page)s\" has been submitted for moderation"
-msgstr "Stránka \"%(page)s\" bola odoslaná na moderáciu"
-
-msgid "Page privacy"
-msgstr "Nastavenie súkromia stránky"
 
 msgid "This page has been made private by a parent page."
 msgstr "Táto stránka bola zmenená na súkromnú svojou rodičovskou stránkou."
@@ -524,13 +508,6 @@ msgid "Are you sure you want to unpublish this page?"
 msgstr "Naozaj chcete odpublikovať túto stránku?"
 
 #, python-format
-msgid "Pages using %(page_class_verbose_name)s"
-msgstr "Stránky používajúce %(page_class_verbose_name)s"
-
-msgid "Pages using"
-msgstr "Stránky požívajúce"
-
-#, python-format
 msgid "Copy %(title)s"
 msgstr "Kopírovať %(title)s"
 
@@ -540,45 +517,11 @@ msgstr "Kopírovať"
 msgid "Copy this page"
 msgstr "Kopírovať túto stránku"
 
-#, python-format
-msgid "New %(page_type)s"
-msgstr "Nový  %(page_type)s"
-
-msgid "Actions"
-msgstr "Akcie"
-
 msgid "This page has unsaved changes."
 msgstr "Táto stránka má neuložené zmeny."
 
-#, python-format
-msgid "Editing %(page_type)s: %(title)s"
-msgstr "Upravujete %(page_type)s: %(title)s"
-
-msgid "User"
-msgstr "Používateľ"
-
-msgid "Live version"
-msgstr "Živá verzia"
-
-msgid "Current draft"
-msgstr "Aktuálny koncept"
-
-#, python-format
-msgid "Exploring %(title)s"
-msgstr "Prehliadanie %(title)s"
-
-msgid "Drag"
-msgstr "Potiahnuť"
-
 msgid "Configure a site now."
 msgstr "Nastavte webové sídlo."
-
-msgid "No pages have been created at this location."
-msgstr "V tejto lokácii neboli vytvorené žiadne stránky."
-
-#, python-format
-msgid "Why not <a href=\"%(add_page_url)s\">create one</a>?"
-msgstr "Prečo nevytvoriť <a href=\"%(add_page_url)s\">jednu ihneď</a>?"
 
 msgid "This page is locked to further editing"
 msgstr "Táto stránka bola uzamknutá pre budúcu úpravu"
@@ -590,6 +533,15 @@ msgstr "Prehliadajte podstránky '%(title)s'"
 #, python-format
 msgid "Add a child page to '%(title)s'"
 msgstr "Pridajte podstránku do '%(title)s'"
+
+msgid "Drag"
+msgstr "Potiahnuť"
+
+msgid "Disable ordering of child pages"
+msgstr "Zakázať usporiadanie podstránok"
+
+msgid "Enable ordering of child pages"
+msgstr "Povoliť usporiadanie child stránok"
 
 msgid "Sites menu"
 msgstr "Menu sídiel"
@@ -603,14 +555,8 @@ msgstr "Následujúca"
 msgid "This page is protected from public view"
 msgstr "Táto stránka je chránená pred zobrazením návštevníkom"
 
-msgid "Disable ordering of child pages"
-msgstr "Zakázať usporiadanie podstránok"
-
-msgid "Enable ordering of child pages"
-msgstr "Povoliť usporiadanie child stránok"
-
-msgid "Updated"
-msgstr "Aktualizované"
+msgid "Add child page"
+msgstr "Pridať podstránku"
 
 msgid "Enter a search term above"
 msgstr "Zadajte hľadaný výraz"
@@ -624,11 +570,23 @@ msgstr "Posunúť vyššie"
 msgid "Move down"
 msgstr "Posunúť nižšie"
 
-msgid "Download CSV"
-msgstr "Stiahnuť CSV"
+msgid "Type"
+msgstr "Typ"
+
+msgid "Updated"
+msgstr "Aktualizované"
+
+msgid "Pages"
+msgstr "Stránky"
 
 msgid "Locked"
 msgstr "Zamknuté"
+
+msgid "Name"
+msgstr "Názov"
+
+msgid "User"
+msgstr "Používateľ"
 
 msgid "Edit this item"
 msgstr "Upraviť položku"
@@ -637,14 +595,20 @@ msgstr "Upraviť položku"
 msgid "Page %(page_num)s of %(total_pages)s."
 msgstr "Strana %(page_num)s z %(total_pages)s."
 
-msgid "Root"
-msgstr "Koreň"
+msgid "Continue"
+msgstr "Pokračovať"
+
+msgid "Download CSV"
+msgstr "Stiahnuť CSV"
 
 msgid "Filter"
 msgstr "Filter"
 
 msgid "Other searches"
 msgstr "Ostatné výsledky hľadania"
+
+msgid "Minimap"
+msgstr "Minimapa"
 
 msgid "Unlocked"
 msgstr "Odomknuté"
@@ -654,6 +618,9 @@ msgstr "Zamknúť"
 
 msgid "Privacy changes apply to all children of this page too."
 msgstr "Zmeny súkromia tejto stránky sa prejavia tiež všetkým jej podstránkam."
+
+msgid "Edited"
+msgstr "Upravené"
 
 msgid "Add a child page"
 msgstr "Pridať podstránku"
@@ -666,9 +633,6 @@ msgstr "Stránka"
 
 msgid "New"
 msgstr "Nový"
-
-msgid "Compare with live version"
-msgstr "Porovnaj s live verziou"
 
 msgid "More"
 msgstr "Viac"
@@ -716,17 +680,33 @@ msgstr "Kolekcia '%(object)s' bola zmazaná."
 msgid "Are you sure you want to delete this collection?"
 msgstr "Naozaj chcete zmazať túto kolekciu?"
 
+msgid "Home"
+msgstr "Domov"
+
+msgid "Live version"
+msgstr "Živá verzia"
+
+msgid "Current draft"
+msgstr "Aktuálny koncept"
+
+#, python-format
+msgid "Edit '%(title)s'"
+msgstr "Upraviť '%(title)s'"
+
+msgid "Inspect"
+msgstr "Skontrolovať"
+
 msgid "Editing"
 msgstr "Editácia"
+
+msgid "Inspecting"
+msgstr "Kontrola %s"
 
 msgid "Earliest"
 msgstr "Najstaršie"
 
 msgid "Latest"
 msgstr "Najnovšie"
-
-msgid "Usage of"
-msgstr "Použitie"
 
 #, python-format
 msgid "Edit this %(object)s"
@@ -774,9 +754,6 @@ msgstr "Táto stránka nemôže byť vytvorená, kvôli validačným chybám."
 msgid "Page '%(page_title)s' deleted."
 msgstr "Stránka '%(page_title)s' bola zmazaná."
 
-msgid "This page is currently awaiting moderation"
-msgstr "Táto stránka momentálne čaká na moderáciu"
-
 #, python-format
 msgid "Page '%(page_title)s' has been updated."
 msgstr "Stránka '%(page_title)s' bola aktualizovaná."
@@ -799,27 +776,15 @@ msgstr "Stránka nemohla byť uložená, pretože je momentálne uzamknutá."
 msgid "The page could not be saved due to validation errors"
 msgstr "Táto stránka nemohla byť uložená, kvôli validačným chybám."
 
+msgid "Owner"
+msgstr "Vlastník"
+
+msgid "Site"
+msgstr "Sídlo"
+
 #, python-format
 msgid "Page '%(page_title)s' is now unlocked."
 msgstr "Stránka '%(page_title)s' bola odomknutá."
-
-#, python-format
-msgid "The page '%(page_title)s' is not currently awaiting moderation."
-msgstr "Stránka '%(page_title)s'  momentálne čaká na moderáciu"
-
-#, python-format
-msgid "Page '%(page_title)s' published."
-msgstr "Stránka '%(page_title)s' bola publikovaná."
-
-msgid "Failed to send approval notifications"
-msgstr "Odoslanie notifikácií o schválení zlyhalo"
-
-#, python-format
-msgid "Page '%(page_title)s' rejected for publication."
-msgstr "Publikácia stránky '%(page_title)s' zamietnutá."
-
-msgid "Failed to send rejection notifications"
-msgstr "Odoslanie notifikácií o zamietnutí zlyhalo"
 
 #, python-format
 msgid "Page '%(page_title)s' moved."
@@ -829,15 +794,12 @@ msgstr "Stránka '%(page_title)s' bola presunutá."
 msgid "Page '%(page_title)s' unpublished."
 msgstr "Stránka '%(page_title)s' bola odpublikovaná."
 
-msgid "Pages"
-msgstr "Stránky"
+msgid "Pages using"
+msgstr "Stránky požívajúce"
 
 #, python-format
-msgid "Edit '%(title)s'"
-msgstr "Upraviť '%(title)s'"
-
-msgid "Add child page"
-msgstr "Pridať podstránku"
+msgid "The page '%(page_title)s' is not currently awaiting moderation."
+msgstr "Stránka '%(page_title)s'  momentálne čaká na moderáciu"
 
 msgid "Choose an item"
 msgstr "Zvoľte položku"

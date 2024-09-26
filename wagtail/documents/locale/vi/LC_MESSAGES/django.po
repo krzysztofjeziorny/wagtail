@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Wagtail\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-04-20 11:47+0100\n"
+"POT-Creation-Date: 2024-08-07 10:06+0100\n"
 "PO-Revision-Date: 2014-02-20 21:06+0000\n"
 "Last-Translator: Vu Pham, 2021\n"
 "Language-Team: Vietnamese (http://app.transifex.com/torchbox/wagtail/"
@@ -99,8 +99,8 @@ msgstr "Lưu"
 msgid "Delete document"
 msgstr "Xóa văn bản"
 
-msgid "Title"
-msgstr "Tiêu đề"
+msgid "Tag"
+msgstr "Thẻ"
 
 msgid "Delete"
 msgstr "Xoá"
@@ -110,6 +110,9 @@ msgstr "Chọn một văn bản"
 
 msgid "Edit this document"
 msgstr "Biên tập văn bản này"
+
+msgid "Title"
+msgstr "Tiêu đề"
 
 #, python-format
 msgid "Document '%(document_title)s' deleted."

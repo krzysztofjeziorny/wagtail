@@ -12,7 +12,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Wagtail\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-04-20 11:47+0100\n"
+"POT-Creation-Date: 2024-08-07 10:06+0100\n"
 "PO-Revision-Date: 2014-02-21 15:50+0000\n"
 "Last-Translator: MRostgaard <Mrostgaard@gmail.com>, 2019\n"
 "Language-Team: Danish (http://app.transifex.com/torchbox/wagtail/language/"
@@ -86,6 +86,11 @@ msgstr "Upload et profilbillede"
 
 msgid "Enter password"
 msgstr "Skriv adgangskode"
+
+#, python-format
+msgid "Your %(username_field)s and password didn't match. Please try again."
+msgstr ""
+"Dit %(username_field)s og adgangskode matcher ikke. Prøv venligst igen."
 
 #, python-format
 msgid "Enter your %(username_field_name)s"
@@ -206,6 +211,9 @@ msgstr "Promover"
 msgid "Settings"
 msgstr "Indstillinger"
 
+msgid "Title"
+msgstr "Titel"
+
 msgid "Error 404: Page not found"
 msgstr "Fejl 404: Side ikke fundet"
 
@@ -298,9 +306,6 @@ msgstr "Udforsk undersider af '%(title)s'?"
 msgid "Explore"
 msgstr "Udforsk"
 
-msgid "Collection privacy"
-msgstr "Indsamling af privatfølsomme data"
-
 msgid "This collection has been made private by a parent collection."
 msgstr "Denne samling er blevet gjort privat af en forældre samling."
 
@@ -324,9 +329,6 @@ msgstr "Offentlig"
 
 msgid "Private"
 msgstr "Privat"
-
-msgid "Name"
-msgstr "Navn"
 
 msgid "Yes, delete"
 msgstr "Ja, slet"
@@ -361,9 +363,6 @@ msgstr "Ændringer"
 msgid "Welcome to the %(site_name)s Wagtail CMS"
 msgstr "Velkommen til %(site_name)s Wagtail CMS"
 
-msgid "Title"
-msgstr "Titel"
-
 msgid "Edit this page"
 msgstr "Rediger denne side"
 
@@ -375,21 +374,6 @@ msgstr "Skitse"
 
 msgid "Live"
 msgstr "Live"
-
-msgid "Type"
-msgstr "Type"
-
-msgid "Edited"
-msgstr "Redigeret"
-
-msgid "Approve"
-msgstr "Godkend"
-
-msgid "Reject"
-msgstr "Afvis"
-
-msgid "Preview"
-msgstr "Forhåndsvis"
 
 msgid "Your most recent edits"
 msgstr "Dine seneste redigeringer"
@@ -406,16 +390,14 @@ msgstr "Side opsummering"
 msgid "Close"
 msgstr "Luk"
 
+msgid "Preview"
+msgstr "Forhåndsvis"
+
 msgid "Sign in"
 msgstr "Log Ind"
 
 msgid "Sign in to Wagtail"
 msgstr "Log ind i Wagtail"
-
-#, python-format
-msgid "Your %(username_field)s and password didn't match. Please try again."
-msgstr ""
-"Dit %(username_field)s og adgangskode matcher ikke. Prøv venligst igen."
 
 msgid "Signing in…"
 msgstr "Logger ind..."
@@ -440,9 +422,6 @@ msgstr "Du kan redigere siden her:"
 
 msgid "You can preview the page here:"
 msgstr "Du kan få en forhåndsvisning af siden her:"
-
-msgid "Page privacy"
-msgstr "Side privatliv"
 
 msgid "This page has been made private by a parent page."
 msgstr "Denne side er blevet lavet privat af en forældreside."
@@ -508,13 +487,6 @@ msgid "Are you sure you want to unpublish this page?"
 msgstr "Er du sikker på, at du vil afpublicere denne side?"
 
 #, python-format
-msgid "Pages using %(page_class_verbose_name)s"
-msgstr "Sider der bruger %(page_class_verbose_name)s"
-
-msgid "Pages using"
-msgstr "Sider der bruger"
-
-#, python-format
 msgid "Copy %(title)s"
 msgstr "Kopier %(title)s"
 
@@ -524,39 +496,11 @@ msgstr "Kopi"
 msgid "Copy this page"
 msgstr "Kopier denne side"
 
-#, python-format
-msgid "New %(page_type)s"
-msgstr "Ny %(page_type)s"
-
 msgid "This page has unsaved changes."
 msgstr "Denne side har ugemte ændringer."
 
-#, python-format
-msgid "Editing %(page_type)s: %(title)s"
-msgstr "Redigerer %(page_type)s: %(title)s"
-
-msgid "Live version"
-msgstr "Live version"
-
-msgid "Current draft"
-msgstr "Nuværende skitse"
-
-#, python-format
-msgid "Exploring %(title)s"
-msgstr "Udforsker %(title)s"
-
-msgid "Drag"
-msgstr "Træk"
-
 msgid "Configure a site now."
 msgstr "Konfigurer en side nu."
-
-msgid "No pages have been created at this location."
-msgstr "Ingen sider er blevet lavet på denne lokation."
-
-#, python-format
-msgid "Why not <a href=\"%(add_page_url)s\">create one</a>?"
-msgstr "Hvorfor ikke <a href=\"%(add_page_url)s\">lave én</a>?"
 
 #, python-format
 msgid "Explore child pages of '%(title)s'"
@@ -565,6 +509,15 @@ msgstr "Udforsk undersider af '%(title)s'?"
 #, python-format
 msgid "Add a child page to '%(title)s'"
 msgstr "Tilføj en underside til '%(title)s'"
+
+msgid "Drag"
+msgstr "Træk"
+
+msgid "Disable ordering of child pages"
+msgstr "Deaktiver arrangering af undersider"
+
+msgid "Enable ordering of child pages"
+msgstr "Aktiver arrangering af undersider"
 
 msgid "Sites menu"
 msgstr "Sidemenu"
@@ -578,14 +531,8 @@ msgstr "Næste"
 msgid "This page is protected from public view"
 msgstr "Denne side er beskyttet mod offentlig skue"
 
-msgid "Disable ordering of child pages"
-msgstr "Deaktiver arrangering af undersider"
-
-msgid "Enable ordering of child pages"
-msgstr "Aktiver arrangering af undersider"
-
-msgid "Updated"
-msgstr "Opdateret"
+msgid "Add child page"
+msgstr "Tilføj en underside"
 
 #, python-format
 msgid "Add %(label)s"
@@ -597,20 +544,32 @@ msgstr "Bevæg op"
 msgid "Move down"
 msgstr "Bevæg ned"
 
+msgid "Type"
+msgstr "Type"
+
+msgid "Updated"
+msgstr "Opdateret"
+
+msgid "Pages"
+msgstr "Sider"
+
 msgid "Locked"
 msgstr "Låst"
 
+msgid "Name"
+msgstr "Navn"
+
 msgid "Edit this item"
 msgstr "Rediger denne enhed"
-
-msgid "Root"
-msgstr "Rod"
 
 msgid "Unlocked"
 msgstr "Ulåst"
 
 msgid "Lock"
 msgstr "Lås"
+
+msgid "Edited"
+msgstr "Redigeret"
 
 msgid "Add a child page"
 msgstr "Tilføj en underside"
@@ -633,6 +592,31 @@ msgstr "%(time_period)s siden"
 
 msgid "Log out"
 msgstr "Log ud"
+
+msgid "Undo"
+msgstr "Gå tilbage"
+
+msgid "Redo"
+msgstr "Gå frem"
+
+msgid "Bold"
+msgstr "Fed"
+
+msgid "Italic"
+msgstr "Skråskrift"
+
+msgid "Home"
+msgstr "Hjem"
+
+msgid "Live version"
+msgstr "Live version"
+
+msgid "Current draft"
+msgstr "Nuværende skitse"
+
+#, python-format
+msgid "Edit '%(title)s'"
+msgstr "Rediger '%(title)s'"
 
 msgid "Editing"
 msgstr "Redigerer"
@@ -680,6 +664,9 @@ msgstr "Side '%(page_title)s' er blevet udgivet."
 msgid "Page '%(page_title)s' has been submitted for moderation."
 msgstr "Side '%(page_title)s' er blivet indsendt til moderation."
 
+msgid "Site"
+msgstr "Site"
+
 #, python-format
 msgid "Page '%(page_title)s' moved."
 msgstr "SIde '%(page_title)s' flyttet."
@@ -688,27 +675,14 @@ msgstr "SIde '%(page_title)s' flyttet."
 msgid "Page '%(page_title)s' unpublished."
 msgstr "SIde '%(page_title)s' afpubliceret."
 
-msgid "Pages"
-msgstr "Sider"
-
-#, python-format
-msgid "Edit '%(title)s'"
-msgstr "Rediger '%(title)s'"
-
-msgid "Add child page"
-msgstr "Tilføj en underside"
+msgid "Pages using"
+msgstr "Sider der bruger"
 
 msgid "Bulleted list"
 msgstr "Liste med prikker"
 
 msgid "Numbered list"
 msgstr "Liste med numre"
-
-msgid "Bold"
-msgstr "Fed"
-
-msgid "Italic"
-msgstr "Skråskrift"
 
 msgid "Link"
 msgstr "Link"

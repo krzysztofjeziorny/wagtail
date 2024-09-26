@@ -120,13 +120,13 @@ export class PageExplorerMenuItemDefinition extends LinkMenuItemDefinition {
       name,
       label,
       url,
-      attrs,
-      icon_name: iconName = null,
-      classnames = undefined,
+      attrs = {},
+      icon_name: iconName = null as string | null,
+      classname = undefined as string | undefined,
     },
     startPageId: number,
   ) {
-    super({ name, label, url, attrs, icon_name: iconName, classnames });
+    super({ name, label, url, attrs, icon_name: iconName, classname });
     this.startPageId = startPageId;
   }
 

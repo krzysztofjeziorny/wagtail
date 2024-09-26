@@ -105,11 +105,11 @@ window.comments = (() => {
     }
 
     show() {
-      this.node.classList.remove('u-hidden');
+      this.node.classList.remove('!w-hidden');
     }
 
     hide() {
-      this.node.classList.add('u-hidden');
+      this.node.classList.add('!w-hidden');
     }
 
     setOnClickHandler(localId) {
@@ -155,7 +155,9 @@ window.comments = (() => {
 
     register() {
       if (!this.contentpath) {
-        // The widget has no valid contentpath, skip subscriptions
+        // The widget has no valid contentpath,
+        // remove the button and skip subscriptions
+        this.commentAdditionNode.remove();
         return undefined;
       }
       const initialState = commentApp.store.getState();
@@ -229,7 +231,7 @@ window.comments = (() => {
         'aria-describedby',
         this.commentAdditionNode.getAttribute('aria-describedby'),
       );
-      annotationNode.classList.remove('u-hidden');
+      annotationNode.classList.remove('!w-hidden');
       this.commentAdditionNode.insertAdjacentElement(
         'beforebegin',
         annotationNode,
@@ -289,10 +291,15 @@ window.comments = (() => {
     }
 
     // Show comments app
-    const commentNotifications = formElement.querySelector(
+    const commentNotifications = document.querySelector(
       '[data-comment-notifications]',
     );
     commentNotifications.hidden = false;
+    // Attach the comment notifications input to the form using the form attribute
+    // because the input element is outside the form.
+    const notificationsInput = commentNotifications.querySelector('input');
+    notificationsInput.setAttribute('form', formElement.id);
+
     const tabContentElement = formElement.querySelector('.tab-content');
     tabContentElement.classList.add('tab-content--comments-enabled');
 
@@ -305,16 +312,9 @@ window.comments = (() => {
     });
 
     // Keep number of comments up to date with comment app
-    const commentToggle = document.querySelector(
-      '[data-side-panel-toggle="comments"]',
+    const commentCounter = document.querySelector(
+      '[data-side-panel-toggle="comments"] [data-side-panel-toggle-counter]',
     );
-
-    const commentCounter = document.createElement('div');
-    commentCounter.className =
-      '-w-mr-3 w-py-0.5 w-px-[0.325rem] w-translate-y-[-8px] rtl:w-translate-x-[4px] w-translate-x-[-4px] w-text-[0.5625rem] w-font-bold w-bg-surface-button-default w-text-text-button w-border w-border-surface-page w-rounded-[1rem]';
-    commentToggle.className =
-      'w-h-slim-header w-bg-transparent w-box-border w-py-3 w-px-3 w-flex w-justify-center w-items-center w-outline-offset-inside w-text-text-meta w-transition hover:w-transform hover:w-scale-110 hover:w-text-text-label focus:w-text-text-label expanded:w-text-text-label';
-    commentToggle.appendChild(commentCounter);
 
     const updateCommentCount = () => {
       const commentCount = commentApp.selectors.selectCommentCount(
@@ -328,6 +328,7 @@ window.comments = (() => {
 
       if (commentCount > 0) {
         commentCounter.innerText = commentCount.toString();
+        commentCounter.hidden = false;
       } else {
         // Note: Hide the circle when its content is empty
         commentCounter.hidden = true;
@@ -336,6 +337,17 @@ window.comments = (() => {
     commentApp.store.subscribe(updateCommentCount);
     updateCommentCount();
   }
+
+  /** Add support for initializing comments via event dispatching. */
+  document.addEventListener(
+    'w-comments:init',
+    ({ target }) => {
+      setTimeout(() => {
+        initCommentsInterface(target);
+      });
+    },
+    { once: true },
+  );
 
   return {
     commentApp,

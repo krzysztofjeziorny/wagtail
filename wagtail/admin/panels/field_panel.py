@@ -109,12 +109,11 @@ class FieldPanel(Panel):
         if not isinstance(choices, ModelChoiceIterator) and choices:
             labels = dict(choices)
             display_values = [
-                labels.get(v, v)  # Use raw value if no match found
-                for v in (
+                str(labels.get(v, v))  # Use raw value if no match found
+                for v in
+                (
                     # Account for single AND multiple choice fields
-                    tuple(value)
-                    if isinstance(value, (list, tuple))
-                    else (value,)
+                    tuple(value) if isinstance(value, (list, tuple)) else (value,)
                 )
             ]
             return ", ".join(display_values)
@@ -122,7 +121,7 @@ class FieldPanel(Panel):
         return super().format_value_for_display(value)
 
     def __repr__(self):
-        return "<%s '%s' with model=%s>" % (
+        return "<{} '{}' with model={}>".format(
             self.__class__.__name__,
             self.field_name,
             self.model,
@@ -169,7 +168,7 @@ class FieldPanel(Panel):
                     )
                 return
 
-            # Ensure heading and help_text are consistant accross
+            # Ensure heading and help_text are consistent across
             # Panel, BoundPanel and Field
             if self.panel.heading:
                 self.heading = self.bound_field.label = self.panel.heading
@@ -275,7 +274,6 @@ class FieldPanel(Panel):
             return context
 
         def get_editable_context_data(self):
-
             widget_described_by_ids = []
             help_text_id = "%s-helptext" % self.prefix
             error_message_id = "%s-errors" % self.prefix
@@ -362,7 +360,7 @@ class FieldPanel(Panel):
             return []
 
         def __repr__(self):
-            return "<%s '%s' with model=%s instance=%s request=%s form=%s>" % (
+            return "<{} '{}' with model={} instance={} request={} form={}>".format(
                 self.__class__.__name__,
                 self.field_name,
                 self.panel.model,

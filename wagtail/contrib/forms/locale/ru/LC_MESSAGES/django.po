@@ -3,8 +3,8 @@
 # This file is distributed under the same license as the PACKAGE package.
 #
 # Translators:
-# Andrey <talkerbox@live.com>, 2016
-# Andrey <talkerbox@live.com>, 2016
+# Andrei “Talkerbox” Audzei <bigtalkerbox@gmail.com>, 2016
+# Andrei “Talkerbox” Audzei <bigtalkerbox@gmail.com>, 2016
 # Eugene <eugene.mechanism@gmail.com>, 2017
 # Eugene <eugene.mechanism@gmail.com>, 2014-2015
 # Eugene <eugene.mechanism@gmail.com>, 2017
@@ -18,7 +18,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Wagtail\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-04-20 11:47+0100\n"
+"POT-Creation-Date: 2024-08-07 10:06+0100\n"
 "PO-Revision-Date: 2014-09-11 15:42+0000\n"
 "Last-Translator: Влад <integration.into.society@gmail.com>, 2022\n"
 "Language-Team: Russian (http://app.transifex.com/torchbox/wagtail/language/"
@@ -181,20 +181,12 @@ msgstr[3] "Вы уверены, что хотите удалить эти зап
 msgid "Delete"
 msgstr "Удалить"
 
-msgid "Forms"
-msgstr "Формы"
-
-msgid "Pages"
-msgstr "Страницы"
-
-msgid "Title"
-msgstr "Заголовок"
-
-msgid "Origin"
-msgstr "Происхождение"
-
 msgid "Delete selected submissions"
 msgstr "Удалить выбранные"
+
+#, python-format
+msgid "There have been no submissions of the '%(title)s' form."
+msgstr "Форма '%(title)s' еще не заполнялась."
 
 msgid "Total submissions"
 msgstr "Всего добавлений"
@@ -202,28 +194,21 @@ msgstr "Всего добавлений"
 msgid "Latest submission"
 msgstr "Последнее добавление"
 
-msgid "No form pages have been created."
-msgstr "Страниц с формами не было создано."
-
 #, python-format
 msgid "Submissions of %(form_title)s"
 msgstr "Заполненные %(form_title)s"
 
-msgid "Download XLSX"
-msgstr "Скачать XLSX"
+msgid "Forms"
+msgstr "Формы"
 
-msgid "Download CSV"
-msgstr "Скачать CSV"
+msgid "Title"
+msgstr "Заголовок"
 
-#, python-format
-msgid "There have been no submissions of the '%(title)s' form."
-msgstr "Форма '%(title)s' еще не заполнялась."
+msgid "Origin"
+msgstr "Происхождение"
 
-msgid "Filter"
-msgstr "Фильтр"
-
-msgid "Apply filters"
-msgstr "Применить фильтры"
+msgid "Pages"
+msgstr "Страницы"
 
 #, python-format
 msgid "One submission has been deleted."

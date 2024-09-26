@@ -2,11 +2,11 @@
 
 # How to use StreamField for mixed content
 
-StreamField provides a content editing model suitable for pages that do not follow a fixed structure -- such as blog posts or news stories -- where the text may be interspersed with subheadings, images, pull quotes and video. It's also suitable for more specialised content types, such as maps and charts (or, for a programming blog, code snippets). In this model, these different content types are represented as a sequence of 'blocks', which can be repeated and arranged in any order.
+StreamField provides a content editing model suitable for pages that do not follow a fixed structure -- such as blog posts or news stories -- where the text may be interspersed with subheadings, images, pull quotes and video. It's also suitable for more specialized content types, such as maps and charts (or, for a programming blog, code snippets). In this model, these different content types are represented as a sequence of 'blocks', which can be repeated and arranged in any order.
 
 For further background on StreamField, and why you would use it instead of a rich text field for the article body, see the blog post [Rich text fields and faster horses](https://torchbox.com/blog/rich-text-fields-and-faster-horses/).
 
-StreamField also offers a rich API to define your own block types, ranging from simple collections of sub-blocks (such as a 'person' block consisting of first name, surname and photograph) to completely custom components with their own editing interface. Within the database, the StreamField content is stored as JSON, ensuring that the full informational content of the field is preserved, rather than just an HTML representation of it.
+StreamField also offers a rich API to define your own block types, ranging from simple collections of sub-blocks (such as a 'person' block consisting of first name, surname, and photograph) to completely custom components with their own editing interface. Within the database, the StreamField content is stored as JSON, ensuring that the full informational content of the field is preserved, rather than just an HTML representation of it.
 
 ## Using StreamField
 
@@ -28,7 +28,7 @@ class BlogPage(Page):
         ('heading', blocks.CharBlock(form_classname="title")),
         ('paragraph', blocks.RichTextBlock()),
         ('image', ImageChooserBlock()),
-    ], use_json_field=True)
+    ])
 
     content_panels = Page.content_panels + [
         FieldPanel('author'),
@@ -45,8 +45,8 @@ You can find the complete list of available block types in the [](streamfield_bl
    StreamField is not a direct replacement for other field types such as RichTextField. If you need to migrate an existing field to StreamField, refer to [](streamfield_migrating_richtext).
 ```
 
-```{versionchanged} 5.0
-The `use_json_field=True` argument is required. `use_json_field=False` is only permitted within migrations created before Wagtail 5.0. This is a temporary measure to ensure that all existing StreamFields are upgraded to the database's native JSONField support; it will be removed in a future release.
+```{note}
+   While block definitions look similar to model fields, they are not the same thing. Blocks are only valid within a StreamField - using them in place of a model field will not work.
 ```
 
 (streamfield_template_rendering)=
@@ -124,7 +124,7 @@ body = StreamField([
     ('heading', blocks.CharBlock(form_classname="title")),
     ('paragraph', blocks.RichTextBlock()),
     ('image', ImageChooserBlock()),
-], use_json_field=True)
+])
 ```
 
 When reading back the content of a StreamField (such as when rendering a template), the value of a StructBlock is a dict-like object with keys corresponding to the block names given in the definition:
@@ -165,8 +165,10 @@ body = StreamField([
     ('heading', blocks.CharBlock(form_classname="title")),
     ('paragraph', blocks.RichTextBlock()),
     ('image', ImageChooserBlock()),
-], use_json_field=True)
+])
 ```
+
+(block_icons)=
 
 ### Block icons
 
@@ -185,7 +187,7 @@ body = StreamField([
     ('heading', blocks.CharBlock(form_classname="title")),
     ('paragraph', blocks.RichTextBlock()),
     ('image', ImageChooserBlock()),
-], use_json_field=True)
+])
 ```
 
 ```{code-block} python
@@ -215,7 +217,7 @@ body = StreamField([
     ('heading', blocks.CharBlock(form_classname="title")),
     ('paragraph', blocks.RichTextBlock()),
     ('image', ImageChooserBlock()),
-], use_json_field=True)
+])
 ```
 
 When reading back the content of a StreamField (such as when rendering a template), the value of a ListBlock is a list of child values:
@@ -251,7 +253,7 @@ body = StreamField([
     ('heading', blocks.CharBlock(form_classname="title")),
     ('paragraph', blocks.RichTextBlock()),
     ('image', ImageChooserBlock()),
-], use_json_field=True)
+])
 ```
 
 `StreamBlock` can also be subclassed in the same way as `StructBlock`, with the child blocks being specified as attributes on the class:
@@ -275,7 +277,7 @@ class CommonContentBlock(blocks.StreamBlock):
 
 
 class BlogPage(Page):
-    body = StreamField(CommonContentBlock(), use_json_field=True)
+    body = StreamField(CommonContentBlock())
 ```
 
 When reading back the content of a StreamField, the value of a StreamBlock is a sequence of block objects with `block_type` and `value` properties, just like the top-level value of the StreamField itself.
@@ -309,7 +311,7 @@ body = StreamField([
     ('heading', blocks.CharBlock(form_classname="title")),
     ('paragraph', blocks.RichTextBlock()),
     ('image', ImageChooserBlock()),
-], min_num=2, max_num=5, use_json_field=True)
+], min_num=2, max_num=5)
 ```
 
 Or equivalently:
@@ -334,7 +336,7 @@ body = StreamField([
     ('image', ImageChooserBlock()),
 ], block_counts={
     'heading': {'min_num': 1, 'max_num': 3},
-}, use_json_field=True)
+})
 ```
 
 Or equivalently:
@@ -496,7 +498,7 @@ All block types, not just `StructBlock`, support the `template` property. Howeve
 
 ## Customisations
 
-All block types implement a common API for rendering their front-end and form representations, and storing and retrieving values to and from the database. By subclassing the various block classes and overriding these methods, all kinds of customisations are possible, from modifying the layout of StructBlock form fields to implementing completely new ways of combining blocks. For further details, see [](custom_streamfield_blocks).
+All block types implement a common API for rendering their front-end and form representations, and storing and retrieving values to and from the database. By subclassing the various block classes and overriding these methods, all kinds of customizations are possible, from modifying the layout of StructBlock form fields to implementing completely new ways of combining blocks. For further details, see [](custom_streamfield_blocks).
 
 (modifying_streamfield_data)=
 
@@ -512,14 +514,13 @@ my_page.body[0] = ('heading', "My story")
 del my_page.body[-1]
 
 # Append a rich text block to the stream
-from wagtail.rich_text import RichText
-my_page.body.append(('paragraph', RichText("<p>And they all lived happily ever after.</p>")))
+my_page.body.append(('paragraph', "<p>And they all lived happily ever after.</p>"))
 
 # Save the updated data back to the database
 my_page.save()
 ```
 
-If a block extending a StructBlock is to be used inside of the StreamField's value, the value of this block can be provided as a python dict (similar in what is accepted by the block's `.to_python` method).
+If a block extending a StructBlock is to be used inside of the StreamField's value, the value of this block can be provided as a Python dict (similar to what is accepted by the block's `.to_python` method).
 
 ```python
 
@@ -573,6 +574,20 @@ hero_image = my_page.body.first_block_by_name('image')
 
 ```html+django
 <div class="hero-image">{{ page.body.first_block_by_name.image }}</div>
+```
+
+(streamfield_search)=
+
+## Search considerations
+
+Like any other field, content in a StreamField can be made searchable by adding the field to the model's search_fields definition - see {ref}`wagtailsearch_indexing_fields`. By default, all text content from the stream will be added to the search index. If you wish to exclude certain block types from being indexed, pass the keyword argument `search_index=False` as part of the block's definition. For example:
+
+```python
+body = StreamField([
+    ('normal_text', blocks.RichTextBlock()),
+    ('pull_quote', blocks.RichTextBlock(search_index=False)),
+    ('footnotes', blocks.ListBlock(blocks.CharBlock(), search_index=False)),
+])
 ```
 
 ## Custom validation

@@ -1,25 +1,56 @@
-/* global $ */
 import { gettext } from '../../../utils/gettext';
+import { runInlineScripts } from '../../../utils/runInlineScripts';
 
 class BoundWidget {
-  constructor(element, name, idForLabel, initialState, parentCapabilities) {
-    var selector = ':input[name="' + name + '"]';
-    this.input = element.find(selector).addBack(selector); // find, including element itself
+  constructor(
+    elementOrNodeList,
+    name,
+    idForLabel,
+    initialState,
+    parentCapabilities,
+    options,
+  ) {
+    // if elementOrNodeList not iterable, it must be a single element
+    const nodeList = elementOrNodeList.forEach
+      ? elementOrNodeList
+      : [elementOrNodeList];
+
+    // look for an input element with the given name, as either a direct element of nodeList
+    // or a descendant
+    const selector = `:is(input,select,textarea,button)[name="${name}"]`;
+
+    for (let i = 0; i < nodeList.length; i += 1) {
+      const element = nodeList[i];
+      if (element.nodeType === Node.ELEMENT_NODE) {
+        if (element.matches(selector)) {
+          this.input = element;
+          break;
+        } else {
+          const input = element.querySelector(selector);
+          if (input) {
+            this.input = input;
+            break;
+          }
+        }
+      }
+    }
+
     this.idForLabel = idForLabel;
     this.setState(initialState);
     this.parentCapabilities = parentCapabilities || new Map();
+    this.options = options;
   }
 
   getValue() {
-    return this.input.val();
+    return this.input.value;
   }
 
   getState() {
-    return this.input.val();
+    return this.input.value;
   }
 
   setState(state) {
-    this.input.val(state);
+    this.input.value = state;
   }
 
   getTextLabel(opts) {
@@ -49,18 +80,49 @@ class Widget {
 
   boundWidgetClass = BoundWidget;
 
-  render(placeholder, name, id, initialState, parentCapabilities) {
-    var html = this.html.replace(/__NAME__/g, name).replace(/__ID__/g, id);
-    var idForLabel = this.idPattern.replace(/__ID__/g, id);
-    var dom = $(html);
-    $(placeholder).replaceWith(dom);
+  render(
+    placeholder,
+    name,
+    id,
+    initialState,
+    parentCapabilities,
+    options = {},
+  ) {
+    const html = this.html.replace(/__NAME__/g, name).replace(/__ID__/g, id);
+    const idForLabel = this.idPattern.replace(/__ID__/g, id);
+
+    /* write the HTML into a temp container to parse it into a node list */
+    const tempContainer = document.createElement('div');
+    tempContainer.innerHTML = html.trim();
+    const childNodes = Array.from(tempContainer.childNodes);
+
+    /* replace the placeholder with the new nodes */
+    placeholder.replaceWith(...childNodes);
+
+    const childElements = childNodes.filter(
+      (node) => node.nodeType === Node.ELEMENT_NODE,
+    );
+
+    /* execute any scripts in the new element(s) */
+    childElements.forEach((element) => {
+      runInlineScripts(element);
+    });
+
+    // Add any extra attributes we received to the first element of the widget
+    if (typeof options?.attributes === 'object') {
+      Object.entries(options.attributes).forEach(([key, value]) => {
+        childElements[0].setAttribute(key, value);
+      });
+    }
+
     // eslint-disable-next-line new-cap
     return new this.boundWidgetClass(
-      dom,
+      childElements.length === 1 ? childElements[0] : childNodes,
       name,
       idForLabel,
       initialState,
       parentCapabilities,
+      options,
     );
   }
 }
@@ -68,16 +130,15 @@ window.telepath.register('wagtail.widgets.Widget', Widget);
 
 class BoundCheckboxInput extends BoundWidget {
   getValue() {
-    return this.input.is(':checked');
+    return this.input.checked;
   }
 
   getState() {
-    return this.input.is(':checked');
+    return this.input.checked;
   }
 
   setState(state) {
-    // if false, set attribute value to null to remove it
-    this.input.attr('checked', state || null);
+    this.input.checked = state;
   }
 }
 
@@ -91,24 +152,37 @@ class BoundRadioSelect {
     this.element = element;
     this.name = name;
     this.idForLabel = idForLabel;
-    this.selector = 'input[name="' + name + '"]:checked';
+    this.isMultiple = !!this.element.querySelector(
+      `input[name="${name}"][type="checkbox"]`,
+    );
+    this.selector = `input[name="${name}"]:checked`;
     this.setState(initialState);
   }
 
   getValue() {
-    return this.element.find(this.selector).val();
+    if (this.isMultiple) {
+      return Array.from(this.element.querySelectorAll(this.selector)).map(
+        (el) => el.value,
+      );
+    }
+    return this.element.querySelector(this.selector)?.value;
   }
 
   getState() {
-    return this.element.find(this.selector).val();
+    return Array.from(this.element.querySelectorAll(this.selector)).map(
+      (el) => el.value,
+    );
   }
 
   setState(state) {
-    this.element.find('input[name="' + this.name + '"]').val([state]);
+    const inputs = this.element.querySelectorAll(`input[name="${this.name}"]`);
+    for (let i = 0; i < inputs.length; i += 1) {
+      inputs[i].checked = state.includes(inputs[i].value);
+    }
   }
 
   focus() {
-    this.element.find('input[name="' + this.name + '"]').focus();
+    this.element.querySelector(`input[name="${this.name}"]`)?.focus();
   }
 }
 
@@ -119,7 +193,29 @@ window.telepath.register('wagtail.widgets.RadioSelect', RadioSelect);
 
 class BoundSelect extends BoundWidget {
   getTextLabel() {
-    return this.input.find(':selected').text();
+    return Array.from(this.input.selectedOptions)
+      .map((option) => option.text)
+      .join(', ');
+  }
+
+  getValue() {
+    if (this.input.multiple) {
+      return Array.from(this.input.selectedOptions).map(
+        (option) => option.value,
+      );
+    }
+    return this.input.value;
+  }
+
+  getState() {
+    return Array.from(this.input.selectedOptions).map((option) => option.value);
+  }
+
+  setState(state) {
+    const options = this.input.options;
+    for (let i = 0; i < options.length; i += 1) {
+      options[i].selected = state.includes(options[i].value);
+    }
   }
 }
 
@@ -349,12 +445,17 @@ class DraftailRichTextArea {
     this.options = options;
   }
 
-  render(container, name, id, initialState, parentCapabilities) {
+  render(container, name, id, initialState, parentCapabilities, options = {}) {
     const input = document.createElement('input');
     input.type = 'hidden';
     input.id = id;
     input.name = name;
 
+    if (typeof options?.attributes === 'object') {
+      Object.entries(options.attributes).forEach(([key, value]) => {
+        input.setAttribute(key, value);
+      });
+    }
     // If the initialState is an EditorState, rather than serialized rawContentState, it's
     // easier for us to initialize the widget blank and then setState to the correct state
     const initialiseBlank = !!initialState.getCurrentContent;
@@ -363,7 +464,7 @@ class DraftailRichTextArea {
 
     const boundDraftail = new BoundDraftailWidget(
       input,
-      this.options,
+      { ...this.options, ...options },
       parentCapabilities,
     );
 
@@ -408,6 +509,9 @@ class BaseDateTimeWidget extends Widget {
         // focusing opens the date picker, so don't do this if it's a 'soft' focus
         if (opts && opts.soft) return;
         element.focus();
+      },
+      getTextLabel() {
+        return this.getValue() || '';
       },
       idForLabel: id,
     };

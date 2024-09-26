@@ -4,6 +4,7 @@ from contextlib import contextmanager
 from mimetypes import guess_type
 
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator
 from django.db import models
 from django.dispatch import Signal
@@ -46,6 +47,7 @@ class AbstractDocument(CollectionMember, index.Indexed, models.Model):
     search_fields = CollectionMember.search_fields + [
         index.SearchField("title", boost=10),
         index.AutocompleteField("title"),
+        index.FilterField("id"),
         index.FilterField("title"),
         index.RelatedFields(
             "tags",
@@ -70,7 +72,10 @@ class AbstractDocument(CollectionMember, index.Indexed, models.Model):
         allowed_extensions = getattr(settings, "WAGTAILDOCS_EXTENSIONS", None)
         if allowed_extensions:
             validate = FileExtensionValidator(allowed_extensions)
-            validate(self.file)
+            try:
+                validate(self.file)
+            except ValidationError as e:
+                raise ValidationError({"file": e.messages[0]})
 
     def is_stored_locally(self):
         """
@@ -114,7 +119,7 @@ class AbstractDocument(CollectionMember, index.Indexed, models.Model):
         if self.file_size is None:
             try:
                 self.file_size = self.file.size
-            except Exception:
+            except Exception:  # noqa: BLE001
                 # File doesn't exist
                 return
 
@@ -215,23 +220,3 @@ class Document(AbstractDocument):
 
 # provides args: request
 document_served = Signal()
-
-
-class UploadedDocument(models.Model):
-    """
-    Temporary storage for documents uploaded through the multiple doc uploader, when validation
-    rules (e.g. required metadata fields) prevent creating a Document object from the document file
-    alone. In this case, the document file is stored against this model, to be turned into a
-    Document object once the full form has been filled in.
-    """
-
-    file = models.FileField(upload_to="uploaded_documents", max_length=200)
-    uploaded_by_user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        verbose_name=_("uploaded by user"),
-        null=True,
-        blank=True,
-        editable=False,
-        on_delete=models.SET_NULL,
-    )
-    uploaded_by_user.wagtail_reference_index_ignore = True

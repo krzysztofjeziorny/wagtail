@@ -2,11 +2,11 @@ msgid ""
 msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 
-#: src/components/Sidebar/menu/SubMenuItem.tsx:100
+#: src/components/Sidebar/menu/SubMenuItem.tsx:121
 msgid "(%(number)s new items in this menu)"
 msgstr ""
 
-#: src/components/Sidebar/menu/SubMenuItem.tsx:99
+#: src/components/Sidebar/menu/SubMenuItem.tsx:120
 msgid "(1 new item in this menu)"
 msgstr ""
 
@@ -19,6 +19,12 @@ msgstr ""
 #: src/controllers/CountController.ts:61
 msgid "%(num)s error"
 msgid_plural "%(num)s errors"
+msgstr[0] ""
+msgstr[1] ""
+
+#: src/includes/contentMetrics.ts:113
+msgid "%(num)s min"
+msgid_plural "%(num)s mins"
 msgstr[0] ""
 msgstr[1] ""
 
@@ -41,7 +47,7 @@ msgstr ""
 msgid "Are you sure?"
 msgstr ""
 
-#: src/entrypoints/admin/telepath/widgets.js:311
+#: src/entrypoints/admin/telepath/widgets.js:407
 msgid "Blocks"
 msgstr ""
 
@@ -64,7 +70,7 @@ msgstr ""
 msgid "Character count:"
 msgstr ""
 
-#: src/entrypoints/admin/modal-workflow.js:50
+#: src/entrypoints/admin/modal-workflow.js:56
 msgid "Close"
 msgstr ""
 
@@ -109,13 +115,8 @@ msgstr ""
 msgid "Edit"
 msgstr ""
 
-#: src/components/PageExplorer/PageExplorerItem.tsx:62
+#: src/components/PageExplorer/PageExplorerItem.tsx:60
 msgid "Edit '%(title)s'"
-msgstr ""
-
-#: src/components/Sidebar/modules/MainMenu.tsx:313
-#: src/components/Sidebar/modules/MainMenu.tsx:315
-msgid "Edit your account"
 msgstr ""
 
 #: src/components/CommentApp/components/Comment/index.tsx:238
@@ -126,7 +127,7 @@ msgstr ""
 msgid "Enter your reply..."
 msgstr ""
 
-#: src/entrypoints/admin/preview-panel.js:191
+#: src/entrypoints/admin/preview-panel.js:283
 msgid "Error while sending preview data."
 msgstr ""
 
@@ -139,7 +140,7 @@ msgstr ""
 msgid "Focus comment"
 msgstr ""
 
-#: src/components/Draftail/index.js:152
+#: src/components/Draftail/index.js:161
 msgid "Horizontal line"
 msgstr ""
 
@@ -147,7 +148,7 @@ msgstr ""
 msgid "Insert a block"
 msgstr ""
 
-#: src/components/Draftail/index.js:193
+#: src/components/Draftail/index.js:215
 msgid "Line break"
 msgstr ""
 
@@ -168,7 +169,7 @@ msgid "More actions"
 msgstr ""
 
 #: src/components/ComboBox/ComboBox.tsx:11
-#: src/components/Draftail/index.js:219
+#: src/components/Draftail/index.js:241
 #: src/components/PageExplorer/PageExplorerPanel.tsx:84
 msgid "No results"
 msgstr ""
@@ -202,7 +203,7 @@ msgstr ""
 msgid "Reply"
 msgstr ""
 
-#: src/includes/chooserModal.js:47
+#: src/includes/chooserModal.js:51
 msgid "Report this error to your website administrator with the following information:"
 msgstr ""
 
@@ -261,7 +262,7 @@ msgstr ""
 
 #: src/components/Draftail/sources/ModalWorkflowSource.js:63
 #: src/components/PageExplorer/PageExplorerPanel.tsx:112
-#: src/includes/chooserModal.js:57
+#: src/includes/chooserModal.js:61
 msgid "Server Error"
 msgstr ""
 
@@ -273,7 +274,7 @@ msgstr ""
 msgid "Show latest content"
 msgstr ""
 
-#: src/entrypoints/admin/telepath/widgets.js:202
+#: src/entrypoints/admin/telepath/widgets.js:298
 msgid "Split block"
 msgstr ""
 
@@ -281,11 +282,23 @@ msgstr ""
 msgid "The editor just crashed. Content has been reset to the last saved version."
 msgstr ""
 
-#: src/includes/chooserModal.js:22
+#: src/components/StreamField/blocks/ListBlock.js:196
+#: src/components/StreamField/blocks/StreamBlock.js:271
+#: src/components/StreamField/blocks/StreamBlock.js:295
+msgid "The maximum number of items is %(max_num)d"
+msgstr ""
+
+#: src/components/StreamField/blocks/ListBlock.js:207
+#: src/components/StreamField/blocks/StreamBlock.js:279
+#: src/components/StreamField/blocks/StreamBlock.js:309
+msgid "The minimum number of items is %(min_num)d"
+msgstr ""
+
+#: src/includes/chooserModal.js:21
 msgid "This field is required."
 msgstr ""
 
-#: src/components/Minimap/Minimap.tsx:223
+#: src/components/Minimap/Minimap.tsx:224
 msgid "Toggle side panel"
 msgstr ""
 
@@ -302,10 +315,10 @@ msgstr ""
 msgid "Unpin toolbar"
 msgstr ""
 
-#: src/components/PageExplorer/PageExplorerItem.tsx:75
+#: src/components/PageExplorer/PageExplorerItem.tsx:73
 msgid "View child pages of '%(title)s'"
 msgstr ""
 
-#: src/components/Draftail/index.js:190
+#: src/components/Draftail/index.js:212
 msgid "Write something or type ‘/’ to insert a block"
 msgstr ""

@@ -5,7 +5,7 @@
 # Translators:
 # Andrej Marsetič, 2022
 # Andrej Marsetič, 2022
-# Andrej Marsetič, 2022-2023
+# Andrej Marsetič, 2022-2024
 # Mitja Pagon <mitja.pagon@inueni.com>, 2016
 # UP, 2021
 # UP, 2021
@@ -13,9 +13,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Wagtail\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-04-20 11:47+0100\n"
+"POT-Creation-Date: 2024-08-07 10:06+0100\n"
 "PO-Revision-Date: 2014-02-20 21:05+0000\n"
-"Last-Translator: Andrej Marsetič, 2022-2023\n"
+"Last-Translator: Andrej Marsetič, 2022-2024\n"
 "Language-Team: Slovenian (http://app.transifex.com/torchbox/wagtail/language/"
 "sl/)\n"
 "MIME-Version: 1.0\n"
@@ -44,6 +44,14 @@ msgstr "Podprte oblike zapisa: %(supported_formats)s."
 msgid "Not a supported image format. Supported formats: %(supported_formats)s."
 msgstr ""
 "Oblika zapisa slike ni podprta. Podprte oblike so: %(supported_formats)s."
+
+#, python-format
+msgid ""
+"Not a valid .%(extension)s image. The extension does not match the file "
+"format (%(image_format)s)"
+msgstr ""
+"Ni veljavno. %(extension)s slika. Končnica se ne ujema z obliko datoteke "
+"(%(image_format)s)"
 
 #, python-format
 msgid ""
@@ -166,6 +174,14 @@ msgstr "slika"
 msgid "images"
 msgstr "slike"
 
+#, python-format
+msgid "Add tags to 1 image"
+msgid_plural "Add tags to %(counter)s images"
+msgstr[0] "Dodajte oznake 1 sliki"
+msgstr[1] "Dodajte oznake %(counter)s slikama"
+msgstr[2] "Dodajte oznake %(counter)s slikam"
+msgstr[3] "Dodajte oznake %(counter)s slikam"
+
 msgid "Add tags to images"
 msgstr "Dodaj oznake k slikam"
 
@@ -188,6 +204,14 @@ msgstr "Da, dodaj"
 
 msgid "No, don't add"
 msgstr "Ne, ne dodaj"
+
+#, python-format
+msgid "Add 1 image to new collection"
+msgid_plural "Add %(counter)s images to new collection"
+msgstr[0] "Dodajte 1 sliko v novo zbirko"
+msgstr[1] "Dodajte %(counter)s sliki v novo zbirko"
+msgstr[2] "Dodajte %(counter)s slik v novo zbirko"
+msgstr[3] "Dodajte %(counter)s slik v novo zbirko"
 
 msgid "Add images to collection"
 msgstr "Dodajte slike v zbirko"
@@ -286,11 +310,38 @@ msgstr "V to zbirko niste naložili nobene slike."
 msgid "You haven't uploaded any images."
 msgstr "Naložili niste nobene datoteke. Zakaj je ne bi naložili sedaj?"
 
+msgid ""
+"Why not <a class=\"upload-one-now\" href=\"#tab-upload\" data-tab-"
+"trigger>upload one now</a>?"
+msgstr ""
+"Zakaj ne bi <a class=\"upload-one-now\" href=\"#tab-upload\" data-tab-"
+"trigger>enega naložili zdaj</a>?"
+
 msgid "Choose a format"
 msgstr "Izberite obliko zapisa"
 
 msgid "Insert image"
 msgstr "Vstavi sliko"
+
+#, python-format
+msgid ""
+"<span>%(total)s</span> Image <span class=\"w-sr-only\">created in "
+"%(site_name)s</span>"
+msgid_plural ""
+"<span>%(total)s</span> Images <span class=\"w-sr-only\">created in "
+"%(site_name)s</span>"
+msgstr[0] ""
+"<span>%(total)s</span> Slika <span class=\"w-sr-only\">ustvarjena na "
+"%(site_name)s</span>"
+msgstr[1] ""
+"<span>%(total)s</span> sliki<span class=\"w-sr-only\">ustvarjeni na "
+"%(site_name)s</span>"
+msgstr[2] ""
+"<span>%(total)s</span> Slike <span class=\"w-sr-only\">ustvarjene na "
+"%(site_name)s</span>"
+msgstr[3] ""
+"<span>%(total)s</span> Slik <span class=\"w-sr-only\">ustvarjenih na "
+"%(site_name)s</span>"
 
 msgid "Change image file:"
 msgstr "Spremeni datoteko slike:"
@@ -357,37 +408,11 @@ msgstr "Datoteka ne obstaja"
 msgid "Usage"
 msgstr "Uporaba"
 
-msgid "Images"
-msgstr "Slike"
-
 msgid "Sort by"
 msgstr "Razvrsti po"
 
-msgid "Entries per page"
-msgstr "Vnosov na stran"
-
-msgid "Popular Tags:"
-msgstr "Priljubljene oznake:"
-
-msgid "Clear"
-msgstr "Počisti"
-
 msgid "Select all images in listing"
 msgstr "Izberite vse slike na seznamu"
-
-#, python-format
-msgid "There is %(counter)s match"
-msgid_plural "There are %(counter)s matches"
-msgstr[0] "%(counter)s zadetek"
-msgstr[1] "%(counter)s zadetka"
-msgstr[2] "%(counter)s zadetkov"
-msgstr[3] "%(counter)s zadetkov"
-
-msgid "Select image"
-msgstr "Izberi sliko"
-
-msgid "pixels"
-msgstr "pikslov"
 
 #, python-format
 msgid "Sorry, no images match \"<em>%(query_string)s</em>\""
@@ -409,21 +434,23 @@ msgstr ""
 "Naložili niste nobene datoteke. Zakaj je <a "
 "href=\"%(wagtailimages_add_image_url)s\">ne bi naložili sedaj</a>?"
 
-msgid "Generating URL"
-msgstr "Generiranje URL"
+msgid "Preview"
+msgstr "Predogled"
 
 msgid "URL"
 msgstr "URL"
 
-msgid "Preview"
-msgstr "Predogled"
+msgid "Image URL"
+msgstr "URL naslov slike"
 
-msgid ""
-"Note that images generated larger than the screen will appear smaller when "
-"previewed here, so they fit the screen."
-msgstr ""
-"Upoštevajte, da so slike, ustvarjene večje od zaslona, v predogledu "
-"prikazane pomanjšane, da so lahko prikazane v celoti."
+msgid "Copy URL"
+msgstr "Kopiraj URL"
+
+msgid "Copied to clipboard"
+msgstr "Kopirano v odložišče"
+
+msgid "Copying to clipboard failed"
+msgstr "Kopiranje v odložišče ni uspelo"
 
 msgid "Add multiple images"
 msgstr "Dodaj več slik"
@@ -448,6 +475,13 @@ msgstr ""
 "Prenos je uspel. Sliko lahko, če je potrebno, opremite z bolj ustreznim "
 "nazivom. Sliko lahko tudi popolnoma izbrišete, v kolikor prenos ni bil "
 "potreben."
+
+msgid ""
+"Upload successful. However, your new image seems to be a duplicate of this "
+"existing image. You may delete it if it wasn't required."
+msgstr ""
+"Nalaganje uspešno. Zdi se, da je vaša nova slika dvojnik obstoječe slike. "
+"Sliko lahko izbrišete, če je ne potrebujete."
 
 msgid "Sorry, upload failed."
 msgstr "Prenos žal ni uspel."
@@ -479,11 +513,27 @@ msgstr "Oznaka"
 msgid "Add tags to the selected images"
 msgstr "Izbranim slikam dodajte oznake"
 
+#, python-format
+msgid "New tags have been added to %(num_parent_objects)d image"
+msgid_plural "New tags have been added to %(num_parent_objects)d images"
+msgstr[0] "%(num_parent_objects)d sliki so bile dodane nove oznake"
+msgstr[1] "%(num_parent_objects)d slikama so bile dodane nove oznake"
+msgstr[2] "%(num_parent_objects)d slikam so bile dodane nove oznake"
+msgstr[3] "%(num_parent_objects)d slikam so bile dodane nove oznake"
+
 msgid "Add to collection"
 msgstr "Dodaj v zbirko"
 
 msgid "Add selected images to collection"
 msgstr "Dodajte izbrane slike v zbirko"
+
+#, python-format
+msgid "%(num_parent_objects)d image has been added to %(collection)s"
+msgid_plural "%(num_parent_objects)d images have been added to %(collection)s"
+msgstr[0] "%(num_parent_objects)d slika je bila dodana v %(collection)s"
+msgstr[1] "%(num_parent_objects)d sliki sta bili dodani v %(collection)s"
+msgstr[2] "%(num_parent_objects)d slik je bilo dodanih v %(collection)s"
+msgstr[3] "%(num_parent_objects)d slik je bilo dodanih v %(collection)s"
 
 msgid "Delete"
 msgstr "Izbriši"
@@ -532,8 +582,8 @@ msgstr "Velikost datoteke: (od majhne do velike)"
 msgid "File size: (high to low)"
 msgstr "Velikost datoteke: (od velike proti majhni)"
 
-msgid "Search images"
-msgstr "Iskanje po slikah"
+msgid "Images"
+msgstr "Slike"
 
 #, python-format
 msgid "Image '%(image_title)s' updated."

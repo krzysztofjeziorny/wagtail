@@ -4,16 +4,16 @@
 #
 # Translators:
 # Jim Brouzoulis <jim.brouzoulis@chalmers.se>, 2017
-# Martin Sandström <martin@marteinn.se>, 2020-2021,2023
+# Martin Sandström <martin@marteinn.se>, 2020-2021,2023-2024
 # Philip Andersen <renegadevi@codeofmagi.net>, 2018-2019
 # Thomas Kunambi <kunambi@gmail.com>, 2016-2017,2021-2022
 msgid ""
 msgstr ""
 "Project-Id-Version: Wagtail\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-04-20 11:47+0100\n"
+"POT-Creation-Date: 2024-08-07 10:05+0100\n"
 "PO-Revision-Date: 2014-02-21 15:51+0000\n"
-"Last-Translator: Martin Sandström <martin@marteinn.se>, 2020-2021,2023\n"
+"Last-Translator: Martin Sandström <martin@marteinn.se>, 2020-2021,2023-2024\n"
 "Language-Team: Swedish (http://app.transifex.com/torchbox/wagtail/language/"
 "sv/)\n"
 "MIME-Version: 1.0\n"
@@ -101,6 +101,12 @@ msgstr "<b>'{title}' låstes</b> av <b>{user}</b> vid <b>{datetime}</b>."
 msgid "<b>'{title}' is locked</b>."
 msgstr "<b>'{title}' är låst</b>."
 
+msgid "Locked by you"
+msgstr "Låst av dig"
+
+msgid "Locked by another user"
+msgstr "Låst av en annan användare"
+
 #, python-format
 msgid "This %(model_name)s is currently awaiting moderation."
 msgstr "Denna %(model_name)s väntar på moderering."
@@ -185,6 +191,39 @@ msgstr "under moderering"
 msgid "live + in moderation"
 msgstr "publicerad + under moderering"
 
+msgid "Add/edit pages you own"
+msgstr "Skapa/redigera sidor du äger"
+
+msgid "Bulk delete"
+msgstr "Massradera"
+
+msgid "Delete pages with children"
+msgstr "Radera sidor med undersidor"
+
+msgid "Edit"
+msgstr "Redigera"
+
+msgid "Edit any page"
+msgstr "Redigera alla sidor"
+
+msgid "Lock"
+msgstr "Lås"
+
+msgid "Lock/unlock pages you've locked"
+msgstr "Lås/lås upp sidor du låst"
+
+msgid "Publish"
+msgstr "Publicera"
+
+msgid "Publish any page"
+msgstr "Publicera alla sidor"
+
+msgid "Unlock"
+msgstr "Lås upp"
+
+msgid "Unlock any page"
+msgstr "Lås upp valfri sida"
+
 msgid "title"
 msgstr "titel"
 
@@ -257,9 +296,6 @@ msgstr "sidor"
 msgid "object id"
 msgstr "objektid"
 
-msgid "submitted for moderation"
-msgstr "inlämnad för moderering"
-
 msgid "created at"
 msgstr "skapad vid"
 
@@ -278,44 +314,11 @@ msgstr "revision"
 msgid "revisions"
 msgstr "revisioner"
 
-msgid "Add/edit pages you own"
-msgstr "Skapa/redigera sidor du äger"
-
-msgid "Edit"
-msgstr "Redigera"
-
-msgid "Edit any page"
-msgstr "Redigera alla sidor"
-
-msgid "Publish"
-msgstr "Publicera"
-
-msgid "Publish any page"
-msgstr "Publicera alla sidor"
-
-msgid "Bulk delete"
-msgstr "Massradera"
-
-msgid "Delete pages with children"
-msgstr "Radera sidor med undersidor"
-
-msgid "Lock"
-msgstr "Lås"
-
-msgid "Lock/unlock pages you've locked"
-msgstr "Lås/lås upp sidor du låst"
-
-msgid "Unlock"
-msgstr "Lås upp"
-
-msgid "Unlock any page"
-msgstr "Lås upp valfri sida"
-
 msgid "group"
 msgstr "grupp"
 
-msgid "permission type"
-msgstr "rättighetstyp"
+msgid "permission"
+msgstr "rättighet"
 
 msgid "group page permission"
 msgstr "gruppens sidrättighet"
@@ -519,14 +522,14 @@ msgstr "visningsrestriktioner för samling"
 msgid "collections"
 msgstr "samlingar"
 
-msgid "permission"
-msgstr "rättighet"
-
 msgid "group collection permission"
 msgstr "gruppsamlingsrättighet"
 
 msgid "group collection permissions"
 msgstr "gruppsamlingsbehörigheter"
+
+msgid "uploaded by user"
+msgstr "uppladdad av användare"
 
 msgid "hostname"
 msgstr "värdnamn"
@@ -583,17 +586,11 @@ msgstr ""
 msgid "Public"
 msgstr "Publik"
 
-msgid "Private, accessible to logged-in users"
-msgstr "Privat, åtkomligen för inloggade användare"
-
-msgid "Private, accessible with the following password"
-msgstr "Privat, åtkomligen med följande lösenord"
-
 msgid "Private, accessible to users in specific groups"
 msgstr "Privat, åtkomligen för användare i specifika grupper"
 
-msgid "password"
-msgstr "lösenord"
+msgid "shared password"
+msgstr "delat lösenord"
 
 msgid "view restriction"
 msgstr "visningsrestriktion"
@@ -805,10 +802,6 @@ msgstr "Uppdaterade vyrestriktionen"
 
 msgid "Remove view restrictions"
 msgstr "Radera vyrestriktioner"
-
-#, python-format
-msgid "Removed the '%(restriction)s' view restriction"
-msgstr "Raderade vyrestriktionen '%(restriction)s'"
 
 msgid "Removed view restriction"
 msgstr "Raderade vyrestriktionen"

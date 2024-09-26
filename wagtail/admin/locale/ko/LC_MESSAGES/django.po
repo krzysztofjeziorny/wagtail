@@ -9,13 +9,14 @@
 # Kyu Choi, 2022
 # Kyungil Choi <hanpama@gmail.com>, 2015,2017-2020,2022
 # Matt Westcott <matthew@torchbox.com>, 2018
+# mirusu400, 2024
 msgid ""
 msgstr ""
 "Project-Id-Version: Wagtail\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-04-20 11:47+0100\n"
+"POT-Creation-Date: 2024-08-07 10:06+0100\n"
 "PO-Revision-Date: 2014-02-21 15:50+0000\n"
-"Last-Translator: Matt Westcott <matthew@torchbox.com>, 2018\n"
+"Last-Translator: mirusu400, 2024\n"
 "Language-Team: Korean (http://app.transifex.com/torchbox/wagtail/language/"
 "ko/)\n"
 "MIME-Version: 1.0\n"
@@ -75,8 +76,17 @@ msgstr "시작일"
 msgid "Date to"
 msgstr "종료일"
 
+msgid "Locale"
+msgstr "현장"
+
 msgid "All"
 msgstr "모두"
+
+msgid "Collection"
+msgstr "모음"
+
+msgid "Tag"
+msgstr "테그"
 
 msgid "Preferred language"
 msgstr "선호하는 언어"
@@ -100,6 +110,10 @@ msgid "Enter password"
 msgstr "패스워드 입력"
 
 #, python-format
+msgid "Your %(username_field)s and password didn't match. Please try again."
+msgstr "%(username_field)s 과 비밀번호가 맞지 않습니다. 다시 시도해 주세요"
+
+#, python-format
 msgid "Enter your %(username_field_name)s"
 msgstr "%(username_field_name)s 입력"
 
@@ -117,9 +131,6 @@ msgstr "검색"
 
 msgid "All collections"
 msgstr "모든 모음"
-
-msgid "Collection"
-msgstr "모음"
 
 msgid "Parent"
 msgstr "상위"
@@ -225,6 +236,12 @@ msgstr ""
 "하위 페이지를 복사할 때 페이지를 그 페이지 자신으로 복사해 넣을 수는 없습니"
 "다."
 
+msgid "Parent page"
+msgstr "상위 페이지"
+
+msgid "Search…"
+msgstr "검색..."
+
 #, python-format
 msgid "Tag(s) %(value_too_long)s are over %(max_tag_length)d characters"
 msgstr "태그(들)가%(value_too_long)s가 %(max_tag_length)d자를 초과합니다"
@@ -313,6 +330,13 @@ msgstr "이 화면 안의 모든 %(objects)s 유저가 선택됨"
 msgid "All users in listing selected"
 msgstr "목록 안의 모든 유저가 선택됨"
 
+msgid "1 snippet selected"
+msgstr "스니펫 1개 선택됨"
+
+#, python-format
+msgid "%(objects)s snippets selected"
+msgstr "스니펫 %(objects)s개 선택됨"
+
 msgid "1 item selected"
 msgstr "물건 1이 선택됨"
 
@@ -326,9 +350,6 @@ msgstr "이 화면 안의 모든 %(objects)s 물건이 선택됨"
 
 msgid "All items in listing selected"
 msgstr "목록 안의 모든 물건이 선택됨"
-
-msgid "Page title"
-msgstr "페이지 제목"
 
 msgid "For search engines"
 msgstr "엔진을 검색하기 위해"
@@ -344,6 +365,12 @@ msgstr "홍보"
 
 msgid "Settings"
 msgstr "설정"
+
+msgid "Title"
+msgstr "제목"
+
+msgid "Page title"
+msgstr "페이지 제목"
 
 msgid "Error 404: Page not found"
 msgstr "에러 404: 페이지를 찾을 수 없습니다"
@@ -513,9 +540,6 @@ msgstr "'%(title)s' 의 하위 페이지 탐색"
 msgid "Explore"
 msgstr "탐색"
 
-msgid "Collection privacy"
-msgstr "모음 공개 범위"
-
 msgid "This collection has been made private by a parent collection."
 msgstr "이 모음은 상위 모음에 의해 비공개로 설정되었습니다."
 
@@ -551,9 +575,6 @@ msgid ""
 "This collection cannot be deleted, because it is not empty. It contains:"
 msgstr "이 모음을 삭제할 수 없습니다. 모음이 비어 있지 않습니다:"
 
-msgid "Name"
-msgstr "이름"
-
 #, python-format
 msgid ""
 "No collections have been created. Why not <a "
@@ -580,6 +601,12 @@ msgstr "아니요, 게시를 해제하지 않습니다"
 
 msgid "Cancel"
 msgstr "취소"
+
+msgid "Comment"
+msgstr "댓글"
+
+msgid "Actions"
+msgstr "액션"
 
 msgid "Update"
 msgstr "업데이트"
@@ -622,9 +649,6 @@ msgstr "대시보드는 여러분이 생성한 컨텐츠들에 대한 유용한 
 msgid "Your locked pages"
 msgstr "잠긴 페이지"
 
-msgid "Title"
-msgstr "제목"
-
 msgid "Locked at"
 msgstr "잠긴 시간:"
 
@@ -640,27 +664,6 @@ msgstr "초안"
 msgid "Live"
 msgstr "라이브"
 
-msgid "Pages awaiting moderation"
-msgstr "검토를 기다리는 페이지"
-
-msgid "Type"
-msgstr "타입"
-
-msgid "Edited"
-msgstr "수정된"
-
-msgid "Preview this page"
-msgstr "페이지 미리보기"
-
-msgid "Approve"
-msgstr "승인"
-
-msgid "Reject"
-msgstr "거절"
-
-msgid "Preview"
-msgstr "미리보기"
-
 msgid "Your most recent edits"
 msgstr "최신 수정된 기록"
 
@@ -672,17 +675,6 @@ msgstr "날짜"
 
 msgid "Site summary"
 msgstr "사이트 요약"
-
-#, python-format
-msgid ""
-"<span>%(total)s</span> Page <span class=\"visuallyhidden\">created in "
-"%(site_name)s</span>"
-msgid_plural ""
-"<span>%(total)s</span> Pages <span class=\"visuallyhidden\">created in "
-"%(site_name)s</span>"
-msgstr[0] ""
-"<span>%(total)s</span>페이지는 <span class=\"visuallyhidden\">%(site_name)s</"
-"span>안에 생성되었습니다."
 
 msgid "Task started"
 msgstr "업무 시작"
@@ -705,15 +697,20 @@ msgstr "업무"
 msgid "Task submitted by"
 msgstr "까지 업무 제출"
 
+msgid "Preview"
+msgstr "미리보기"
+
+msgid "Compare with live version"
+msgstr "라이브 버전과 비교"
+
+msgid "Compare with previous version"
+msgstr "이전 버전과 비교합니다."
+
 msgid "Sign in"
 msgstr "로그인"
 
 msgid "Sign in to Wagtail"
 msgstr "웨그테일에 로그인"
-
-#, python-format
-msgid "Your %(username_field)s and password didn't match. Please try again."
-msgstr "%(username_field)s 과 비밀번호가 맞지 않습니다. 다시 시도해 주세요"
 
 msgid "Forgotten password?"
 msgstr "비밀번호를 잊으셨나요?"
@@ -754,17 +751,6 @@ msgid "The page \"%(title)s\" has been rejected"
 msgstr "\"%(title)s\" 페이지가 거절되었습니다"
 
 #, python-format
-msgid "The page \"%(page)s\" has been submitted for moderation by %(editor)s."
-msgstr "\"%(page)s\" 페이지에 대한 검토를 %(editor)s에게 신청했습니다."
-
-msgid "You can preview the page here:"
-msgstr "여기서 페이지를 미리 볼 수 있습니다:"
-
-#, python-format
-msgid "The page \"%(page)s\" has been submitted for moderation"
-msgstr "검토를 위해 \"%(page)s\" 페이지가 제출 되었습니다"
-
-#, python-format
 msgid ""
 "The page \"%(title)s\" has been approved in moderation stage \"%(task)s\"."
 msgstr "페이지 \"%(title)s\"는 조정단계인 \"%(task)s\"에 승인되었습니다."
@@ -789,6 +775,9 @@ msgid ""
 msgstr ""
 "페이지\"%(title)s\"는 승인을 받기 위해 조정단계 \"%(task)s\"안에 제출되었습니"
 "다."
+
+msgid "You can preview the page here:"
+msgstr "여기서 페이지를 미리 볼 수 있습니다:"
 
 #, python-format
 msgid ""
@@ -893,11 +882,11 @@ msgstr ""
 msgid "The page \"%(title)s\" has been submitted to workflow \"%(workflow)s\""
 msgstr "페이지\"%(title)s\"가 작업\"%(workflow)s\"안에 승인되었습니다."
 
-msgid "Page privacy"
-msgstr "페이지 공개 범위"
-
 msgid "This page has been made private by a parent page."
 msgstr "이 페이지는 상위 페이지에 의해 비공개로 설정되었습니다"
+
+msgid "Save the page before leaving"
+msgstr "떠나기 전에 페이지를 저장하십시오"
 
 msgid "You have <span>unsaved edits</span>"
 msgstr "당신은 <span>수정사항</span>을 저장하지 않았습니다"
@@ -908,9 +897,6 @@ msgstr "당신은 <span>댓글을 저장하지 않았습니다</span>"
 msgid "You have <span>unsaved edits</span> and <span>comments</span>"
 msgstr ""
 "당신은 <span>수정사항</span>과 <span>댓글</span>을 저장하지 않았습니다."
-
-msgid "Save the page before leaving"
-msgstr "떠나기 전에 페이지를 저장하십시오"
 
 msgid "Publishing…"
 msgstr "게시 중..."
@@ -1135,13 +1121,6 @@ msgid "Would you still like to publish this page?"
 msgstr "여전히 이 페이지를 게시하길 원하십니까?"
 
 #, python-format
-msgid "Pages using %(page_class_verbose_name)s"
-msgstr "사용 중인 페이지들: %(page_class_verbose_name)s"
-
-msgid "Pages using"
-msgstr "사용한 페이지들"
-
-#, python-format
 msgid "Copy %(title)s"
 msgstr "%(title)s 복사"
 
@@ -1151,19 +1130,8 @@ msgstr "복사"
 msgid "Copy this page"
 msgstr "이 페이지 복사"
 
-#, python-format
-msgid "New %(page_type)s"
-msgstr "새로운 %(page_type)s"
-
-msgid "Actions"
-msgstr "액션"
-
 msgid "This page has unsaved changes."
 msgstr "이 페이지는 저장되지 않은 변경사항이 있습니다."
-
-#, python-format
-msgid "Editing %(page_type)s: %(title)s"
-msgstr "%(page_type)s: %(title)s 수정"
 
 msgid "This page is an alias of another page."
 msgstr "이 페이지는 다른 페이지의 에일리언스입니다."
@@ -1174,43 +1142,8 @@ msgstr "원래 페이지를 수정하십시오."
 msgid "Convert this alias into an ordinary page"
 msgstr "이 에일리어스를 원래의 페이지로 변환하십시오."
 
-#, python-format
-msgid "Page history for %(subtitle)s"
-msgstr "%(subtitle)s의 페이지 히스토리"
-
-msgid "Action"
-msgstr "행동"
-
-msgid "User"
-msgstr "사용자"
-
-msgid "Date / Time"
-msgstr "날짜 / 시간"
-
-msgid "Comment"
-msgstr "댓글"
-
-msgid "Live version"
-msgstr "라이브 버전"
-
-msgid "Current draft"
-msgstr "현재 원고"
-
-msgid "No log entries found."
-msgstr "기록 입장이 확인되지 않음"
-
-#, python-format
-msgid "Exploring %(title)s"
-msgstr "%(title)s 탐색"
-
 msgid "Select all pages in listing"
 msgstr "목록의 모든 페이지를 선택하시오."
-
-msgid "Select page"
-msgstr "페이지 선택"
-
-msgid "Drag"
-msgstr "끌기"
 
 msgid ""
 "The root level is where you can add new sites to your Wagtail installation. "
@@ -1251,13 +1184,6 @@ msgstr ""
 "이 위치에 대한 사이트 항목이 없습니다. 여기에 생성되는 페이지들은 어떤 URL로"
 "도 접근할 수 없습니다."
 
-msgid "No pages have been created at this location."
-msgstr "해당 위치에 생성된 페이지가 없습니다."
-
-#, python-format
-msgid "Why not <a href=\"%(add_page_url)s\">create one</a>?"
-msgstr "<a href=\"%(add_page_url)s\">만들어</a> 보는 건 어떠신가요?"
-
 msgid "This page is locked to further editing"
 msgstr "이 페이지는 추가 수정을 위해 잠겼습니다"
 
@@ -1268,6 +1194,18 @@ msgstr "'%(title)s' 의 하위 페이지 탐색"
 #, python-format
 msgid "Add a child page to '%(title)s'"
 msgstr "'%(title)s' 에 대한 하위 페이지 추가"
+
+msgid "Drag"
+msgstr "끌기"
+
+msgid "Disable ordering of child pages"
+msgstr "하위 페이지들 순서 변경 기능 비활성화"
+
+msgid "Sort"
+msgstr "정렬"
+
+msgid "Enable ordering of child pages"
+msgstr "하위 페이지들 순서 변경 기능 활성화"
 
 msgid "Sites menu"
 msgstr "사이트 메뉴"
@@ -1288,32 +1226,8 @@ msgstr "다음"
 msgid "This page is protected from public view"
 msgstr "이 페이지는 다른 이들이 보지 못하도록 보호되었습니다"
 
-msgid "Disable ordering of child pages"
-msgstr "하위 페이지들 순서 변경 기능 비활성화"
-
-msgid "Sort"
-msgstr "정렬"
-
-msgid "Enable ordering of child pages"
-msgstr "하위 페이지들 순서 변경 기능 활성화"
-
-msgid "Updated"
-msgstr "업데이트됨"
-
-msgid "History"
-msgstr "자취"
-
-msgid "Review this version"
-msgstr "이 버전을 검토헙니다."
-
-msgid "Compare with previous version"
-msgstr "이전 버전과 비교합니다."
-
-msgid "Compare with current version"
-msgstr "현재 버전과 비교합니다."
-
-msgid "Cancel scheduled publish"
-msgstr "예약 게시 취소"
+msgid "Add child page"
+msgstr "하위 페이지 추가"
 
 #, python-format
 msgid "There is one matching page"
@@ -1343,9 +1257,6 @@ msgstr "위로 이동"
 msgid "Move down"
 msgstr "아래로 이동"
 
-msgid "Comment notifications"
-msgstr "댓글 알림"
-
 msgid "Collection management permissions"
 msgstr "수집 관리 권한"
 
@@ -1358,17 +1269,20 @@ msgstr "마지막으로 게시된"
 msgid "Last published by"
 msgstr "에 의해 마지막으로 게시된"
 
+msgid "Type"
+msgstr "타입"
+
 msgid "No pages found."
 msgstr "찾은 페이지 없음."
 
 msgid "No pages match this report's criteria."
 msgstr "리포트 조건에 맞는 페이지가 없습니다."
 
-msgid "Download XLSX"
-msgstr "XLSX 다운로드"
+msgid "Updated"
+msgstr "업데이트됨"
 
-msgid "Download CSV"
-msgstr "CSV 다운로드"
+msgid "Pages"
+msgstr "페이지"
 
 msgid "Locking status"
 msgstr "잠금 상태"
@@ -1391,11 +1305,23 @@ msgstr "잠김"
 msgid "No locked pages found."
 msgstr "잠긴 페이지가 없음."
 
+msgid "Name"
+msgstr "이름"
+
+msgid "Action"
+msgstr "행동"
+
+msgid "User"
+msgstr "사용자"
+
+msgid "Date / Time"
+msgstr "날짜 / 시간"
+
 msgid "Edit this item"
 msgstr "이 아이템 수정"
 
-msgid "By Task"
-msgstr "업무에 의해"
+msgid "No log entries found."
+msgstr "기록 입장이 확인되지 않음"
 
 msgid "Workflow"
 msgstr "작업흐름"
@@ -1408,9 +1334,6 @@ msgstr "에서 시작됨"
 
 msgid "Incomplete task"
 msgstr "업무 미완성"
-
-msgid "By Workflow"
-msgstr "작업흐름에 의해"
 
 msgid "Completed at"
 msgstr "에 완료됨"
@@ -1425,11 +1348,14 @@ msgstr "부분 전환"
 msgid "Breadcrumb"
 msgstr "브레드크럼"
 
-msgid "Root"
-msgstr "기본"
+msgid "Continue"
+msgstr "계속"
 
-msgid "Add comment"
-msgstr "댓글 추가"
+msgid "Download XLSX"
+msgstr "XLSX 다운로드"
+
+msgid "Download CSV"
+msgstr "CSV 다운로드"
 
 msgid "Filter"
 msgstr "필터"
@@ -1437,9 +1363,14 @@ msgstr "필터"
 msgid "Apply filters"
 msgstr "필터를 적용한"
 
-#, python-format
-msgid "Editing %(page_type)s %(title)s"
-msgstr "%(page_type)s%(title)s를 수정하는 중"
+msgid "Add comment"
+msgstr "댓글 추가"
+
+msgid "Back"
+msgstr "뒤로"
+
+msgid "History"
+msgstr "자취"
 
 msgid "Current page status:"
 msgstr "현재 페이지 상태:"
@@ -1478,8 +1409,8 @@ msgstr "다른 검색결과들"
 msgid "Toggle side panel"
 msgstr "사이드 패널 전환"
 
-msgid "Page Locale: "
-msgstr "현장 페이지"
+msgid "Comment notifications"
+msgstr "댓글 알림"
 
 msgid "No other translations"
 msgstr "다른 번역이 없음"
@@ -1513,9 +1444,6 @@ msgid "Used %(usage_count)s time"
 msgid_plural "Used %(usage_count)s times"
 msgstr[0] "%(usage_count)s번 사용"
 
-msgid "Page status: "
-msgstr "페이지 상태:"
-
 msgid "In Moderation"
 msgstr "일반적으로"
 
@@ -1524,6 +1452,9 @@ msgstr "상세 확인"
 
 msgid "View history"
 msgstr "히스토리 확인"
+
+msgid "First published"
+msgstr "가장 먼저 게시됨"
 
 msgid "Edit / Review"
 msgstr "수정 / 검토"
@@ -1544,6 +1475,9 @@ msgstr "시간대"
 
 msgid "Initial Revision"
 msgstr "초판 개정"
+
+msgid "Edited"
+msgstr "수정된"
 
 #, python-format
 msgid "%(action)s by <b>%(who)s</b> at <b>%(at)s</b>"
@@ -1652,6 +1586,11 @@ msgstr "해당 활성 작업에 사용됨"
 msgid "Not used"
 msgstr "사용되지 않음"
 
+#, python-format
+msgid "+%(counter)s more"
+msgid_plural "+%(counter)s more"
+msgstr[0] "%(counter)s 추가"
+
 msgid "Assigned pages"
 msgstr "할당된 페이지"
 
@@ -1661,28 +1600,14 @@ msgstr "페이지"
 msgid "Assign to another page"
 msgstr "다른 페이지에 할당됨"
 
-msgid "Hide disabled workflows"
-msgstr "불가한 작업 숨기기"
-
-msgid "Show disabled workflows"
-msgstr "불가한 작업 표시"
-
-msgid "Used by"
-msgstr "에 의해 사용됨"
-
-#, python-format
-msgid "1 page"
-msgid_plural "%(counter)s pages"
-msgstr[0] "%(counter)s페이지"
-
 #, python-format
 msgid "Step %(step_number)s"
 msgstr "%(step_number)s단계"
 
 #, python-format
-msgid "+%(counter)s more"
-msgid_plural "+%(counter)s more"
-msgstr[0] "%(counter)s 추가"
+msgid "1 page"
+msgid_plural "%(counter)s pages"
+msgstr[0] "%(counter)s페이지"
 
 #, python-format
 msgid ""
@@ -1726,12 +1651,6 @@ msgstr ""
 
 msgid "You haven't created any tasks."
 msgstr "당신은 어떤 작업도 생성한 적 없음"
-
-msgid "Hide disabled tasks"
-msgstr "불가한 작업 숨기기"
-
-msgid "Show disabled tasks"
-msgstr "불가한 작업 표시"
 
 #, python-format
 msgid ""
@@ -1777,8 +1696,48 @@ msgstr "출시된"
 msgid "See full history"
 msgstr "모든 자취 보기"
 
-msgid "Compare with live version"
-msgstr "라이브 버전과 비교"
+msgid "More"
+msgstr "더 보기"
+
+msgid "0 minutes"
+msgstr "0분"
+
+#, python-format
+msgid "%(time_period)s ago"
+msgstr "%(time_period)s 전"
+
+msgid "Log out"
+msgstr "로그아웃"
+
+msgid "Undo"
+msgstr "실행취소"
+
+msgid "Redo"
+msgstr "재실행"
+
+msgid "Bold"
+msgstr "굵게"
+
+msgid "Italic"
+msgstr "기울임꼴"
+
+msgid "Superscript"
+msgstr "위첨자"
+
+msgid "Subscript"
+msgstr "아래첨자"
+
+msgid "Toggle status"
+msgstr "상황이 오락가락하다"
+
+msgid "Toggle comments"
+msgstr "댓글이 오락가락하다"
+
+msgid "Comments"
+msgstr "댓글"
+
+msgid "Toggle preview"
+msgstr "미리보기가 오락가락하다"
 
 #, python-format
 msgid ""
@@ -1796,34 +1755,6 @@ msgstr ""
 "'%(parent)s' 페이지의 하위 페이지의 순서를  %(label)s'에 대해 내림차순으로 정"
 "렬합니다."
 
-msgid "More"
-msgstr "더 보기"
-
-msgid "View more bulk actions"
-msgstr "대부분의 행동 보기"
-
-msgid "0 minutes"
-msgstr "0분"
-
-#, python-format
-msgid "%(time_period)s ago"
-msgstr "%(time_period)s 전"
-
-msgid "Log out"
-msgstr "로그아웃"
-
-msgid "Toggle status"
-msgstr "상황이 오락가락하다"
-
-msgid "Comments"
-msgstr "댓글"
-
-msgid "Toggle comments"
-msgstr "댓글이 오락가락하다"
-
-msgid "Toggle preview"
-msgstr "미리보기가 오락가락하다"
-
 msgid "Profile"
 msgstr "프로필"
 
@@ -1835,9 +1766,6 @@ msgstr "이름과 이메일"
 
 msgid "Profile picture"
 msgstr "프로필 사진"
-
-msgid "Locale"
-msgstr "현장"
 
 msgid "Password"
 msgstr "비밀번호"
@@ -1878,6 +1806,24 @@ msgstr "'%(object)s' 모음이 삭제됨."
 msgid "Are you sure you want to delete this collection?"
 msgstr "이 모음을 지우려는 것이 확실한가요?"
 
+msgid "Home"
+msgstr "홈"
+
+msgid "Live version"
+msgstr "라이브 버전"
+
+msgid "Current draft"
+msgstr "현재 원고"
+
+msgid "Review this version"
+msgstr "이 버전을 검토헙니다."
+
+msgid "Compare with current version"
+msgstr "현재 버전과 비교합니다."
+
+msgid "Cancel scheduled publish"
+msgstr "예약 게시 취소"
+
 msgid "Workflow progress"
 msgstr "작업흐름 과정"
 
@@ -1889,17 +1835,32 @@ msgstr "%(model_name)s '%(object)s' 수정됨."
 msgid "%(model_name)s '%(object)s' created."
 msgstr "%(model_name)s '%(object)s' 생성됨."
 
+#, python-format
+msgid "Edit '%(title)s'"
+msgstr "'%(title)s' 수정"
+
+msgid "Inspect"
+msgstr "검사"
+
+#, python-format
+msgid "Delete '%(title)s'"
+msgstr "'%(title)s' 삭제"
+
 msgid "Editing"
 msgstr "수정"
+
+#, python-format
+msgid "%(model_name)s '%(object)s' deleted."
+msgstr "%(model_name)s '%(object)s' 삭제됨."
+
+msgid "Inspecting"
+msgstr "분석"
 
 msgid "Earliest"
 msgstr "최초"
 
 msgid "Latest"
 msgstr "최근"
-
-msgid "Usage of"
-msgstr "의 사용"
 
 #, python-format
 msgid "Edit this %(object)s"
@@ -2038,9 +1999,6 @@ msgstr "이 페이지는 오류에 의해 생성될 수 없습니다"
 msgid "Page '%(page_title)s' deleted."
 msgstr "'%(page_title)s' 페이지가 삭제되었습니다"
 
-msgid "This page is currently awaiting moderation"
-msgstr "이 페이지는 현재 검토를 기다리고 있습니다"
-
 #, python-format
 msgid ""
 "Page '%(page_title)s' has been replaced with version from "
@@ -2098,33 +2056,18 @@ msgstr "이 페이지는 잠겨 있으므로 저장할 수 없습니다"
 msgid "The page could not be saved due to validation errors"
 msgstr "이 페이지는 오류에 의해 저장할 수 없습니다"
 
-msgid "Hide commenting actions"
-msgstr "댓글 달기 숨기기"
+msgid "Owner"
+msgstr "소유자"
 
-msgid "Page history"
-msgstr "페이지 히스토리"
+msgid "Site"
+msgstr "사이트"
+
+msgid "Yes"
+msgstr "예"
 
 #, python-format
 msgid "Page '%(page_title)s' is now unlocked."
 msgstr "'%(page_title)s' 페이지의 잠금을 풀었습니다."
-
-#, python-format
-msgid "The page '%(page_title)s' is not currently awaiting moderation."
-msgstr "'%(page_title)s' 페이지는 현재 검토를 기다리고 있지 않습니다"
-
-#, python-format
-msgid "Page '%(page_title)s' published."
-msgstr "'%(page_title)s' 페이지가 게시되었습니다"
-
-msgid "Failed to send approval notifications"
-msgstr "승인 알림 보내기 실패"
-
-#, python-format
-msgid "Page '%(page_title)s' rejected for publication."
-msgstr "'%(page_title)s' 페이지는 게시가 거절되었습니다"
-
-msgid "Failed to send rejection notifications"
-msgstr "거절 알림 보내기 실패"
 
 #, python-format
 msgid ""
@@ -2144,9 +2087,19 @@ msgid ""
 "by %(user)s"
 msgstr "당신은 <b>%(created_at)s</b>의 이전 버전을 %(user)s에서 보고 있습니다."
 
+msgid "Page history"
+msgstr "페이지 히스토리"
+
 #, python-format
 msgid "Page '%(page_title)s' unpublished."
 msgstr "'%(page_title)s' 페이지의 게시가 해제 되었습니다"
+
+msgid "Pages using"
+msgstr "사용한 페이지들"
+
+#, python-format
+msgid "The page '%(page_title)s' is not currently awaiting moderation."
+msgstr "'%(page_title)s' 페이지는 현재 검토를 기다리고 있지 않습니다"
 
 #, python-format
 msgid ""
@@ -2197,6 +2150,9 @@ msgstr "에 의해 요청됨"
 
 msgid "Add a workflow"
 msgstr "워크플로우 추가"
+
+msgid "Used by"
+msgstr "에 의해 사용됨"
 
 msgid "New workflow"
 msgstr "새로운 워크플로우"
@@ -2262,13 +2218,6 @@ msgstr "작업 '%(object)s' 불가"
 msgid "Task '%(task_name)s' enabled."
 msgstr "작업 '%(task_name)s' 불가"
 
-msgid "Pages"
-msgstr "페이지"
-
-#, python-format
-msgid "Edit '%(title)s'"
-msgstr "'%(title)s' 수정"
-
 #, python-format
 msgid "Preview draft version of '%(title)s'"
 msgstr "'%(title)s'의 초고 버전 미리보기"
@@ -2276,17 +2225,6 @@ msgstr "'%(title)s'의 초고 버전 미리보기"
 #, python-format
 msgid "View live version of '%(title)s'"
 msgstr "'%(title)s'의 라이브 버전 보기"
-
-msgid "Add child page"
-msgstr "하위 페이지 추가"
-
-#, python-format
-msgid "Add a child page to '%(title)s' "
-msgstr "'%(title)s' 페이지에 하위 페이지 추가"
-
-#, python-format
-msgid "View more options for '%(title)s'"
-msgstr " '%(title)s'에 대한 옵션 더 보기"
 
 #, python-format
 msgid "Move page '%(title)s'"
@@ -2328,20 +2266,8 @@ msgstr "숫자 목록"
 msgid "Blockquote"
 msgstr "인용"
 
-msgid "Bold"
-msgstr "굵게"
-
-msgid "Italic"
-msgstr "기울임꼴"
-
 msgid "Link"
 msgstr "링크"
-
-msgid "Superscript"
-msgstr "위첨자"
-
-msgid "Subscript"
-msgstr "아래첨자"
 
 msgid "Strikethrough"
 msgstr "취소선"
@@ -2351,9 +2277,6 @@ msgstr "코드"
 
 msgid "Reports"
 msgstr "리포트"
-
-msgid "Yes"
-msgstr "예"
 
 msgid "Choose an item"
 msgstr "아이템 선택"

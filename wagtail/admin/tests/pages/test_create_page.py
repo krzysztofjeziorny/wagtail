@@ -1,5 +1,4 @@
 import datetime
-import unittest
 from unittest import mock
 
 from django.contrib.auth.models import Group, Permission
@@ -31,6 +30,11 @@ from wagtail.test.utils.timestamps import submittable_timestamp
 
 
 class TestPageCreation(WagtailTestUtils, TestCase):
+    STATUS_TOGGLE_BADGE_REGEX = (
+        r'data-side-panel-toggle="status"[^<]+<svg[^<]+<use[^<]+</use[^<]+</svg[^<]+'
+        r"<div data-side-panel-toggle-counter[^>]+w-bg-critical-200[^>]+>\s*%(num_errors)s\s*</div>"
+    )
+
     def setUp(self):
         # Find root page
         self.root_page = Page.objects.get(id=2)
@@ -513,20 +517,32 @@ class TestPageCreation(WagtailTestUtils, TestCase):
 
         # Check that a form error was raised
         self.assertFormError(
-            response,
-            "form",
+            response.context["form"],
             "go_live_at",
             "Go live date/time must be before expiry date/time",
         )
         self.assertFormError(
-            response,
-            "form",
+            response.context["form"],
             "expire_at",
             "Go live date/time must be before expiry date/time",
         )
 
+        self.assertContains(
+            response,
+            '<div class="w-label-3 w-text-primary">Invalid schedule</div>',
+            html=True,
+        )
+
+        num_errors = 2
+
+        # Should show the correct number on the badge of the toggle button
+        self.assertRegex(
+            response.content.decode(),
+            self.STATUS_TOGGLE_BADGE_REGEX % {"num_errors": num_errors},
+        )
+
         # form should be marked as having unsaved changes for the purposes of the dirty-forms warning
-        self.assertContains(response, "alwaysDirty: true")
+        self.assertContains(response, 'data-w-unsaved-force-value="true"')
 
     def test_create_simplepage_scheduled_expire_in_the_past(self):
         post_data = {
@@ -549,11 +565,27 @@ class TestPageCreation(WagtailTestUtils, TestCase):
 
         # Check that a form error was raised
         self.assertFormError(
-            response, "form", "expire_at", "Expiry date/time must be in the future"
+            response.context["form"],
+            "expire_at",
+            "Expiry date/time must be in the future",
+        )
+
+        self.assertContains(
+            response,
+            '<div class="w-label-3 w-text-primary">Invalid schedule</div>',
+            html=True,
+        )
+
+        num_errors = 1
+
+        # Should show the correct number on the badge of the toggle button
+        self.assertRegex(
+            response.content.decode(),
+            self.STATUS_TOGGLE_BADGE_REGEX % {"num_errors": num_errors},
         )
 
         # form should be marked as having unsaved changes for the purposes of the dirty-forms warning
-        self.assertContains(response, "alwaysDirty: true")
+        self.assertContains(response, 'data-w-unsaved-force-value="true"')
 
     def test_create_simplepage_post_publish(self):
         # Connect a mock signal handler to page_published signal
@@ -717,14 +749,13 @@ class TestPageCreation(WagtailTestUtils, TestCase):
 
         # Check that a form error was raised
         self.assertFormError(
-            response,
-            "form",
+            response.context["form"],
             "slug",
             "The slug 'hello-world' is already in use within the parent page",
         )
 
         # form should be marked as having unsaved changes for the purposes of the dirty-forms warning
-        self.assertContains(response, "alwaysDirty: true")
+        self.assertContains(response, 'data-w-unsaved-force-value="true"')
 
     def test_create_nonexistantparent(self):
         response = self.client.get(
@@ -755,7 +786,7 @@ class TestPageCreation(WagtailTestUtils, TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertFormError(response, "form", "foo", "Field foo must be bar")
+        self.assertFormError(response.context["form"], "foo", "Field foo must be bar")
         self.assertFalse(
             Page.objects.filter(
                 path__startswith=self.root_page.path, slug="hello-world"
@@ -879,7 +910,9 @@ class TestPageCreation(WagtailTestUtils, TestCase):
         )
 
         # Check that a form error was raised
-        self.assertFormError(response, "form", "title", "This field is required.")
+        self.assertFormError(
+            response.context["form"], "title", "This field is required."
+        )
 
     def test_whitespace_titles_with_tab(self):
         post_data = {
@@ -897,7 +930,9 @@ class TestPageCreation(WagtailTestUtils, TestCase):
         )
 
         # Check that a form error was raised
-        self.assertFormError(response, "form", "title", "This field is required.")
+        self.assertFormError(
+            response.context["form"], "title", "This field is required."
+        )
 
     def test_whitespace_titles_with_tab_in_seo_title(self):
         post_data = {
@@ -968,11 +1003,43 @@ class TestPageCreation(WagtailTestUtils, TestCase):
         # Check that a form error was raised
         self.assertEqual(response.status_code, 200)
         self.assertFormError(
-            response,
-            "form",
+            response.context["form"],
             "slug",
             "Ensure this value has at most 255 characters (it has 287).",
         )
+
+    def test_title_field_attrs(self):
+        """
+        Should correctly add the sync field and placeholder attributes to the title field.
+        Note: Many test Page models use a FieldPanel for 'title', StandardChild does not
+        override content_panels (uses the default).
+        """
+
+        response = self.client.get(
+            reverse(
+                "wagtailadmin_pages:add",
+                args=("tests", "standardchild", self.root_page.id),
+            )
+        )
+
+        html = self.get_soup(response.content)
+
+        actual_attrs = html.find("input", {"name": "title"}).attrs
+
+        expected_attrs = {
+            "aria-describedby": "panel-child-content-child-title-helptext",
+            "data-action": "focus->w-sync#check blur->w-sync#apply change->w-sync#apply keyup->w-sync#apply",
+            "data-controller": "w-sync",
+            "data-w-sync-target-value": "#id_slug",
+            "id": "id_title",
+            "maxlength": "255",
+            "name": "title",
+            "placeholder": "Page title*",
+            "required": "",
+            "type": "text",
+        }
+
+        self.assertEqual(actual_attrs, expected_attrs)
 
     def test_before_create_page_hook(self):
         def hook_func(request, parent_page, page_class):
@@ -1162,10 +1229,10 @@ class TestPageCreation(WagtailTestUtils, TestCase):
             "Submit for moderation</button>",
         )
 
-    @override_settings(WAGTAIL_MODERATION_ENABLED=False)
+    @override_settings(WAGTAIL_WORKFLOW_ENABLED=False)
     def test_hide_moderation_button(self):
         """
-        Tests that if WAGTAIL_MODERATION_ENABLED is set to False, the "Submit for Moderation" button is not shown.
+        Tests that if WAGTAIL_WORKFLOW_ENABLED is set to False, the "Submit for Moderation" button is not shown.
         """
         response = self.client.get(
             reverse(
@@ -1427,7 +1494,13 @@ class TestInlineStreamField(WagtailTestUtils, TestCase):
         self.assertEqual(response.status_code, 200)
 
         # response should include HTML declarations for streamfield child blocks
-        self.assertContains(response, '<div id="sections-__prefix__-body" data-block="')
+        self.assertContains(response, '<div id="sections-__prefix__-body" data-block')
+        soup = self.get_soup(response.content)
+        blockDiv = soup.find("div", {"data-controller": "w-block"})
+        self.assertIsNotNone(blockDiv)
+        # block div should contain this attributes
+        self.assertTrue(blockDiv.has_attr("data-w-block-arguments-value"))
+        self.assertTrue(blockDiv.has_attr("data-w-block-data-value"))
 
 
 class TestIssue2994(WagtailTestUtils, TestCase):
@@ -1490,6 +1563,10 @@ class TestInlinePanelWithTags(WagtailTestUtils, TestCase):
             "comments-INITIAL_FORMS": 0,
             "comments-MIN_NUM_FORMS": 0,
             "comments-MAX_NUM_FORMS": 1000,
+            "social_links-TOTAL_FORMS": 0,
+            "social_links-INITIAL_FORMS": 0,
+            "social_links-MIN_NUM_FORMS": 0,
+            "social_links-MAX_NUM_FORMS": 1000,
         }
         response = self.client.post(
             reverse(
@@ -1503,6 +1580,49 @@ class TestInlinePanelWithTags(WagtailTestUtils, TestCase):
         )
         new_page = PersonPage.objects.get(slug="mr-benn")
         self.assertEqual(new_page.addresses.first().tags.count(), 2)
+
+
+class TestNonOrderableInlinePanel(WagtailTestUtils, TestCase):
+    # https://github.com/wagtail/wagtail/issues/11887
+
+    def setUp(self):
+        self.root_page = Page.objects.get(id=2)
+        self.user = self.login()
+
+    def test_create(self):
+        post_data = {
+            "title": "Mr Benn",
+            "slug": "mr-benn",
+            "first_name": "William",
+            "last_name": "Benn",
+            "addresses-TOTAL_FORMS": 0,
+            "addresses-INITIAL_FORMS": 0,
+            "addresses-MIN_NUM_FORMS": 0,
+            "addresses-MAX_NUM_FORMS": 1000,
+            "action-publish": "Publish",
+            "comments-TOTAL_FORMS": 0,
+            "comments-INITIAL_FORMS": 0,
+            "comments-MIN_NUM_FORMS": 0,
+            "comments-MAX_NUM_FORMS": 1000,
+            "social_links-TOTAL_FORMS": 1,
+            "social_links-INITIAL_FORMS": 0,
+            "social_links-MIN_NUM_FORMS": 0,
+            "social_links-MAX_NUM_FORMS": 1000,
+            "social_links-0-url": "https://twitter.com/mrbenn",
+            "social_links-0-kind": "twitter",
+        }
+        response = self.client.post(
+            reverse(
+                "wagtailadmin_pages:add",
+                args=("tests", "personpage", self.root_page.id),
+            ),
+            post_data,
+        )
+        self.assertRedirects(
+            response, reverse("wagtailadmin_explore", args=(self.root_page.id,))
+        )
+        new_page = PersonPage.objects.get(slug="mr-benn")
+        self.assertEqual(new_page.social_links.count(), 1)
 
 
 class TestInlinePanelNonFieldErrors(WagtailTestUtils, TestCase):
@@ -1570,7 +1690,6 @@ class TestLocaleSelector(WagtailTestUtils, TestCase):
         )
         self.user = self.login()
 
-    @unittest.expectedFailure  # TODO: Page editor header rewrite
     def test_locale_selector(self):
         response = self.client.get(
             reverse(
@@ -1647,7 +1766,6 @@ class TestLocaleSelectorOnRootPage(WagtailTestUtils, TestCase):
         self.fr_locale = Locale.objects.create(language_code="fr")
         self.user = self.login()
 
-    @unittest.expectedFailure  # TODO: Page editor header rewrite
     def test_locale_selector(self):
         response = self.client.get(
             reverse(
@@ -1658,6 +1776,7 @@ class TestLocaleSelectorOnRootPage(WagtailTestUtils, TestCase):
 
         self.assertContains(response, 'id="status-sidebar-english"')
 
+        # Should show a link to switch to another locale
         add_translation_url = (
             reverse(
                 "wagtailadmin_pages:add",
@@ -1666,6 +1785,50 @@ class TestLocaleSelectorOnRootPage(WagtailTestUtils, TestCase):
             + "?locale=fr"
         )
         self.assertContains(response, f'href="{add_translation_url}"')
+
+        # Should not show a link to switch to the current locale
+        self_translation_url = (
+            reverse(
+                "wagtailadmin_pages:add",
+                args=["demosite", "homepage", self.root_page.id],
+            )
+            + "?locale=en"
+        )
+        self.assertNotContains(response, f'href="{self_translation_url}"')
+
+    def test_locale_selector_selected(self):
+        response = self.client.get(
+            reverse(
+                "wagtailadmin_pages:add",
+                args=["demosite", "homepage", self.root_page.id],
+            )
+            + "?locale=fr"
+        )
+
+        self.assertContains(response, 'id="status-sidebar-french"')
+
+        # Should render the locale input with the currently selected locale
+        self.assertContains(response, '<input type="hidden" name="locale" value="fr">')
+
+        # Should show a link to switch to another locale
+        add_translation_url = (
+            reverse(
+                "wagtailadmin_pages:add",
+                args=["demosite", "homepage", self.root_page.id],
+            )
+            + "?locale=en"
+        )
+        self.assertContains(response, f'href="{add_translation_url}"')
+
+        # Should not show a link to switch to the current locale
+        self_translation_url = (
+            reverse(
+                "wagtailadmin_pages:add",
+                args=["demosite", "homepage", self.root_page.id],
+            )
+            + "?locale=fr"
+        )
+        self.assertNotContains(response, f'href="{self_translation_url}"')
 
     @override_settings(WAGTAIL_I18N_ENABLED=False)
     def test_locale_selector_not_present_when_i18n_disabled(self):
@@ -1696,7 +1859,7 @@ class TestPageSubscriptionSettings(WagtailTestUtils, TestCase):
         # Login
         self.user = self.login()
 
-    def test_commment_notifications_switched_on_by_default(self):
+    def test_comment_notifications_switched_on_by_default(self):
         response = self.client.get(
             reverse(
                 "wagtailadmin_pages:add",
@@ -1766,3 +1929,49 @@ class TestPageSubscriptionSettings(WagtailTestUtils, TestCase):
 
         self.assertEqual(subscription.user, self.user)
         self.assertFalse(subscription.comment_notifications)
+
+
+class TestCommenting(WagtailTestUtils, TestCase):
+    """
+    Tests the commenting related logic of the create page view.
+    """
+
+    def setUp(self):
+        # Find root page
+        self.root_page = Page.objects.get(id=2)
+
+        # Login
+        self.user = self.login()
+
+    def test_comments_enabled_by_default(self):
+        response = self.client.get(
+            reverse(
+                "wagtailadmin_pages:add",
+                args=["tests", "simplepage", self.root_page.id],
+            )
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        soup = self.get_soup(response.content)
+        form = soup.select_one("[data-edit-form]")
+        self.assertEqual("page-edit-form", form["id"])
+        self.assertIn("w-init", form["data-controller"])
+        self.assertEqual("w-comments:init", form["data-w-init-event-value"])
+
+    @override_settings(WAGTAILADMIN_COMMENTS_ENABLED=False)
+    def test_comments_disabled(self):
+        response = self.client.get(
+            reverse(
+                "wagtailadmin_pages:add",
+                args=["tests", "simplepage", self.root_page.id],
+            )
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        soup = self.get_soup(response.content)
+        form = soup.select_one("[data-edit-form]")
+        self.assertEqual("page-edit-form", form["id"])
+        self.assertIn("w-init", form["data-controller"])
+        self.assertEqual("", form["data-w-init-event-value"])

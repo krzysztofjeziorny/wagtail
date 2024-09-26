@@ -1,9 +1,6 @@
-# -*- coding: utf-8 -*-
-
 import json
 import unittest
 
-from django import VERSION as DJANGO_VERSION
 from django.conf import settings
 from django.contrib.auth.models import Group, Permission
 from django.core import mail
@@ -19,6 +16,9 @@ from wagtail.admin.menu import MenuItem
 from wagtail.models import Page
 from wagtail.test.testapp.models import RestaurantTag
 from wagtail.test.utils import WagtailTestUtils
+from wagtail.utils.deprecation import (
+    RemovedInWagtail70Warning,
+)
 
 
 class TestHome(WagtailTestUtils, TestCase):
@@ -37,26 +37,23 @@ class TestHome(WagtailTestUtils, TestCase):
         # check that custom menu items (including classname / icon_name) are pulled in
         self.assertContains(
             response,
-            '{"name": "kittens", "label": "Kittens!", "icon_name": "kitten", "classnames": "kitten--test", "attrs": {"data-is-custom": "true"}, "url": "http://www.tomroyal.com/teaandkittens/"}',
+            '{"name": "kittens", "label": "Kittens!", "icon_name": "kitten", "classname": "kitten--test", "attrs": {"data-is-custom": "true"}, "url": "http://www.tomroyal.com/teaandkittens/"}',
         )
 
         # Check that the explorer menu item is here, with the right start page.
         self.assertContains(
             response,
-            '[{"name": "explorer", "label": "Pages", "icon_name": "folder-open-inverse", "classnames": "", "attrs": {}, "url": "/admin/pages/"}, 1]',
+            '[{"name": "explorer", "label": "Pages", "icon_name": "folder-open-inverse", "classname": "", "attrs": {}, "url": "/admin/pages/"}, 1]',
         )
 
-        # There should be a link to the friend admin in on the home page.
-        self.assertContains(response, '"url": "/admin/friendadmin/"')
-
-        # Since we've marked this as not being shown, it shouldn't be shown.
-        self.assertNotContains(response, '"url": "/admin/enemyadmin/"')
+        # There should be a link to the full-featured snippet admin in on the home page.
+        self.assertContains(response, '"url": "/admin/deep/within/the/admin/"')
 
         # check that is_shown is respected on menu items
         response = self.client.get(reverse("wagtailadmin_home") + "?hide-kittens=true")
         self.assertNotContains(
             response,
-            '{"name": "kittens", "label": "Kittens!", "icon_name": "kitten", "classnames": "kitten--test", "attrs": {"data-is-custom": "true"}, "url": "http://www.tomroyal.com/teaandkittens/"}',
+            '{"name": "kittens", "label": "Kittens!", "icon_name": "kitten", "classname": "kitten--test", "attrs": {"data-is-custom": "true"}, "url": "http://www.tomroyal.com/teaandkittens/"}',
         )
 
     def test_dashboard_panels(self):
@@ -78,18 +75,11 @@ class TestHome(WagtailTestUtils, TestCase):
         self.assertContains(response, "<li>0 broken links</li>")
 
         # check that media attached to summary items is correctly pulled in
-        if DJANGO_VERSION >= (4, 1):
-            self.assertContains(
-                response,
-                '<link href="/static/testapp/css/broken-links.css" media="all" rel="stylesheet">',
-                html=True,
-            )
-        else:
-            self.assertContains(
-                response,
-                '<link href="/static/testapp/css/broken-links.css" type="text/css" media="all" rel="stylesheet">',
-                html=True,
-            )
+        self.assertContains(
+            response,
+            '<link href="/static/testapp/css/broken-links.css" media="all" rel="stylesheet">',
+            html=True,
+        )
 
     def test_never_cache_header(self):
         # This tests that wagtailadmins global cache settings have been applied correctly
@@ -395,6 +385,26 @@ class TestMenuItem(WagtailTestUtils, TestCase):
         menuitem = MenuItem(_("Test"), reverse_lazy("wagtailadmin_home"))
         self.assertIs(menuitem.is_active(self.request), True)
 
+    def test_menuitem_with_classname(self):
+        menuitem = MenuItem(
+            _("Test"),
+            reverse_lazy("wagtailadmin_home"),
+            classname="highlight-item",
+        )
+        self.assertEqual(menuitem.classname, "highlight-item")
+
+    def test_menuitem_with_deprecated_classnames(self):
+        with self.assertWarnsRegex(
+            RemovedInWagtail70Warning,
+            "The `classnames` kwarg for MenuItem is deprecated - use `classname` instead.",
+        ):
+            menuitem = MenuItem(
+                _("Test"),
+                reverse_lazy("wagtailadmin_home"),
+                classnames="is-dimmed",
+            )
+        self.assertEqual(menuitem.classname, "is-dimmed")
+
 
 class TestUserPassesTestPermissionDecorator(WagtailTestUtils, TestCase):
     """
@@ -507,13 +517,11 @@ class TestAdminURLAppendSlash(WagtailTestUtils, TestCase):
 
             # Check that correct page is returned after CommonMiddleware redirect
             self.assertEqual(response.status_code, 200)
-            self.assertTemplateUsed(response, "wagtailadmin/pages/index.html")
-            self.assertEqual(Page.objects.get(id=1), response.context["parent_page"])
-            self.assertTrue(
-                response.context["pages"]
-                .paginator.object_list.filter(id=self.root_page.id)
-                .exists()
+            self.assertTemplateUsed(
+                response, "wagtailadmin/pages/explorable_index.html"
             )
+            self.assertEqual(Page.objects.get(id=1), response.context["parent_page"])
+            self.assertIn(self.root_page, response.context["pages"])
 
 
 class TestRemoveStaleContentTypes(TestCase):

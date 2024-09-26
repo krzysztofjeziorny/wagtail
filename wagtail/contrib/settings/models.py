@@ -51,7 +51,7 @@ class AbstractSetting(models.Model):
         Returns the name of the attribute that should be used to store
         a reference to the fetched/created object on a request.
         """
-        return "_{}.{}".format(cls._meta.app_label, cls._meta.model_name).lower()
+        return f"_{cls._meta.app_label}.{cls._meta.model_name}".lower()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -131,11 +131,19 @@ class BaseSiteSetting(AbstractSetting):
         setattr(request, attr_name, site_settings)
         return site_settings
 
+    def __getstate__(self):
+        # Leave out _request from the pickled state
+        state = super().__getstate__()
+        state.pop("_request", None)
+        return state
+
     @classmethod
     def for_site(cls, site):
         """
         Get or create an instance of this setting for the site.
         """
+        if site is None:
+            raise cls.DoesNotExist("%s does not exist for site None." % cls)
         queryset = cls.base_queryset()
         instance, created = queryset.get_or_create(site=site)
         return instance
@@ -199,4 +207,4 @@ class BaseGenericSetting(AbstractSetting):
         return obj
 
     def __str__(self):
-        return self._meta.verbose_name
+        return str(self._meta.verbose_name)

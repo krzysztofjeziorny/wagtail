@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Wagtail\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-04-20 11:47+0100\n"
+"POT-Creation-Date: 2024-08-07 10:06+0100\n"
 "PO-Revision-Date: 2014-02-21 15:50+0000\n"
 "Last-Translator: Philip Crisp, 2022\n"
 "Language-Team: Welsh (http://app.transifex.com/torchbox/wagtail/language/"
@@ -77,6 +77,12 @@ msgstr "Dyddiad i"
 msgid "All"
 msgstr "I gyd"
 
+msgid "Collection"
+msgstr "Casgliad"
+
+msgid "Tag"
+msgstr "Tag"
+
 msgid "Preferred language"
 msgstr "Iaith a ffafrir"
 
@@ -115,9 +121,6 @@ msgstr ""
 
 msgid "Search"
 msgstr "Chwillio"
-
-msgid "Collection"
-msgstr "Casgliad"
 
 msgid "Parent"
 msgstr "Rhiant"
@@ -235,6 +238,9 @@ msgstr ""
 msgid "You cannot copy a page into itself when copying subpages"
 msgstr "Ni allwch gopïo tudalen ynddo'i hun wrth gopïo is-dudalennau"
 
+msgid "Parent page"
+msgstr "Tudalen rhiant"
+
 msgid "Visibility"
 msgstr "Gwelededd"
 
@@ -258,6 +264,9 @@ msgstr "Hyrwyddo"
 
 msgid "Settings"
 msgstr "Gosodiadau"
+
+msgid "Title"
+msgstr "Teitl"
 
 msgid "Error 404"
 msgstr "Gwall 404"
@@ -301,9 +310,6 @@ msgstr "Cadw"
 msgid "Privacy"
 msgstr "Preifatrwydd"
 
-msgid "Name"
-msgstr "Enw"
-
 msgid "Yes, delete"
 msgstr "Ia, dileu"
 
@@ -313,11 +319,14 @@ msgstr "Na, peidiwch a ddileu"
 msgid "Cancel"
 msgstr "Canslo"
 
+msgid "Comment"
+msgstr "Sylw"
+
+msgid "Actions"
+msgstr "Gweithredoedd"
+
 msgid "Update"
 msgstr "Diweddariad"
-
-msgid "Title"
-msgstr "Teitl"
 
 msgid "Edit this page"
 msgstr "Golygu tudalen hon"
@@ -331,12 +340,6 @@ msgstr "Drafft"
 msgid "Live"
 msgstr "Yn fyw"
 
-msgid "Type"
-msgstr "Math"
-
-msgid "Preview"
-msgstr "Rhagolwg"
-
 msgid "Status"
 msgstr "Statws"
 
@@ -346,6 +349,9 @@ msgstr "Dyddiad"
 msgid "Close"
 msgstr "Cau"
 
+msgid "Preview"
+msgstr "Rhagolwg"
+
 msgid "Saving…"
 msgstr "Cadw…"
 
@@ -354,15 +360,6 @@ msgstr "Ia, ei drosi"
 
 msgid "Copy"
 msgstr "Copio"
-
-msgid "Actions"
-msgstr "Gweithredoedd"
-
-msgid "Action"
-msgstr "Gweithred"
-
-msgid "Comment"
-msgstr "Sylw"
 
 msgid "Pagination"
 msgstr "Tudaleniad"
@@ -376,20 +373,23 @@ msgstr "Nesaf"
 msgid "Confirm"
 msgstr "Cadarnhau"
 
-msgid "History"
-msgstr "Hanes"
-
 msgid "Move up"
 msgstr "Symyd i fyny"
 
 msgid "Move down"
 msgstr "Symyd i lawr"
 
-msgid "Download XLSX"
-msgstr "Lawrlwythwch XSLX"
+msgid "Type"
+msgstr "Math"
 
-msgid "Download CSV"
-msgstr "Lawrlwythwch CSV"
+msgid "Pages"
+msgstr "Tudalennau"
+
+msgid "Name"
+msgstr "Enw"
+
+msgid "Action"
+msgstr "Gweithred"
 
 msgid "Workflow"
 msgstr "Llif gwaith"
@@ -403,8 +403,23 @@ msgstr "Wedi'i gwblhau yn"
 msgid "Breadcrumb"
 msgstr "Briwsion Bara"
 
+msgid "Continue"
+msgstr "Parhau"
+
+msgid "Download XLSX"
+msgstr "Lawrlwythwch XSLX"
+
+msgid "Download CSV"
+msgstr "Lawrlwythwch CSV"
+
 msgid "Filter"
 msgstr "Hidlydd"
+
+msgid "Back"
+msgstr "Yn ol"
+
+msgid "History"
+msgstr "Hanes"
 
 msgid "Lock"
 msgstr "Clo"
@@ -436,6 +451,9 @@ msgstr "%(time_period)s yn ôl"
 msgid "Password"
 msgstr "Cyfrinair"
 
+msgid "Home"
+msgstr "Adref"
+
 #, python-format
 msgid "%(model_name)s '%(object)s' updated."
 msgstr "%(model_name)s '%(object)s' wedi'i diweddaru."
@@ -444,11 +462,26 @@ msgstr "%(model_name)s '%(object)s' wedi'i diweddaru."
 msgid "%(model_name)s '%(object)s' created."
 msgstr "%(model_name)s '%(object)s' wedi'i greu."
 
+#, python-format
+msgid "Edit '%(title)s'"
+msgstr "Golygu '%(title)s'"
+
+msgid "Inspect"
+msgstr "Archwilio"
+
+#, python-format
+msgid "Delete '%(title)s'"
+msgstr "Dileu '%(title)s'"
+
 msgid "Editing"
 msgstr "Golygu"
 
-msgid "Usage of"
-msgstr "Defnydd o"
+#, python-format
+msgid "%(model_name)s '%(object)s' deleted."
+msgstr "%(model_name)s '%(object)s' wedi'i ddileu."
+
+msgid "Inspecting"
+msgstr "Arolygu"
 
 #, python-format
 msgid "Edit this %(object)s"
@@ -456,6 +489,9 @@ msgstr "Golygu %(object)s"
 
 msgid "View live"
 msgstr "Gweld in fyw"
+
+msgid "Site"
+msgstr "Safle"
 
 msgid "Show"
 msgstr "Dangos"
@@ -468,13 +504,6 @@ msgstr "Analluogi"
 
 msgid "Enable"
 msgstr "Galluogi"
-
-msgid "Pages"
-msgstr "Tudalennau"
-
-#, python-format
-msgid "Edit '%(title)s'"
-msgstr "Golygu '%(title)s'"
 
 msgid "Clear choice"
 msgstr "Dewis clir"

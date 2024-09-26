@@ -1,9 +1,9 @@
-# -*- coding: utf-8 -*-
 import datetime
 from io import BytesIO
 
 from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
+from django.contrib.contenttypes.models import ContentType
 from django.test import RequestFactory, TestCase, override_settings
 from django.urls import reverse
 from django.utils.html import escape
@@ -18,7 +18,9 @@ from wagtail.contrib.forms.tests.utils import (
     make_form_page,
     make_form_page_with_custom_submission,
 )
+from wagtail.contrib.forms.utils import get_form_types
 from wagtail.models import Locale, Page
+from wagtail.test.demosite.models import FormPage as FormPageDemo
 from wagtail.test.testapp.models import (
     CustomFormPageSubmission,
     ExtendedFormField,
@@ -29,6 +31,8 @@ from wagtail.test.testapp.models import (
     FormPageWithCustomFormBuilder,
     FormPageWithCustomSubmission,
     FormPageWithCustomSubmissionListView,
+    FormPageWithRedirect,
+    JadeFormPage,
 )
 from wagtail.test.utils import WagtailTestUtils
 from wagtail.test.utils.form_data import inline_formset, nested_form_data
@@ -68,9 +72,33 @@ class TestFormResponsesPanel(TestCase):
         result = self.panel.render_html()
 
         url = reverse("wagtailforms:list_submissions", args=(self.form_page.id,))
-        link = '<a href="{}">1</a>'.format(url)
+        link = f'<a href="{url}">1</a>'
 
         self.assertIn(link, result)
+
+    def test_render_without_submissions(self):
+        """The panel should not be shown if the number of submission is zero."""
+        self.assertFalse(self.panel.is_shown())
+
+
+class TestFormResponsesPanelWithNewPage(TestCase):
+    def setUp(self):
+        self.request = RequestFactory().get("/")
+        user = AnonymousUser()  # technically, Anonymous users cannot access the admin
+        self.request.user = user
+
+        self.form_page = FormPage()
+
+        self.FormPageForm = get_form_for_model(
+            FormPage,
+            form_class=WagtailAdminPageForm,
+            fields=["title", "slug", "to_address", "from_address", "subject"],
+        )
+
+        panel = FormSubmissionsPanel().bind_to_model(FormPage)
+        self.panel = panel.get_bound_panel(
+            instance=self.form_page, form=self.FormPageForm(), request=self.request
+        )
 
     def test_render_without_submissions(self):
         """The panel should not be shown if the number of submission is zero."""
@@ -117,7 +145,7 @@ class TestFormResponsesPanelWithCustomSubmissionClass(WagtailTestUtils, TestCase
         result = self.panel.render_html()
 
         url = reverse("wagtailforms:list_submissions", args=(self.form_page.id,))
-        link = '<a href="{}">1</a>'.format(url)
+        link = f'<a href="{url}">1</a>'
 
         self.assertIn(link, result)
 
@@ -131,16 +159,35 @@ class TestFormsIndex(WagtailTestUtils, TestCase):
 
     def setUp(self):
         self.login(username="siteeditor", password="password")
-        self.form_page = Page.objects.get(url_path="/home/contact-us/")
+        get_form_types.cache_clear()
 
-    def make_form_pages(self):
+    @classmethod
+    def setUpTestData(cls):
+        cls.form_page = Page.objects.specific().get(url_path="/home/contact-us/")
+        # Save a revision so latest_revision_created_at is populated, and thus
+        # the form page is always shown first when using the default ordering
+        # (latest_revision_created_at descending).
+        cls.form_page.save_revision()
+        cls.models = [
+            FormPage,
+            FormPageWithRedirect,
+            FormPageWithCustomFormBuilder,
+            FormPageWithCustomSubmission,
+            FormPageWithCustomSubmissionListView,
+            JadeFormPage,
+            FormPageDemo,
+        ]
+        cls.make_form_pages()
+
+    @classmethod
+    def make_form_pages(cls):
         """
         This makes 100 form pages and adds them as children to 'contact-us'
         This is used to test pagination on the forms index
         """
         for i in range(100):
-            self.form_page.add_child(
-                instance=FormPage(
+            cls.form_page.add_child(
+                instance=cls.models[i % len(cls.models)](
                     title="Form " + str(i), slug="form-" + str(i), live=True
                 )
             )
@@ -153,9 +200,6 @@ class TestFormsIndex(WagtailTestUtils, TestCase):
         self.assertTemplateUsed(response, "wagtailforms/index.html")
 
     def test_forms_index_pagination(self):
-        # Create some more form pages to make pagination kick in
-        self.make_form_pages()
-
         # Get page two
         response = self.client.get(reverse("wagtailforms:index"), {"p": 2})
 
@@ -167,9 +211,6 @@ class TestFormsIndex(WagtailTestUtils, TestCase):
         self.assertEqual(response.context["page_obj"].number, 2)
 
     def test_forms_index_pagination_invalid(self):
-        # Create some more form pages to make pagination kick in
-        self.make_form_pages()
-
         # Get page two
         response = self.client.get(reverse("wagtailforms:index"), {"p": "Hello world!"})
 
@@ -181,10 +222,7 @@ class TestFormsIndex(WagtailTestUtils, TestCase):
         self.assertEqual(response.context["page_obj"].number, 1)
 
     def test_forms_index_pagination_out_of_range(self):
-        # Create some more form pages to make pagination kick in
-        self.make_form_pages()
-
-        # Get page two
+        # Get page that is out of range
         response = self.client.get(reverse("wagtailforms:index"), {"p": 99999})
 
         # Check response
@@ -197,19 +235,27 @@ class TestFormsIndex(WagtailTestUtils, TestCase):
         )
 
     def test_cannot_see_forms_without_permission(self):
+        self.login(username="admin_only_user", password="password")
+        response = self.client.get(reverse("wagtailforms:index"))
+        self.assertRedirects(response, reverse("wagtailadmin_home"))
+
         # Login with as a user without permission to see forms
         self.login(username="eventeditor", password="password")
 
         response = self.client.get(reverse("wagtailforms:index"))
+        self.assertEqual(response.status_code, 200)
 
         # Check that the user cannot see the form page
         self.assertNotIn(self.form_page, response.context["form_pages"])
+        self.assertEqual(len(response.context["form_pages"]), 0)
 
     def test_can_see_forms_with_permission(self):
         response = self.client.get(reverse("wagtailforms:index"))
+        self.assertEqual(response.status_code, 200)
 
         # Check that the user can see the form page
         self.assertIn(self.form_page, response.context["form_pages"])
+        self.assertEqual(len(response.context["form_pages"]), 20)
 
     def test_cant_see_forms_after_filter_form_submissions_for_user_hook(self):
         # Hook allows to see forms only to superusers
@@ -223,6 +269,7 @@ class TestFormsIndex(WagtailTestUtils, TestCase):
 
         # Check that an user can see the form page
         self.assertIn(self.form_page, response.context["form_pages"])
+        self.assertEqual(len(response.context["form_pages"]), 20)
 
         with self.register_hook(
             "filter_form_submissions_for_user", construct_forms_for_user
@@ -231,6 +278,65 @@ class TestFormsIndex(WagtailTestUtils, TestCase):
 
         # Check that an user can't see the form page
         self.assertNotIn(self.form_page, response.context["form_pages"])
+        self.assertEqual(len(response.context["form_pages"]), 0)
+
+    def test_search(self):
+        response = self.client.get(reverse("wagtailforms:index"), {"q": "Form 10"})
+
+        self.assertNotIn(self.form_page, response.context["form_pages"])
+        self.assertCountEqual(
+            [page.title for page in response.context["form_pages"]],
+            ["Form 10"],
+        )
+
+    def test_filter_by_page_type(self):
+        content_type_ids = [
+            ct.pk
+            for ct in ContentType.objects.get_for_models(
+                FormPageWithRedirect, FormPageDemo
+            ).values()
+        ]
+        response = self.client.get(
+            reverse("wagtailforms:index"),
+            {"content_type": content_type_ids},
+        )
+
+        soup = self.get_soup(response.content)
+        inputs = soup.select('input[name="content_type"]')
+        self.assertCountEqual(
+            [int(input.attrs.get("value")) for input in inputs],
+            [ct.pk for ct in ContentType.objects.get_for_models(*self.models).values()],
+        )
+        selected_cts = soup.select('input[name="content_type"][checked]')
+        self.assertEqual(len(selected_cts), 2)
+        self.assertCountEqual(
+            [int(input.attrs.get("value")) for input in selected_cts],
+            content_type_ids,
+        )
+
+        # Check that only pages of the selected types are shown
+        self.assertNotIn(self.form_page, response.context["form_pages"])
+        self.assertEqual(
+            {page.__class__ for page in response.context["form_pages"]},
+            {FormPageWithRedirect, FormPageDemo},
+        )
+
+    def test_search_and_filter(self):
+        response = self.client.get(
+            reverse("wagtailforms:index"),
+            {
+                "q": "Contact",
+                "content_type": ContentType.objects.get_for_model(FormPage).pk,
+            },
+        )
+
+        self.assertIn(self.form_page, response.context["form_pages"])
+        # The "Contact us one more time" page from the fixtures is not included
+        # because it's a FormPageWithCustomSubmission, not a FormPage
+        self.assertCountEqual(
+            [page.title for page in response.context["form_pages"]],
+            ["Contact us"],
+        )
 
 
 @override_settings(WAGTAIL_I18N_ENABLED=True)
@@ -269,33 +375,22 @@ class TestFormsIndexWithLocalisationEnabled(WagtailTestUtils, TestCase):
                 )
             )
 
-    def get_switch_current_locale_markup(self, locale):
-        return f'<a href="javascript:void(0)" aria-label="{locale.get_display_name()}" class="c-dropdown__button u-btn-current w-no-underline">'
-
-    def get_switch_link_markup(self, locale):
-        return f'<a href="{self.forms_index_url}?locale={locale.language_code}" aria-label="{locale.get_display_name()}" class="u-link is-live w-no-underline">'
-
     def test_forms_index(self):
         response = self.client.get(self.forms_index_url)
 
         # Check response
         self.assertEqual(response.status_code, 200)
 
-        self.assertContains(
-            response, self.get_switch_current_locale_markup(self.en_locale)
-        )
-        self.assertContains(response, self.get_switch_link_markup(self.fr_locale))
-
-        response = self.client.get(
-            self.forms_index_url, {"locale": self.fr_locale.language_code}
-        )
-        self.assertContains(
-            response, self.get_switch_current_locale_markup(self.fr_locale)
-        )
-        self.assertContains(response, self.get_switch_link_markup(self.en_locale))
+        soup = self.get_soup(response.content)
+        inputs = soup.select('input[name="locale"]')
+        values = [input.attrs.get("value") for input in inputs]
+        self.assertEqual(len(inputs), 3)
+        self.assertEqual(values, ["", "en", "fr"])
 
     def test_forms_index_pagination(self):
         # Create some more form pages to make pagination kick in
+        # There are 43 pages in total, 2 in test.json, 1 in setUp, and
+        # 40 from the following
         self.make_form_pages(parent=self.form_page, num=20)
         self.make_form_pages(parent=self.fr_form_page, num=20)
 
@@ -309,8 +404,23 @@ class TestFormsIndexWithLocalisationEnabled(WagtailTestUtils, TestCase):
         # Check that we got the correct page
         self.assertEqual(response.context["page_obj"].number, 2)
 
+        # Default unfiltered view should show pages from all locales,
+        # so page 3 should exist
         response = self.client.get(self.forms_index_url, {"p": 3})
-        self.assertEqual(response.context["page_obj"].number, 2)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["page_obj"].number, 3)
+        self.assertEqual(len(response.context["page_obj"].object_list), 3)
+
+        response = self.client.get(self.forms_index_url, {"p": 4})
+        # Check response
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "wagtailforms/index.html")
+
+        # Check that we got the last page
+        self.assertEqual(
+            response.context["page_obj"].number,
+            response.context["paginator"].num_pages,
+        )
 
         # now check the French pages.
         response = self.client.get(
@@ -322,11 +432,9 @@ class TestFormsIndexWithLocalisationEnabled(WagtailTestUtils, TestCase):
     @override_settings(WAGTAIL_I18N_ENABLED=False)
     def test_switcher_doesnt_show_with_i18n_disabled(self):
         response = self.client.get(self.forms_index_url)
-
-        self.assertNotContains(
-            response, self.get_switch_current_locale_markup(self.en_locale)
-        )
-        self.assertNotContains(response, self.get_switch_link_markup(self.fr_locale))
+        soup = self.get_soup(response.content)
+        inputs = soup.select('input[name="locale"]')
+        self.assertEqual(len(inputs), 0)
 
 
 class TestFormsSubmissionsList(WagtailTestUtils, TestCase):
@@ -457,10 +565,8 @@ class TestFormsSubmissionsList(WagtailTestUtils, TestCase):
     def test_list_submissions_pagination(self):
         self.make_list_submissions()
 
-        response = self.client.get(
-            reverse("wagtailforms:list_submissions", args=(self.form_page.id,)),
-            {"p": 2},
-        )
+        list_url = reverse("wagtailforms:list_submissions", args=(self.form_page.id,))
+        response = self.client.get(list_url, {"p": 2})
 
         # Check response
         self.assertEqual(response.status_code, 200)
@@ -468,6 +574,18 @@ class TestFormsSubmissionsList(WagtailTestUtils, TestCase):
 
         # Check that we got the correct page
         self.assertEqual(response.context["page_obj"].number, 2)
+
+        # The delete form should have a 'next' input that points back to the list page
+        # with the same pagination querystring
+        soup = self.get_soup(response.content)
+        delete_url = reverse(
+            "wagtailforms:delete_submissions", args=(self.form_page.id,)
+        )
+        form = soup.find("form", {"action": delete_url})
+        self.assertIsNotNone(form)
+        next_input = form.find("input", {"name": "next"})
+        self.assertIsNotNone(next_input)
+        self.assertEqual(next_input.get("value"), f"{list_url}?p=2")
 
     def test_list_submissions_pagination_invalid(self):
         self.make_list_submissions()
@@ -584,7 +702,7 @@ class TestFormsSubmissionsExport(WagtailTestUtils, TestCase):
             )
             self.assertEqual(
                 data_lines[2],
-                "2014-01-01 12:00:00+00:00,new@example.com,this is a fairly new message,None\r",
+                "2014-01-01 12:00:00+00:00,new@example.com,this is a fairly new message,\r",
             )
         else:
             self.assertEqual(
@@ -593,7 +711,7 @@ class TestFormsSubmissionsExport(WagtailTestUtils, TestCase):
             )
             self.assertEqual(
                 data_lines[2],
-                "2014-01-01 12:00:00,new@example.com,this is a fairly new message,None\r",
+                "2014-01-01 12:00:00,new@example.com,this is a fairly new message,\r",
             )
 
     def test_list_submissions_xlsx_export(self):
@@ -625,7 +743,7 @@ class TestFormsSubmissionsExport(WagtailTestUtils, TestCase):
                 datetime.datetime(2014, 1, 1, 12, 0),
                 "new@example.com",
                 "this is a fairly new message",
-                "None",
+                None,
             ],
         )
         self.assertEqual(len(cell_array), 3)
@@ -681,7 +799,7 @@ class TestFormsSubmissionsExport(WagtailTestUtils, TestCase):
             )
             self.assertEqual(
                 data_lines[2],
-                "2014-01-01 12:00:00+00:00,new@example.com,this is a fairly new message,None\r",
+                "2014-01-01 12:00:00+00:00,new@example.com,this is a fairly new message,\r",
             )
         else:
             self.assertEqual(
@@ -690,7 +808,7 @@ class TestFormsSubmissionsExport(WagtailTestUtils, TestCase):
             )
             self.assertEqual(
                 data_lines[2],
-                "2014-01-01 12:00:00,new@example.com,this is a fairly new message,None\r",
+                "2014-01-01 12:00:00,new@example.com,this is a fairly new message,\r",
             )
 
         with self.register_hook(
@@ -720,12 +838,12 @@ class TestFormsSubmissionsExport(WagtailTestUtils, TestCase):
         if settings.USE_TZ:
             self.assertEqual(
                 data_lines[1],
-                "2014-01-01 12:00:00+00:00,new@example.com,this is a fairly new message,None\r",
+                "2014-01-01 12:00:00+00:00,new@example.com,this is a fairly new message,\r",
             )
         else:
             self.assertEqual(
                 data_lines[1],
-                "2014-01-01 12:00:00,new@example.com,this is a fairly new message,None\r",
+                "2014-01-01 12:00:00,new@example.com,this is a fairly new message,\r",
             )
 
     def test_list_submissions_csv_export_with_date_to_filtering(self):
@@ -768,12 +886,12 @@ class TestFormsSubmissionsExport(WagtailTestUtils, TestCase):
         if settings.USE_TZ:
             self.assertEqual(
                 data_lines[1],
-                "2014-01-01 12:00:00+00:00,new@example.com,this is a fairly new message,None\r",
+                "2014-01-01 12:00:00+00:00,new@example.com,this is a fairly new message,\r",
             )
         else:
             self.assertEqual(
                 data_lines[1],
-                "2014-01-01 12:00:00,new@example.com,this is a fairly new message,None\r",
+                "2014-01-01 12:00:00,new@example.com,this is a fairly new message,\r",
             )
 
     def test_list_submissions_csv_export_with_unicode_in_submission(self):
@@ -890,20 +1008,20 @@ class TestCustomFormsSubmissionsExport(WagtailTestUtils, TestCase):
         if settings.USE_TZ:
             self.assertEqual(
                 data_lines[1],
-                "user-john@example.com,2013-01-01 12:00:00+00:00,old@example.com,this is a really old message,None\r",
+                "user-john@example.com,2013-01-01 12:00:00+00:00,old@example.com,this is a really old message,\r",
             )
             self.assertEqual(
                 data_lines[2],
-                "user-m1kola@example.com,2014-01-01 12:00:00+00:00,new@example.com,this is a fairly new message,None\r",
+                "user-m1kola@example.com,2014-01-01 12:00:00+00:00,new@example.com,this is a fairly new message,\r",
             )
         else:
             self.assertEqual(
                 data_lines[1],
-                "user-john@example.com,2013-01-01 12:00:00,old@example.com,this is a really old message,None\r",
+                "user-john@example.com,2013-01-01 12:00:00,old@example.com,this is a really old message,\r",
             )
             self.assertEqual(
                 data_lines[2],
-                "user-m1kola@example.com,2014-01-01 12:00:00,new@example.com,this is a fairly new message,None\r",
+                "user-m1kola@example.com,2014-01-01 12:00:00,new@example.com,this is a fairly new message,\r",
             )
 
     def test_list_submissions_csv_export_with_date_from_filtering(self):
@@ -923,12 +1041,12 @@ class TestCustomFormsSubmissionsExport(WagtailTestUtils, TestCase):
         if settings.USE_TZ:
             self.assertEqual(
                 data_lines[1],
-                "user-m1kola@example.com,2014-01-01 12:00:00+00:00,new@example.com,this is a fairly new message,None\r",
+                "user-m1kola@example.com,2014-01-01 12:00:00+00:00,new@example.com,this is a fairly new message,\r",
             )
         else:
             self.assertEqual(
                 data_lines[1],
-                "user-m1kola@example.com,2014-01-01 12:00:00,new@example.com,this is a fairly new message,None\r",
+                "user-m1kola@example.com,2014-01-01 12:00:00,new@example.com,this is a fairly new message,\r",
             )
 
     def test_list_submissions_csv_export_with_date_to_filtering(self):
@@ -948,12 +1066,12 @@ class TestCustomFormsSubmissionsExport(WagtailTestUtils, TestCase):
         if settings.USE_TZ:
             self.assertEqual(
                 data_lines[1],
-                "user-john@example.com,2013-01-01 12:00:00+00:00,old@example.com,this is a really old message,None\r",
+                "user-john@example.com,2013-01-01 12:00:00+00:00,old@example.com,this is a really old message,\r",
             )
         else:
             self.assertEqual(
                 data_lines[1],
-                "user-john@example.com,2013-01-01 12:00:00,old@example.com,this is a really old message,None\r",
+                "user-john@example.com,2013-01-01 12:00:00,old@example.com,this is a really old message,\r",
             )
 
     def test_list_submissions_csv_export_with_range_filtering(self):
@@ -973,12 +1091,12 @@ class TestCustomFormsSubmissionsExport(WagtailTestUtils, TestCase):
         if settings.USE_TZ:
             self.assertEqual(
                 data_lines[1],
-                "user-m1kola@example.com,2014-01-01 12:00:00+00:00,new@example.com,this is a fairly new message,None\r",
+                "user-m1kola@example.com,2014-01-01 12:00:00+00:00,new@example.com,this is a fairly new message,\r",
             )
         else:
             self.assertEqual(
                 data_lines[1],
-                "user-m1kola@example.com,2014-01-01 12:00:00,new@example.com,this is a fairly new message,None\r",
+                "user-m1kola@example.com,2014-01-01 12:00:00,new@example.com,this is a fairly new message,\r",
             )
 
     def test_list_submissions_csv_export_with_unicode_in_submission(self):
@@ -1160,10 +1278,8 @@ class TestCustomFormsSubmissionsList(WagtailTestUtils, TestCase):
     def test_list_submissions_pagination(self):
         self.make_list_submissions()
 
-        response = self.client.get(
-            reverse("wagtailforms:list_submissions", args=(self.form_page.id,)),
-            {"p": 2},
-        )
+        list_url = reverse("wagtailforms:list_submissions", args=(self.form_page.id,))
+        response = self.client.get(list_url, {"p": 2})
 
         # Check response
         self.assertEqual(response.status_code, 200)
@@ -1177,6 +1293,18 @@ class TestCustomFormsSubmissionsList(WagtailTestUtils, TestCase):
             response, '<th id="useremail" class="">User email</th>', html=True
         )
         self.assertContains(response, "generated-username-", count=20)
+
+        # The delete form should have a 'next' input that points back to the list page
+        # with the same pagination querystring
+        soup = self.get_soup(response.content)
+        delete_url = reverse(
+            "wagtailforms:delete_submissions", args=(self.form_page.id,)
+        )
+        form = soup.find("form", {"action": delete_url})
+        self.assertIsNotNone(form)
+        next_input = form.find("input", {"name": "next"})
+        self.assertIsNotNone(next_input)
+        self.assertEqual(next_input.get("value"), f"{list_url}?p=2")
 
     def test_list_submissions_pagination_invalid(self):
         self.make_list_submissions()
@@ -1219,20 +1347,34 @@ class TestDeleteFormSubmission(WagtailTestUtils, TestCase):
         self.form_page = Page.objects.get(url_path="/home/contact-us/")
 
     def test_delete_submission_show_confirmation(self):
+        delete_url = reverse(
+            "wagtailforms:delete_submissions", args=(self.form_page.id,)
+        )
+        list_url = reverse("wagtailforms:list_submissions", args=(self.form_page.id,))
+
         response = self.client.get(
             reverse("wagtailforms:delete_submissions", args=(self.form_page.id,))
-            + "?selected-submissions={}".format(FormSubmission.objects.first().id)
+            + f"?selected-submissions={FormSubmission.objects.first().id}"
         )
+        self.assertEqual(response.status_code, 200)
         # Check show confirm page when HTTP method is GET
         self.assertTemplateUsed(response, "wagtailforms/confirm_delete.html")
 
         # Check that the deletion has not happened with GET request
         self.assertEqual(FormSubmission.objects.count(), 2)
 
+        # The delete form should have a 'next' input that points back to the list page
+        soup = self.get_soup(response.content)
+        form = soup.select_one(f'form[action^="{delete_url}"]')
+        self.assertIsNotNone(form)
+        next_input = form.find("input", {"name": "next"})
+        self.assertIsNotNone(next_input)
+        self.assertEqual(next_input.get("value"), list_url)
+
     def test_delete_submission_with_permissions(self):
         response = self.client.post(
             reverse("wagtailforms:delete_submissions", args=(self.form_page.id,))
-            + "?selected-submissions={}".format(FormSubmission.objects.first().id)
+            + f"?selected-submissions={FormSubmission.objects.first().id}"
         )
 
         # Check that the submission is gone
@@ -1264,7 +1406,7 @@ class TestDeleteFormSubmission(WagtailTestUtils, TestCase):
 
         response = self.client.post(
             reverse("wagtailforms:delete_submissions", args=(self.form_page.id,))
-            + "?selected-submissions={}".format(FormSubmission.objects.first().id)
+            + f"?selected-submissions={FormSubmission.objects.first().id}"
         )
 
         # Check that the user received a permission denied response
@@ -1283,7 +1425,7 @@ class TestDeleteFormSubmission(WagtailTestUtils, TestCase):
         ):
             response = self.client.post(
                 reverse("wagtailforms:delete_submissions", args=(self.form_page.id,))
-                + "?selected-submissions={}".format(FormSubmission.objects.first().id)
+                + f"?selected-submissions={FormSubmission.objects.first().id}"
             )
 
         # An user can't delete a from submission with the hook
@@ -1302,6 +1444,39 @@ class TestDeleteFormSubmission(WagtailTestUtils, TestCase):
             response,
             reverse("wagtailforms:list_submissions", args=(self.form_page.id,)),
         )
+
+    def test_delete_submission_with_next_url(self):
+        submission_id = FormSubmission.objects.first().id
+        delete_url = reverse(
+            "wagtailforms:delete_submissions", args=(self.form_page.id,)
+        )
+        list_url = reverse("wagtailforms:list_submissions", args=(self.form_page.id,))
+        next_url = list_url + "?p=2"
+
+        response = self.client.get(
+            reverse("wagtailforms:delete_submissions", args=(self.form_page.id,))
+            + f"?selected-submissions={submission_id}&next={next_url}"
+        )
+        self.assertEqual(response.status_code, 200)
+
+        # The delete form should have a 'next' input that points back to the list page
+        # with the same pagination querystring
+        soup = self.get_soup(response.content)
+        form = soup.select_one(f'form[action^="{delete_url}"]')
+        self.assertIsNotNone(form)
+        next_input = form.find("input", {"name": "next"})
+        self.assertIsNotNone(next_input)
+        self.assertEqual(next_input.get("value"), next_url)
+
+        # Submitting the form should redirect to the next URL
+        response = self.client.post(
+            reverse("wagtailforms:delete_submissions", args=(self.form_page.id,)),
+            {
+                "selected-submissions": submission_id,
+                "next": next_url,
+            },
+        )
+        self.assertRedirects(response, next_url)
 
 
 class TestDeleteCustomFormSubmission(WagtailTestUtils, TestCase):
@@ -1497,10 +1672,8 @@ class TestFormsWithCustomSubmissionsList(WagtailTestUtils, TestCase):
     def test_list_submissions_pagination(self):
         self.make_list_submissions()
 
-        response = self.client.get(
-            reverse("wagtailforms:list_submissions", args=(self.form_page.id,)),
-            {"p": 2},
-        )
+        list_url = reverse("wagtailforms:list_submissions", args=(self.form_page.id,))
+        response = self.client.get(list_url, {"p": 2})
 
         # Check response
         self.assertEqual(response.status_code, 200)
@@ -1510,6 +1683,18 @@ class TestFormsWithCustomSubmissionsList(WagtailTestUtils, TestCase):
         self.assertContains(response, "Page 2 of 3")
         self.assertContains(response, "Wet my pants excited!", count=50)
         self.assertEqual(response.context["page_obj"].number, 2)
+
+        # The delete form should have a 'next' input that points back to the list page
+        # with the same pagination querystring
+        soup = self.get_soup(response.content)
+        delete_url = reverse(
+            "wagtailforms:delete_submissions", args=(self.form_page.id,)
+        )
+        form = soup.find("form", {"action": delete_url})
+        self.assertIsNotNone(form)
+        next_input = form.find("input", {"name": "next"})
+        self.assertIsNotNone(next_input)
+        self.assertEqual(next_input.get("value"), f"{list_url}?p=2")
 
     def test_list_submissions_csv_export(self):
         response = self.client.get(
@@ -1634,7 +1819,6 @@ class TestDuplicateFormFieldLabels(WagtailTestUtils, TestCase):
     fixtures = ["test.json"]
 
     def setUp(self):
-
         self.login(username="superuser", password="password")
         # Find root page
         self.root_page = Page.objects.get(id=2)
@@ -1791,7 +1975,6 @@ class TestDuplicateFormFieldLabels(WagtailTestUtils, TestCase):
 
 
 class TestPreview(WagtailTestUtils, TestCase):
-
     post_data = {
         "title": "Form page!",
         "content": "Some content",
@@ -1856,3 +2039,85 @@ class TestPreview(WagtailTestUtils, TestCase):
                 response = self.client.get(preview_url + params)
                 self.assertEqual(response.status_code, 200)
                 self.assertTemplateUsed(response, template)
+
+
+class TestFormPageCreate(WagtailTestUtils, TestCase):
+    def setUp(self):
+        # Find root page
+        self.root_page = Page.objects.get(id=2)
+
+        # Login
+        self.user = self.login()
+
+    def test_get_creation_form(self):
+        response = self.client.get(
+            reverse(
+                "wagtailadmin_pages:add",
+                args=("tests", "formpage", self.root_page.id),
+            )
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_post_creation_form(self):
+        post_data = {
+            "title": "Form page!",
+            "slug": "contact-us",
+            "form_fields-TOTAL_FORMS": "1",
+            "form_fields-INITIAL_FORMS": "1",
+            "form_fields-MIN_NUM_FORMS": "0",
+            "form_fields-MAX_NUM_FORMS": "1000",
+            "form_fields-0-id": "",
+            "form_fields-0-label": "Field One",
+            "form_fields-0-field_type": "singleline",
+        }
+        response = self.client.post(
+            reverse(
+                "wagtailadmin_pages:add",
+                args=("tests", "formpage", self.root_page.id),
+            ),
+            post_data,
+        )
+        # Find the page and check it
+        page = Page.objects.get(slug="contact-us")
+
+        # Should be redirected to edit page
+        self.assertRedirects(
+            response, reverse("wagtailadmin_pages:edit", args=(page.id,))
+        )
+
+
+class TestFormPageEdit(WagtailTestUtils, TestCase):
+    def setUp(self):
+        self.form_page = make_form_page()
+
+        # Login
+        self.user = self.login()
+
+    def test_get_edit_form(self):
+        response = self.client.get(
+            reverse("wagtailadmin_pages:edit", args=(self.form_page.id,))
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_post_edit_form(self):
+        post_data = {
+            "title": "Updated form page",
+            "slug": "contact-us",
+            "form_fields-TOTAL_FORMS": "1",
+            "form_fields-INITIAL_FORMS": "1",
+            "form_fields-MIN_NUM_FORMS": "0",
+            "form_fields-MAX_NUM_FORMS": "1000",
+            "form_fields-0-id": "",
+            "form_fields-0-label": "Field One",
+            "form_fields-0-field_type": "singleline",
+        }
+        response = self.client.post(
+            reverse("wagtailadmin_pages:edit", args=(self.form_page.id,)),
+            post_data,
+        )
+        # Should be redirected to edit page
+        self.assertRedirects(
+            response, reverse("wagtailadmin_pages:edit", args=(self.form_page.id,))
+        )
+        page = Page.objects.get(slug="contact-us").get_latest_revision_as_object()
+        self.assertEqual(page.title, "Updated form page")

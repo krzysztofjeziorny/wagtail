@@ -17,7 +17,7 @@
 // The focus outline color is defined without reusing a named color variable
 // because it shouldn’t be reused for anything else in the UI.
 const focusToken = {
-  value: '#009072',
+  value: '#00A885',
   bgUtility: 'w-bg-focus',
   textUtility: 'w-text-focus',
   cssVariable: '--w-color-focus',
@@ -94,64 +94,17 @@ const light = [
         textUtility: 'w-text-surface-button-outline-hover',
         cssVariable: '--w-color-surface-button-outline-hover',
       },
-      'surface-panel-information': {
-        value: 'var(--w-color-info-50)',
-        bgUtility: 'w-bg-surface-panel-information',
-        textUtility: 'w-text-surface-panel-information',
-        cssVariable: '--w-color-surface-panel-information',
-      },
-    },
-  },
-  {
-    label: 'Surfaces - Alerts',
-    tokens: {
-      'surface-alert-modal-information': {
-        value: 'var(--w-color-info-50)',
-        bgUtility: 'w-bg-surface-alert-modal-information',
-        textUtility: 'w-text-surface-alert-modal-information',
-        cssVariable: '--w-color-surface-alert-modal-information',
-      },
-      'surface-alert-information': {
-        value: 'var(--w-color-info-100)',
-        bgUtility: 'w-bg-surface-alert-information',
-        textUtility: 'w-text-surface-alert-information',
-        cssVariable: '--w-color-surface-alert-information',
-      },
-      'surface-alert-modal-confirmation': {
-        value: 'var(--w-color-positive-50)',
-        bgUtility: 'w-bg-surface-alert-modal-confirmation',
-        textUtility: 'w-text-surface-alert-modal-confirmation',
-        cssVariable: '--w-color-surface-alert-modal-confirmation',
-      },
-      'surface-alert-confirmation': {
-        value: 'var(--w-color-positive-100)',
-        bgUtility: 'w-bg-surface-alert-confirmation',
-        textUtility: 'w-text-surface-alert-confirmation',
-        cssVariable: '--w-color-surface-alert-confirmation',
-      },
-      'surface-alert-modal-warning': {
-        value: 'var(--w-color-warning-50)',
-        bgUtility: 'w-bg-surface-alert-modal-warning',
-        textUtility: 'w-text-surface-alert-modal-warning',
-        cssVariable: '--w-color-surface-alert-modal-warning',
-      },
-      'surface-alert-warning': {
-        value: 'var(--w-color-warning-100)',
-        bgUtility: 'w-bg-surface-alert-warning',
-        textUtility: 'w-text-surface-alert-warning',
-        cssVariable: '--w-color-surface-alert-warning',
-      },
-      'surface-alert-modal-danger': {
+      'surface-button-critical-hover': {
         value: 'var(--w-color-critical-50)',
-        bgUtility: 'w-bg-surface-alert-modal-danger',
-        textUtility: 'w-text-surface-alert-modal-danger',
-        cssVariable: '--w-color-surface-alert-modal-danger',
+        bgUtility: 'w-bg-surface-button-critical-hover',
+        textUtility: 'w-text-surface-button-critical-hover',
+        cssVariable: '--w-color-surface-button-critical-hover',
       },
-      'surface-alert-danger': {
-        value: 'var(--w-color-critical-200)',
-        bgUtility: 'w-bg-surface-alert-danger',
-        textUtility: 'w-text-surface-alert-danger',
-        cssVariable: '--w-color-surface-alert-danger',
+      'surface-status-label': {
+        value: 'var(--w-color-info-50)',
+        bgUtility: 'w-bg-surface-status-label',
+        textUtility: 'w-text-surface-status-label',
+        cssVariable: '--w-color-surface-status-label',
       },
     },
   },
@@ -218,23 +171,41 @@ const light = [
         textUtility: 'w-text-text-button-outline-default',
         cssVariable: '--w-color-text-button-outline-default',
       },
+      'text-button-outline-hover': {
+        value: 'var(--w-color-secondary-400)',
+        bgUtility: 'w-bg-text-button-outline-hover',
+        textUtility: 'w-text-text-button-outline-hover',
+        cssVariable: '--w-color-text-button-outline-hover',
+      },
       'text-highlight': {
         value: 'var(--w-color-secondary-75)',
         bgUtility: 'w-bg-text-highlight',
         textUtility: 'w-text-text-highlight',
         cssVariable: '--w-color-text-highlight',
       },
+      'text-error': {
+        value: 'var(--w-color-critical-200)',
+        bgUtility: 'w-bg-text-error',
+        textUtility: 'w-text-text-error',
+        cssVariable: '--w-color-text-error',
+      },
+      'text-button-critical-outline-hover': {
+        value: 'var(--w-color-critical-200)',
+        bgUtility: 'w-bg-text-button-critical-outline-hover',
+        textUtility: 'w-text-text-button-critical-outline-hover',
+        cssVariable: '--w-color-text-button-critical-outline-hover',
+      },
+      'text-status-label': {
+        value: 'var(--w-color-info-100)',
+        bgUtility: 'w-bg-text-status-label',
+        textUtility: 'w-text-text-status-label',
+        cssVariable: '--w-color-text-status-label',
+      },
     },
   },
   {
     label: 'Icons',
     tokens: {
-      'icon-menus-default': {
-        value: 'var(--w-color-white-80)',
-        bgUtility: 'w-bg-icon-menus-default',
-        textUtility: 'w-text-icon-menus-default',
-        cssVariable: '--w-color-icon-menus-default',
-      },
       'icon-primary': {
         value: 'var(--w-color-primary)',
         bgUtility: 'w-bg-icon-primary',
@@ -259,30 +230,6 @@ const light = [
         textUtility: 'w-text-icon-secondary-hover',
         cssVariable: '--w-color-icon-secondary-hover',
       },
-      'icon-alert-modal-information': {
-        value: 'var(--w-color-info-100)',
-        bgUtility: 'w-bg-icon-alert-modal-information',
-        textUtility: 'w-text-icon-alert-modal-information',
-        cssVariable: '--w-color-icon-alert-modal-information',
-      },
-      'icon-alert-modal-confirmation': {
-        value: 'var(--w-color-positive-100)',
-        bgUtility: 'w-bg-icon-alert-modal-confirmation',
-        textUtility: 'w-text-icon-alert-modal-confirmation',
-        cssVariable: '--w-color-icon-alert-modal-confirmation',
-      },
-      'icon-alert-modal-warning': {
-        value: 'var(--w-color-warning-100)',
-        bgUtility: 'w-bg-icon-alert-modal-warning',
-        textUtility: 'w-text-icon-alert-modal-warning',
-        cssVariable: '--w-color-icon-alert-modal-warning',
-      },
-      'icon-alert-modal-danger': {
-        value: 'var(--w-color-critical-200)',
-        bgUtility: 'w-bg-icon-alert-modal-danger',
-        textUtility: 'w-text-icon-alert-modal-danger',
-        cssVariable: '--w-color-icon-alert-modal-danger',
-      },
     },
   },
   {
@@ -293,12 +240,6 @@ const light = [
         bgUtility: 'w-bg-border-furniture',
         textUtility: 'w-text-border-furniture',
         cssVariable: '--w-color-border-furniture',
-      },
-      'border-dashed-block': {
-        value: 'var(--w-color-grey-100)',
-        bgUtility: 'w-bg-border-dashed-block',
-        textUtility: 'w-text-border-dashed-block',
-        cssVariable: '--w-color-border-dashed-block',
       },
       'border-button-small-outline-default': {
         value: 'var(--w-color-grey-150)',
@@ -330,24 +271,24 @@ const light = [
         textUtility: 'w-text-border-button-outline-default',
         cssVariable: '--w-color-border-button-outline-default',
       },
+      'border-button-outline-hover': {
+        value: 'var(--w-color-secondary-400)',
+        bgUtility: 'w-bg-border-button-outline-hover',
+        textUtility: 'w-text-border-button-outline-hover',
+        cssVariable: '--w-color-border-button-outline-hover',
+      },
     },
   },
   {
     label: 'Misc',
     tokens: {
-      'wagtail-logo-circle': {
-        value: 'var(--w-color-white-10)',
-        bgUtility: 'w-bg-wagtail-logo-circle',
-        textUtility: 'w-text-wagtail-logo-circle',
-        cssVariable: '--w-color-wagtail-logo-circle',
-      },
-      'wagtail-logo-bird-hover': {
-        value: 'var(--w-color-black)',
-        bgUtility: 'w-bg-wagtail-logo-bird-hover',
-        textUtility: 'w-text-wagtail-logo-bird-hover',
-        cssVariable: '--w-color-wagtail-logo-bird-hover',
-      },
       'focus': focusToken,
+      'box-shadow-md': {
+        value: 'var(--w-color-black-25)',
+        bgUtility: 'w-bg-box-shadow-md',
+        textUtility: 'w-text-box-shadow-md',
+        cssVariable: '--w-color-box-shadow-md',
+      },
     },
   },
 ];
@@ -376,19 +317,19 @@ const dark = [
         cssVariable: '--w-color-surface-field-inactive',
       },
       'surface-header': {
-        value: 'var(--w-color-grey-600)',
+        value: 'var(--w-color-grey-700)',
         bgUtility: 'w-bg-surface-header',
         textUtility: 'w-text-surface-header',
         cssVariable: '--w-color-surface-header',
       },
       'surface-menus': {
-        value: 'var(--w-color-grey-500)',
+        value: 'var(--w-color-grey-800)',
         bgUtility: 'w-bg-surface-menus',
         textUtility: 'w-text-surface-menus',
         cssVariable: '--w-color-surface-menus',
       },
       'surface-menu-item-active': {
-        value: 'var(--w-color-grey-600)',
+        value: 'var(--w-color-grey-700)',
         bgUtility: 'w-bg-surface-menu-item-active',
         textUtility: 'w-text-surface-menu-item-active',
         cssVariable: '--w-color-surface-menu-item-active',
@@ -418,69 +359,22 @@ const dark = [
         cssVariable: '--w-color-surface-button-inactive',
       },
       'surface-button-outline-hover': {
-        value: 'var(--w-color-grey-500)',
+        value: 'var(--w-color-grey-700)',
         bgUtility: 'w-bg-surface-button-outline-hover',
         textUtility: 'w-text-surface-button-outline-hover',
         cssVariable: '--w-color-surface-button-outline-hover',
       },
-      'surface-panel-information': {
-        value: 'var(--w-color-info-50)',
-        bgUtility: 'w-bg-surface-panel-information',
-        textUtility: 'w-text-surface-panel-information',
-        cssVariable: '--w-color-surface-panel-information',
+      'surface-button-critical-hover': {
+        value: 'var(--w-color-grey-600)',
+        bgUtility: 'w-bg-surface-button-critical-hover',
+        textUtility: 'w-text-surface-button-critical-hover',
+        cssVariable: '--w-color-surface-button-critical-hover',
       },
-    },
-  },
-  {
-    label: 'Surfaces - Alerts',
-    tokens: {
-      'surface-alert-modal-information': {
-        value: 'var(--w-color-info-50)',
-        bgUtility: 'w-bg-surface-alert-modal-information',
-        textUtility: 'w-text-surface-alert-modal-information',
-        cssVariable: '--w-color-surface-alert-modal-information',
-      },
-      'surface-alert-information': {
-        value: 'var(--w-color-info-100)',
-        bgUtility: 'w-bg-surface-alert-information',
-        textUtility: 'w-text-surface-alert-information',
-        cssVariable: '--w-color-surface-alert-information',
-      },
-      'surface-alert-modal-confirmation': {
-        value: 'var(--w-color-positive-50)',
-        bgUtility: 'w-bg-surface-alert-modal-confirmation',
-        textUtility: 'w-text-surface-alert-modal-confirmation',
-        cssVariable: '--w-color-surface-alert-modal-confirmation',
-      },
-      'surface-alert-confirmation': {
-        value: 'var(--w-color-positive-100)',
-        bgUtility: 'w-bg-surface-alert-confirmation',
-        textUtility: 'w-text-surface-alert-confirmation',
-        cssVariable: '--w-color-surface-alert-confirmation',
-      },
-      'surface-alert-modal-warning': {
-        value: 'var(--w-color-warning-50)',
-        bgUtility: 'w-bg-surface-alert-modal-warning',
-        textUtility: 'w-text-surface-alert-modal-warning',
-        cssVariable: '--w-color-surface-alert-modal-warning',
-      },
-      'surface-alert-warning': {
-        value: 'var(--w-color-warning-100)',
-        bgUtility: 'w-bg-surface-alert-warning',
-        textUtility: 'w-text-surface-alert-warning',
-        cssVariable: '--w-color-surface-alert-warning',
-      },
-      'surface-alert-modal-danger': {
-        value: 'var(--w-color-critical-50)',
-        bgUtility: 'w-bg-surface-alert-modal-danger',
-        textUtility: 'w-text-surface-alert-modal-danger',
-        cssVariable: '--w-color-surface-alert-modal-danger',
-      },
-      'surface-alert-danger': {
-        value: 'var(--w-color-critical-200)',
-        bgUtility: 'w-bg-surface-alert-danger',
-        textUtility: 'w-text-surface-alert-danger',
-        cssVariable: '--w-color-surface-alert-danger',
+      'surface-status-label': {
+        value: 'var(--w-color-grey-600)',
+        bgUtility: 'w-bg-surface-status-label',
+        textUtility: 'w-text-surface-status-label',
+        cssVariable: '--w-color-surface-status-label',
       },
     },
   },
@@ -547,23 +441,41 @@ const dark = [
         textUtility: 'w-text-text-button-outline-default',
         cssVariable: '--w-color-text-button-outline-default',
       },
+      'text-button-outline-hover': {
+        value: 'var(--w-color-secondary-100)',
+        bgUtility: 'w-bg-text-button-outline-hover',
+        textUtility: 'w-text-text-button-outline-hover',
+        cssVariable: '--w-color-text-button-outline-hover',
+      },
       'text-highlight': {
         value: 'var(--w-color-secondary-400)',
         bgUtility: 'w-bg-text-highlight',
         textUtility: 'w-text-text-highlight',
         cssVariable: '--w-color-text-highlight',
       },
+      'text-error': {
+        value: 'var(--w-color-critical-100)',
+        bgUtility: 'w-bg-text-error',
+        textUtility: 'w-text-text-error',
+        cssVariable: '--w-color-text-error',
+      },
+      'text-button-critical-outline-hover': {
+        value: 'var(--w-color-critical-50)',
+        bgUtility: 'w-bg-text-button-critical-outline-hover',
+        textUtility: 'w-text-text-button-critical-outline-hover',
+        cssVariable: '--w-color-text-button-critical-outline-hover',
+      },
+      'text-status-label': {
+        value: 'var(--w-color-info-75)',
+        bgUtility: 'w-bg-text-status-label',
+        textUtility: 'w-text-text-status-label',
+        cssVariable: '--w-color-text-status-label',
+      },
     },
   },
   {
     label: 'Icons',
     tokens: {
-      'icon-menus-default': {
-        value: 'var(--w-color-white-80)',
-        bgUtility: 'w-bg-icon-menus-default',
-        textUtility: 'w-text-icon-menus-default',
-        cssVariable: '--w-color-icon-menus-default',
-      },
       'icon-primary': {
         value: 'var(--w-color-grey-150)',
         bgUtility: 'w-bg-icon-primary',
@@ -588,30 +500,6 @@ const dark = [
         textUtility: 'w-text-icon-secondary-hover',
         cssVariable: '--w-color-icon-secondary-hover',
       },
-      'icon-alert-modal-information': {
-        value: 'var(--w-color-info-100)',
-        bgUtility: 'w-bg-icon-alert-modal-information',
-        textUtility: 'w-text-icon-alert-modal-information',
-        cssVariable: '--w-color-icon-alert-modal-information',
-      },
-      'icon-alert-modal-confirmation': {
-        value: 'var(--w-color-positive-100)',
-        bgUtility: 'w-bg-icon-alert-modal-confirmation',
-        textUtility: 'w-text-icon-alert-modal-confirmation',
-        cssVariable: '--w-color-icon-alert-modal-confirmation',
-      },
-      'icon-alert-modal-warning': {
-        value: 'var(--w-color-warning-100)',
-        bgUtility: 'w-bg-icon-alert-modal-warning',
-        textUtility: 'w-text-icon-alert-modal-warning',
-        cssVariable: '--w-color-icon-alert-modal-warning',
-      },
-      'icon-alert-modal-danger': {
-        value: 'var(--w-color-critical-200)',
-        bgUtility: 'w-bg-icon-alert-modal-danger',
-        textUtility: 'w-text-icon-alert-modal-danger',
-        cssVariable: '--w-color-icon-alert-modal-danger',
-      },
     },
   },
   {
@@ -622,12 +510,6 @@ const dark = [
         bgUtility: 'w-bg-border-furniture',
         textUtility: 'w-text-border-furniture',
         cssVariable: '--w-color-border-furniture',
-      },
-      'border-dashed-block': {
-        value: 'var(--w-color-grey-500)',
-        bgUtility: 'w-bg-border-dashed-block',
-        textUtility: 'w-text-border-dashed-block',
-        cssVariable: '--w-color-border-dashed-block',
       },
       'border-button-small-outline-default': {
         value: 'var(--w-color-grey-400)',
@@ -659,24 +541,24 @@ const dark = [
         textUtility: 'w-text-border-button-outline-default',
         cssVariable: '--w-color-border-button-outline-default',
       },
+      'border-button-outline-hover': {
+        value: 'var(--w-color-secondary-100)',
+        bgUtility: 'w-bg-border-button-outline-hover',
+        textUtility: 'w-text-border-button-outline-hover',
+        cssVariable: '--w-color-border-button-outline-hover',
+      },
     },
   },
   {
     label: 'Misc',
     tokens: {
-      'wagtail-logo-circle': {
-        value: 'var(--w-color-white-10)',
-        bgUtility: 'w-bg-wagtail-logo-circle',
-        textUtility: 'w-text-wagtail-logo-circle',
-        cssVariable: '--w-color-wagtail-logo-circle',
-      },
-      'wagtail-logo-bird-hover': {
-        value: 'var(--w-color-black)',
-        bgUtility: 'w-bg-wagtail-logo-bird-hover',
-        textUtility: 'w-text-wagtail-logo-bird-hover',
-        cssVariable: '--w-color-wagtail-logo-bird-hover',
-      },
       'focus': focusToken,
+      'box-shadow-md': {
+        value: 'var(--w-color-black-50)',
+        bgUtility: 'w-bg-box-shadow-md',
+        textUtility: 'w-text-box-shadow-md',
+        cssVariable: '--w-color-box-shadow-md',
+      },
     },
   },
 ];

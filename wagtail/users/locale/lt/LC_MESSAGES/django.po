@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Wagtail\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-04-20 11:47+0100\n"
+"POT-Creation-Date: 2024-08-07 10:06+0100\n"
 "PO-Revision-Date: 2014-02-19 11:54+0000\n"
 "Last-Translator: Naglis Jonaitis, 2020,2022\n"
 "Language-Team: Lithuanian (http://app.transifex.com/torchbox/wagtail/"
@@ -95,6 +95,9 @@ msgstr "Pasirinkti kalbą administravimui"
 msgid "profile picture"
 msgstr "profilio nuotrauka"
 
+msgid "Default"
+msgstr "Numatytasis"
+
 msgid "user profile"
 msgstr "vartotojo profilis"
 
@@ -113,9 +116,6 @@ msgstr "Taip, ištrinti"
 msgid "No, don't delete"
 msgstr "Ne, neištrinti"
 
-msgid "Delete group"
-msgstr "Ištrinti grupę"
-
 msgid ""
 "Deleting this group will revoke this group's permissions from all member "
 "users."
@@ -127,14 +127,11 @@ msgstr "Ar tikrai norite ištrinti šią grupę?"
 msgid "Add group"
 msgstr "Pridėti grupę"
 
-msgid "Editing"
-msgstr "Redagavimas"
-
-msgid "View users in this group"
-msgstr "Peržiūrėti šios grupės vartotojus"
-
 msgid "Save"
 msgstr "Išsaugoti"
+
+msgid "Delete group"
+msgstr "Ištrinti grupę"
 
 msgid "Object permissions"
 msgstr "Objekto leidimai"
@@ -184,14 +181,8 @@ msgstr ""
 "Nėra sukonfigūruota jokia grupė. Kodėl gi <a "
 "href=\"%(wagtailusers_create_group_url)s\">nesukūrus vienos</a>?"
 
-msgid "Delete user"
-msgstr "Ištrinti vartotoją"
-
 msgid "Are you sure you want to delete this user?"
 msgstr "Ar tikrai norite ištrinti šį vartotoją?"
-
-msgid "Add user"
-msgstr "Pridėti vartotoją"
 
 msgid "Account"
 msgstr "Vartotojas"
@@ -199,36 +190,20 @@ msgstr "Vartotojas"
 msgid "Roles"
 msgstr "Rolės"
 
-msgid "Users"
-msgstr "Vartotojai"
-
-msgid "Add a user"
+msgid "Add user"
 msgstr "Pridėti vartotoją"
 
-msgid "Username"
-msgstr "Vartotojo vardas"
+msgid "Delete user"
+msgstr "Ištrinti vartotoją"
 
-msgid "Status"
-msgstr "Statusas"
-
-msgid "Last Login"
-msgstr "Paskutinis prisijungimas"
-
-msgid "Admin"
-msgstr "Administratorius"
+msgid "Delete selected users"
+msgstr "Ištrinti pasirinktus vartotojus"
 
 msgid "Active"
 msgstr "Aktyvus"
 
 msgid "Inactive"
 msgstr "Neaktyvus"
-
-#, python-format
-msgid "Sorry, no users match \"<em>%(query_string)s</em>\""
-msgstr "Atsiprašome, jokie vartotojai neatitiko \"<em>%(query_string)s</em>\""
-
-msgid "Delete selected users"
-msgstr "Ištrinti pasirinktus vartotojus"
 
 msgid "Groups"
 msgstr "Grupės"
@@ -250,9 +225,27 @@ msgstr "Grupė '%(object)s' atnaujinta."
 msgid "The group could not be saved due to errors."
 msgstr "Ši grupė negali būti išsaugota dėl klaidų."
 
+msgid "View users in this group"
+msgstr "Peržiūrėti šios grupės vartotojus"
+
 #, python-format
 msgid "Group '%(object)s' deleted."
 msgstr "Grupė '%(object)s' ištrinta."
+
+msgid "Add a user"
+msgstr "Pridėti vartotoją"
+
+msgid "Users"
+msgstr "Vartotojai"
+
+msgid "Username"
+msgstr "Vartotojo vardas"
+
+msgid "Admin"
+msgstr "Administratorius"
+
+msgid "Status"
+msgstr "Statusas"
 
 #, python-format
 msgid "User '%(object)s' updated."
@@ -262,18 +255,5 @@ msgid "The user could not be saved due to errors."
 msgstr "Šis vartotojas negali būti išsaugotas dėl klaidų."
 
 #, python-format
-msgid "Editing %(object)s"
-msgstr "Redaguojamas %(object)s"
-
-#, python-format
 msgid "User '%(object)s' deleted."
 msgstr "Vartotojas '%(object)s' ištrintas."
-
-msgid "Edit"
-msgstr "Redaguoti"
-
-msgid "Edit this user"
-msgstr "Redaguoti šį vartotoją"
-
-msgid "Delete this user"
-msgstr "Ištrinti šį vartotoją"

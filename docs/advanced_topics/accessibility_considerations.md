@@ -20,14 +20,14 @@ As part of defining your site’s models, here are areas to pay special attentio
 
 ### Alt text for images
 
-The default behaviour for Wagtail images is to use the `title` field as the alt text ([#4945](https://github.com/wagtail/wagtail/issues/4945)).
+The default behavior for Wagtail images is to use the `title` field as the alt text ([#4945](https://github.com/wagtail/wagtail/issues/4945)).
 This is inappropriate, as it’s not communicated in the CMS interface, and the image upload form uses the image’s filename as the title by default.
 
 Ideally, always add an optional “alt text” field wherever an image is used, alongside the image field:
 
 -   For normal fields, add an alt text field to your image’s panel.
 -   For StreamField, add an extra field to your image block.
--   For rich text – Wagtail already makes it possible to customise alt text for rich text images.
+-   For rich text – Wagtail already makes it possible to customize alt text for rich text images.
 
 When defining the alt text fields, make sure they are optional so editors can choose to not write any alt text for decorative images. Take the time to provide `help_text` with appropriate guidance.
 For example, linking to [established resources on alt text](https://axesslab.com/alt-texts/).
@@ -84,7 +84,7 @@ Here are common gotchas to be aware of to make the site’s templates as accessi
 
 ### Alt text in templates
 
-See the [content modelling](content_modeling) section above. Additionally, make sure to [customise images’ alt text](image_tag_alt), either setting it to the relevant field, or to an empty string for decorative images, or images where the alt text would be a repeat of other content.
+See the [content modelling](content_modeling) section above. Additionally, make sure to [customize images’ alt text](image_tag_alt), either setting it to the relevant field, or to an empty string for decorative images, or images where the alt text would be a repeat of other content.
 Even when your images have alt text coming directly from the image model, you still need to decide whether there should be alt text for the particular context the image is used in. For example, avoid alt text in listings where the alt text just repeats the listing items’ title.
 
 ### Empty heading tags
@@ -128,7 +128,7 @@ A number of built-in tools and additional resources are available to help create
 
 ### Built-in accessibility checker
 
-Wagtail includes an accessibility checker built into the [user bar](wagtailuserbar_tag). The checker can help authors create more accessible websites following best practices and accessibility standards like [WCAG](https://www.w3.org/WAI/standards-guidelines/wcag/).
+Wagtail includes an accessibility checker built into the [user bar](wagtailuserbar_tag) and editing views supporting previews. The checker can help authors create more accessible websites following best practices and accessibility standards like [WCAG](https://www.w3.org/WAI/standards-guidelines/wcag/).
 
 The checker is based on the [Axe](https://github.com/dequelabs/axe-core) testing engine and scans the loaded page for errors.
 
@@ -142,48 +142,47 @@ By default, the checker includes the following rules to find common accessibilit
 -   `input-button-name`: `<input>` button elements must always have a text label.
 -   `link-name`: `<a>` link elements must always have a text label.
 -   `p-as-heading`: This rule checks for paragraphs that are styled as headings. Paragraphs should not be styled as headings, as they don’t help users who rely on headings to navigate content.
+-   `alt-text-quality`: A custom rule ensures that image alt texts don't contain anti-patterns like file extensions and underscores.
 
-To customise how the checker is run (e.g. the rules to test), you can define a custom subclass of {class}`~wagtail.admin.userbar.AccessibilityItem` and override the attributes to your liking. Then, swap the instance of the default `AccessibilityItem` with an instance of your custom class via the [`construct_wagtail_userbar`](construct_wagtail_userbar) hook.
+To customize how the checker is run (such as what rules to test), you can define a custom subclass of {class}`~wagtail.admin.userbar.AccessibilityItem` and override the attributes to your liking. Then, swap the instance of the default `AccessibilityItem` with an instance of your custom class via the [`construct_wagtail_userbar`](construct_wagtail_userbar) hook.
 
-The following is the reference documentation for the `AccessibilityItem` class:
+For example, Axe's [`p-as-heading`](https://github.com/dequelabs/axe-core/blob/develop/lib/checks/navigation/p-as-heading.json) rule evaluates combinations of font weight, size, and italics to decide if a paragraph is acting as a heading visually. Depending on your heading styles, you might want Axe to rely only on font weight to flag short, bold paragraphs as potential headings.
 
-```{eval-rst}
-.. autoclass:: wagtail.admin.userbar.AccessibilityItem
-
-    .. autoattribute:: axe_include
-    .. autoattribute:: axe_exclude
-    .. autoattribute:: axe_run_only
-       :no-value:
-    .. autoattribute:: axe_rules
-    .. autoattribute:: axe_messages
-       :no-value:
-
-    The above attributes can also be overridden via the following methods to allow per-request customisation.
-    When overriding these methods, be mindful of the mutability of the class attributes above.
-    To avoid unexpected behaviour, you should always return a new object instead of modifying the attributes
-    directly in the methods.
-
-    .. method:: get_axe_include(request)
-    .. method:: get_axe_exclude(request)
-    .. method:: get_axe_run_only(request)
-    .. method:: get_axe_rules(request)
-    .. method:: get_axe_messages(request)
-
-    For more advanced customisation, you can also override the following methods:
-
-    .. automethod:: get_axe_context
-    .. automethod:: get_axe_options
-```
-
-Here is an example of a custom `AccessibilityItem` subclass that enables more rules:
 
 ```python
 from wagtail.admin.userbar import AccessibilityItem
 
 
 class CustomAccessibilityItem(AccessibilityItem):
-    # Run all rules with these tags
-    axe_run_only = [
+    axe_custom_checks = [
+        {
+	    # Flag heading-like paragraphs based only on font weight compared to surroundings.
+            "id": "p-as-heading",
+            "options": {
+                "margins": [
+                    { "weight": 150 },
+                ],
+                "passLength": 1,
+                "failLength": 0.5
+            },
+        },
+    ]
+
+
+@hooks.register('construct_wagtail_userbar')
+def replace_userbar_accessibility_item(request, items):
+    items[:] = [CustomAccessibilityItem() if isinstance(item, AccessibilityItem) else item for item in items]
+```
+
+The checks you run in production should be restricted to issues your content editors can fix themselves; warnings about things out of their control will only teach them to ignore all warnings. However, it may be useful for you to run additional checks in your development environment.
+
+```python
+from wagtail.admin.userbar import AccessibilityItem
+
+
+class CustomAccessibilityItem(AccessibilityItem):
+    # Run all Axe rules with these tags in the development environment
+    axe_rules_in_dev = [
         "wcag2a",
         "wcag2aa",
         "wcag2aaa",
@@ -197,11 +196,12 @@ class CustomAccessibilityItem(AccessibilityItem):
         "color-contrast-enhanced": {"enabled": False},
     }
 
-    def get_axe_rules(self, request):
-        # Do not disable any rules if the user is a superuser
-        if request.user.is_superuser:
-            return {}
-        return self.axe_rules
+    def get_axe_run_only(self, request):
+        if env.bool('DEBUG', default=False):
+            return self.axe_rules_in_dev
+        else:
+            # In production, run Wagtail's default accessibility rules for authored content only
+            return self.axe_run_only
 
 
 @hooks.register('construct_wagtail_userbar')
@@ -209,9 +209,48 @@ def replace_userbar_accessibility_item(request, items):
     items[:] = [CustomAccessibilityItem() if isinstance(item, AccessibilityItem) else item for item in items]
 ```
 
+#### AccessibilityItem reference
+
+The following is the reference documentation for the `AccessibilityItem` class:
+
+```{eval-rst}
+.. autoclass:: wagtail.admin.userbar.AccessibilityItem
+
+    .. autoattribute:: axe_include
+    .. autoattribute:: axe_exclude
+    .. autoattribute:: axe_run_only
+       :no-value:
+    .. autoattribute:: axe_rules
+    .. autoattribute:: axe_custom_rules
+       :no-value:
+    .. autoattribute:: axe_custom_checks
+       :no-value:
+    .. autoattribute:: axe_messages
+       :no-value:
+
+    The above attributes can also be overridden via the following methods to allow per-request customization.
+    When overriding these methods, be mindful of the mutability of the class attributes above.
+    To avoid unexpected behavior, you should always return a new object instead of modifying the attributes
+    directly in the methods.
+
+    .. method:: get_axe_include(request)
+    .. method:: get_axe_exclude(request)
+    .. method:: get_axe_run_only(request)
+    .. method:: get_axe_rules(request)
+    .. method:: get_axe_custom_rules(request)
+    .. method:: get_axe_custom_checks(request)
+    .. method:: get_axe_messages(request)
+
+    For more advanced customization, you can also override the following methods:
+
+    .. automethod:: get_axe_context
+    .. automethod:: get_axe_options
+    .. automethod:: get_axe_spec
+```
+
 ### wagtail-accessibility
 
-[wagtail-accessibility](https://github.com/neon-jungle/wagtail-accessibility) is a third-party package which adds [tota11y](https://khan.github.io/tota11y/) to Wagtail previews.
+[wagtail-accessibility](https://github.com/neon-jungle/wagtail-accessibility) is a third-party package which adds [tota11y](https://blog.khanacademy.org/tota11y-an-accessibility-visualization-toolkit/) to Wagtail previews.
 This makes it easy for authors to run basic accessibility checks – validating the page’s heading outline, or link text.
 
 ### help_text and HelpPanel
@@ -220,9 +259,26 @@ Occasional Wagtail users may not be aware of your site’s content guidelines, o
 
 ### Readability
 
-Readability is fundamental to accessibility. One of the ways to improve text content is to have a clear target for reading level / reading age, which can be assessed with [wagtail-readinglevel](https://github.com/vixdigital/wagtail-readinglevel) as a score displayed in rich text fields.
+Readability is fundamental to accessibility. One of the ways to improve text content is to have a clear target for reading level / reading age, which can be assessed with [wagtail-readinglevel](https://github.com/torchbox-forks/wagtail-readinglevel) as a score displayed in rich text fields.
 
 (accessibility_resources)=
+
+### prefers-reduced-motion
+
+Some users, such as those with vestibular disorders, may prefer a more static version of your site. You can respect this preference by using the `prefers-reduced-motion` media query in your CSS.
+
+```css
+@media (prefers-reduced-motion) {
+    /* styles to apply if a user's device settings are set to reduced motion */
+    /* for example, disable animations */
+    * {
+        animation: none !important;
+        transition: none !important;
+    }
+}
+```
+
+Note that `prefers-reduced-motion` is only applied for users who enabled this setting in their operating system or browser. This feature is supported by Chrome, Safari and Firefox. For more information on reduced motion, see the [MDN Web Docs](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-reduced-motion).
 
 ## Accessibility resources
 

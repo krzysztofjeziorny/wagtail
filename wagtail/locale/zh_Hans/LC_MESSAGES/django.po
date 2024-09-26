@@ -21,7 +21,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Wagtail\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-04-20 11:47+0100\n"
+"POT-Creation-Date: 2024-08-07 10:05+0100\n"
 "PO-Revision-Date: 2014-02-21 15:51+0000\n"
 "Last-Translator: Ford Guo <agile.guo@gmail.com>, 2020,2023\n"
 "Language-Team: Chinese (China) (http://app.transifex.com/torchbox/wagtail/"
@@ -152,6 +152,39 @@ msgstr "审核中"
 msgid "live + in moderation"
 msgstr "发布+审核中"
 
+msgid "Add/edit pages you own"
+msgstr "添加/编辑所属的页面"
+
+msgid "Bulk delete"
+msgstr "批量删除"
+
+msgid "Delete pages with children"
+msgstr "删除页面及其子页面"
+
+msgid "Edit"
+msgstr "编辑"
+
+msgid "Edit any page"
+msgstr "编辑任意页面"
+
+msgid "Lock"
+msgstr "锁定"
+
+msgid "Lock/unlock pages you've locked"
+msgstr "锁定/解锁你已锁定的页面"
+
+msgid "Publish"
+msgstr "发布"
+
+msgid "Publish any page"
+msgstr "发布任意页面"
+
+msgid "Unlock"
+msgstr "解锁"
+
+msgid "Unlock any page"
+msgstr "解锁任意页面"
+
 msgid "title"
 msgstr "标题"
 
@@ -210,9 +243,6 @@ msgstr "页面"
 msgid "object id"
 msgstr "对象ID"
 
-msgid "submitted for moderation"
-msgstr "已提交审核"
-
 msgid "created at"
 msgstr "创建时间"
 
@@ -231,44 +261,11 @@ msgstr "修订版本"
 msgid "revisions"
 msgstr "修订版本"
 
-msgid "Add/edit pages you own"
-msgstr "添加/编辑所属的页面"
-
-msgid "Edit"
-msgstr "编辑"
-
-msgid "Edit any page"
-msgstr "编辑任意页面"
-
-msgid "Publish"
-msgstr "发布"
-
-msgid "Publish any page"
-msgstr "发布任意页面"
-
-msgid "Bulk delete"
-msgstr "批量删除"
-
-msgid "Delete pages with children"
-msgstr "删除页面及其子页面"
-
-msgid "Lock"
-msgstr "锁定"
-
-msgid "Lock/unlock pages you've locked"
-msgstr "锁定/解锁你已锁定的页面"
-
-msgid "Unlock"
-msgstr "解锁"
-
-msgid "Unlock any page"
-msgstr "解锁任意页面"
-
 msgid "group"
 msgstr "组"
 
-msgid "permission type"
-msgstr "权限类型"
+msgid "permission"
+msgstr "权限"
 
 msgid "group page permission"
 msgstr "群组页面权限"
@@ -454,14 +451,14 @@ msgstr "集合查看限制"
 msgid "collections"
 msgstr "集合"
 
-msgid "permission"
-msgstr "权限"
-
 msgid "group collection permission"
 msgstr "群组集合权限"
 
 msgid "group collection permissions"
 msgstr "群组集合权限"
+
+msgid "uploaded by user"
+msgstr "用户上传"
 
 msgid "hostname"
 msgstr "主机名"
@@ -514,17 +511,8 @@ msgstr ""
 msgid "Public"
 msgstr "公开"
 
-msgid "Private, accessible to logged-in users"
-msgstr "私有，登录用户可访问"
-
-msgid "Private, accessible with the following password"
-msgstr "私有，使用下列的密码访问："
-
 msgid "Private, accessible to users in specific groups"
 msgstr "私有，特定用户组中的用户可访问"
-
-msgid "password"
-msgstr "密码"
 
 msgid "view restriction"
 msgstr "查看限制"
@@ -730,10 +718,6 @@ msgstr "已更新查看限制"
 
 msgid "Remove view restrictions"
 msgstr "移除查看限制"
-
-#, python-format
-msgid "Removed the '%(restriction)s' view restriction"
-msgstr "已移除“%(restriction)s”查看限制"
 
 msgid "Removed view restriction"
 msgstr "已移除查看限制"

@@ -3,14 +3,15 @@
 # This file is distributed under the same license as the PACKAGE package.
 #
 # Translators:
+# Andrei Satsevich, 2023
 # Tatsiana Tsygan <art.tatsiana@gmail.com>, 2018,2020
 msgid ""
 msgstr ""
 "Project-Id-Version: Wagtail\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-04-20 11:47+0100\n"
+"POT-Creation-Date: 2024-08-07 10:06+0100\n"
 "PO-Revision-Date: 2014-02-19 21:18+0000\n"
-"Last-Translator: Tatsiana Tsygan <art.tatsiana@gmail.com>, 2018,2020\n"
+"Last-Translator: Andrei Satsevich, 2023\n"
 "Language-Team: Belarusian (http://app.transifex.com/torchbox/wagtail/"
 "language/be/)\n"
 "MIME-Version: 1.0\n"
@@ -24,23 +25,8 @@ msgstr ""
 msgid "Wagtail search"
 msgstr "Пошук Wagtail"
 
-msgid "Query Daily Hits"
-msgstr "Запыт штодзенных хітоў"
+msgid "index entry"
+msgstr "індэксная запіс"
 
-msgid "Popular search terms"
-msgstr "Папулярныя пошукавыя запыты"
-
-msgid "Search"
-msgstr "Пошук"
-
-msgid "Terms"
-msgstr "Тэрміны"
-
-msgid "Views (past week)"
-msgstr "Прагляды (мінулы тыдзень)"
-
-msgid "No results found"
-msgstr "Нічога не знойдзена"
-
-msgid "Choose from popular search terms"
-msgstr "Выбраць з папулярных пошукавых запытаў"
+msgid "index entries"
+msgstr "індэксныя запісы"

@@ -9,6 +9,7 @@
 # Cihad GÜNDOĞDU <cihadgundogdu@gmail.com>, 2016
 # Fatih Koç koç <fatihinemaili@gmail.com>, 2021
 # Halim Turan <halim_turan_61@hotmail.com>, 2020
+# Halit Çelik, 2023
 # Matt Westcott <matthew@torchbox.com>, 2020
 # Py Data Geek <pydatageek@gmail.com>, 2019
 # Py Data Geek <pydatageek@gmail.com>, 2019
@@ -19,9 +20,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Wagtail\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-04-20 11:47+0100\n"
+"POT-Creation-Date: 2024-08-07 10:06+0100\n"
 "PO-Revision-Date: 2014-02-21 15:50+0000\n"
-"Last-Translator: Umut Bektaş <info@umutbektas.com>, 2019\n"
+"Last-Translator: Halit Çelik, 2023\n"
 "Language-Team: Turkish (http://app.transifex.com/torchbox/wagtail/language/"
 "tr/)\n"
 "MIME-Version: 1.0\n"
@@ -44,6 +45,12 @@ msgstr "Tekrar gönderildi %(task_name)s"
 msgid "Submit to %(workflow_name)s"
 msgstr "Gönderildi %(workflow_name)s"
 
+msgid "Restart workflow "
+msgstr " İş akışını yenile"
+
+msgid "Cancel workflow "
+msgstr " İş akışını iptal et"
+
 msgid "Unpublish"
 msgstr "Yayından Kaldır"
 
@@ -52,6 +59,10 @@ msgstr "Taslak Olarak Kaydet"
 
 msgid "Page locked"
 msgstr "Sayfa kilitlendi"
+
+#, python-format
+msgid "%(label)s and Publish"
+msgstr "%(label)s ve yayınla"
 
 msgid "Wagtail admin"
 msgstr "Wagtail Yönetim"
@@ -73,6 +84,9 @@ msgstr "Bitiş tarihi"
 
 msgid "All"
 msgstr "Hepsi"
+
+msgid "Collection"
+msgstr "Koleksiyon"
 
 msgid "Preferred language"
 msgstr "Tercih edilen dil"
@@ -96,6 +110,10 @@ msgid "Enter password"
 msgstr "Şifre girin"
 
 #, python-format
+msgid "Your %(username_field)s and password didn't match. Please try again."
+msgstr "%(username_field)s ve şifre uyuşmuyor. Lütfen tekrar deneyin"
+
+#, python-format
 msgid "Enter your %(username_field_name)s"
 msgstr "%(username_field_name)s girin"
 
@@ -114,9 +132,6 @@ msgstr "Ara"
 msgid "All collections"
 msgstr "Tüm koleksiyonlar"
 
-msgid "Collection"
-msgstr "Koleksiyon"
-
 msgid "Parent"
 msgstr "Üst-Ebeveyn"
 
@@ -126,11 +141,23 @@ msgstr "Aynı kolleksiyon için birden fazla yetkiye sahip olamazsınız."
 msgid "Add"
 msgstr "Ekle"
 
+msgid "Add collections"
+msgstr "Koleksiyon ekle"
+
 msgid "Edit"
 msgstr "Düzenle"
 
+msgid "Edit collections"
+msgstr "Koleksiyonu düzenle"
+
 msgid "Delete"
 msgstr "Sil"
+
+msgid "Delete collections"
+msgstr "Koleksiyonu sil"
+
+msgid "You cannot edit another user's comment."
+msgstr "Başka bir kullanıcının yorumunu düzenleyemezsiniz."
 
 msgid "Go live date/time must be before expiry date/time"
 msgstr "Yayın başlangıç tarih/saati bitiş tarih/saatinden öncesinde olmalı"
@@ -182,6 +209,9 @@ msgstr[1] ""
 "Kopyalanan sayfalardan %(count)s tanesi yayında. Kopyalarını yayınlamak "
 "ister misiniz?"
 
+msgid "Alias"
+msgstr "Diğer Ad"
+
 #, python-format
 msgid "You do not have permission to copy to page \"%(page_title)s\""
 msgstr "\"%(page_title)s\"  sayfasına kopyalamak için izniniz yok"
@@ -196,6 +226,22 @@ msgstr ""
 msgid "You cannot copy a page into itself when copying subpages"
 msgstr "Alt sayfaları kopyalarken bir sayfayı kendi içine kopyalayamazsınız"
 
+#, python-format
+msgid "The slug '%(page_slug)s' is already in use within the parent page"
+msgstr "'%(page_slug)s' slug'ı üst sayfada zaten kullanılıyor"
+
+msgid "Select a new parent for this page."
+msgstr "Bu sayfa için yeni bir üst sayfa seçin"
+
+msgid "Parent page"
+msgstr "Üst sayfa"
+
+#, python-format
+msgid "Tag(s) %(value_too_long)s are over %(max_tag_length)d characters"
+msgstr ""
+"Etiket(ler) %(value_too_long)s maksimum %(max_tag_length)d karakter sayısı "
+"sınırını aşıyor"
+
 msgid "Visibility"
 msgstr "Görünürlük"
 
@@ -205,6 +251,9 @@ msgstr "Bu alan zorunludur."
 msgid "Please select at least one group."
 msgstr "Lütfen en az bir grup seçin."
 
+msgid "All types"
+msgstr "Tüm türler"
+
 msgid "Content"
 msgstr "İçerik"
 
@@ -213,6 +262,9 @@ msgstr "Tanıtımını yap"
 
 msgid "Settings"
 msgstr "Ayarlar"
+
+msgid "Title"
+msgstr "Başlık"
 
 msgid "Error 404: Page not found"
 msgstr "Hata 404: Sayfa bulunamadı"
@@ -320,9 +372,6 @@ msgstr "'%(title)s' sayfasının alt sayfalarını araştırın"
 msgid "Explore"
 msgstr "Araştır"
 
-msgid "Collection privacy"
-msgstr "Koleksiyon gizliliği"
-
 msgid "This collection has been made private by a parent collection."
 msgstr "Bu koleksiyon bir üst koleksiyon tarafından gizli yapıldı."
 
@@ -356,9 +405,6 @@ msgid ""
 "This collection cannot be deleted, because it is not empty. It contains:"
 msgstr "Bu kolleksiyon silinemedi çünkü boş değil ve şunları içeriyor:"
 
-msgid "Name"
-msgstr "İsim"
-
 #, python-format
 msgid ""
 "No collections have been created. Why not <a "
@@ -382,6 +428,9 @@ msgstr "Evet, yayından kaldır"
 
 msgid "No, don't unpublish"
 msgstr "Hayır, yayından kaldırma"
+
+msgid "Actions"
+msgstr "Eylemler"
 
 msgid "Update"
 msgstr "Güncelle"
@@ -413,9 +462,6 @@ msgstr ""
 msgid "Your locked pages"
 msgstr "Kilitli sayfalar"
 
-msgid "Title"
-msgstr "Başlık"
-
 msgid "Locked at"
 msgstr "Kilitli"
 
@@ -430,27 +476,6 @@ msgstr "Taslak"
 
 msgid "Live"
 msgstr "Yayında"
-
-msgid "Pages awaiting moderation"
-msgstr "Denetlenmeyi bekleyen sayfalar"
-
-msgid "Type"
-msgstr "Tip"
-
-msgid "Edited"
-msgstr "Düzenlendi"
-
-msgid "Preview this page"
-msgstr "Bu sayfayı önizle"
-
-msgid "Approve"
-msgstr "Onayla"
-
-msgid "Reject"
-msgstr "Reddet"
-
-msgid "Preview"
-msgstr "Önizleme"
 
 msgid "Your most recent edits"
 msgstr "En son düzenlemeleriniz"
@@ -467,15 +492,17 @@ msgstr "Site özeti"
 msgid "Close"
 msgstr "Kapat"
 
+msgid "Preview"
+msgstr "Önizleme"
+
+msgid "Compare with live version"
+msgstr "Canlı sürümüyle karşılaştır"
+
 msgid "Sign in"
 msgstr "Oturum aç"
 
 msgid "Sign in to Wagtail"
 msgstr "Wagtail'de oturumu aç"
-
-#, python-format
-msgid "Your %(username_field)s and password didn't match. Please try again."
-msgstr "%(username_field)s ve şifre uyuşmuyor. Lütfen tekrar deneyin"
 
 msgid "Signing in…"
 msgstr "Giriş yapılıyor…"
@@ -509,20 +536,8 @@ msgstr "Sayfayı burada düzenleyebilirsiniz:"
 msgid "The page \"%(title)s\" has been rejected"
 msgstr "\"%(title)s\" sayfası reddedildi."
 
-#, python-format
-msgid "The page \"%(page)s\" has been submitted for moderation by %(editor)s."
-msgstr ""
-"\"%(page)s\" sayfası, %(editor)s tarafından kontrol edilmek üzere gönderildi."
-
 msgid "You can preview the page here:"
 msgstr "Sayfayı buradan önizleyebilirsiniz:"
-
-#, python-format
-msgid "The page \"%(page)s\" has been submitted for moderation"
-msgstr "\"%(page)s\" sayfası, kontrol edilmek üzere gönderildi"
-
-msgid "Page privacy"
-msgstr "Sayfa gizliliği"
 
 msgid "This page has been made private by a parent page."
 msgstr "Bu sayfa bir üst sayfa tarafından gizli yapıldı."
@@ -605,13 +620,6 @@ msgid "Are you sure you want to unpublish this page?"
 msgstr "Bu sayfayı yayından kaldırmak istediğinize emin misiniz?"
 
 #, python-format
-msgid "Pages using %(page_class_verbose_name)s"
-msgstr "%(page_class_verbose_name)s kullanan sayfalar"
-
-msgid "Pages using"
-msgstr "Kullanan sayfalar"
-
-#, python-format
 msgid "Copy %(title)s"
 msgstr "%(title)s kopyala"
 
@@ -621,42 +629,11 @@ msgstr "Kopyala"
 msgid "Copy this page"
 msgstr "Bu sayfayı kopyala"
 
-#, python-format
-msgid "New %(page_type)s"
-msgstr "Yeni %(page_type)s"
-
-msgid "Actions"
-msgstr "Eylemler"
-
 msgid "This page has unsaved changes."
 msgstr "Bu sayfadaki düzenlemeler kaydedilmedi."
 
-#, python-format
-msgid "Editing %(page_type)s: %(title)s"
-msgstr "%(page_type)s: %(title)s düzenleniyor"
-
-msgid "Live version"
-msgstr "Canlı sürüm"
-
-msgid "Current draft"
-msgstr "Şimdiki taslak"
-
-#, python-format
-msgid "Exploring %(title)s"
-msgstr "%(title)s araştırılıyor"
-
-msgid "Drag"
-msgstr "Sürükle"
-
 msgid "Configure a site now."
 msgstr "Şimdi bir site yapılandırın."
-
-msgid "No pages have been created at this location."
-msgstr "Bu konumda hiç sayfa oluşturulmadı."
-
-#, python-format
-msgid "Why not <a href=\"%(add_page_url)s\">create one</a>?"
-msgstr "Neden <a href=\"%(add_page_url)s\">bir tane oluşturmuyorsunuz</a>?"
 
 msgid "This page is locked to further editing"
 msgstr "Bu sayfa düzenlemeye karşı kilitlenmiştir"
@@ -668,6 +645,18 @@ msgstr "'%(title)s' sayfasının alt sayfalarını araştırın"
 #, python-format
 msgid "Add a child page to '%(title)s'"
 msgstr "'%(title)s' sayfasına alt sayfa ekleyin"
+
+msgid "Drag"
+msgstr "Sürükle"
+
+msgid "Disable ordering of child pages"
+msgstr "Alt sayfaların sıralamasını etkisizleştir"
+
+msgid "Sort"
+msgstr "Sırala"
+
+msgid "Enable ordering of child pages"
+msgstr "Alt sayfaların sıralamasını etkinleştir"
 
 msgid "Sites menu"
 msgstr "Siteler menüsü"
@@ -684,20 +673,8 @@ msgstr "Sonraki"
 msgid "This page is protected from public view"
 msgstr "Bu sayfa genel görünüme karşı korumalıdır"
 
-msgid "Disable ordering of child pages"
-msgstr "Alt sayfaların sıralamasını etkisizleştir"
-
-msgid "Sort"
-msgstr "Sırala"
-
-msgid "Enable ordering of child pages"
-msgstr "Alt sayfaların sıralamasını etkinleştir"
-
-msgid "Updated"
-msgstr "Güncellendi"
-
-msgid "Cancel scheduled publish"
-msgstr "Zamanlanmış yayını iptal et"
+msgid "Add child page"
+msgstr "Alt sayfa ekle"
 
 msgid "Page types"
 msgstr "Sayfa türleri"
@@ -722,23 +699,29 @@ msgstr "Yukarı taşı"
 msgid "Move down"
 msgstr "Aşağı taşı"
 
+msgid "Type"
+msgstr "Tip"
+
 msgid "No pages found."
 msgstr "Sayfa bulunamadı."
 
 msgid "No pages match this report's criteria."
 msgstr "Rapor kriterine göre eşleşen sayfa bulunmamaktadır."
 
-msgid "Download XLSX"
-msgstr "XLSX İndir"
+msgid "Updated"
+msgstr "Güncellendi"
 
-msgid "Download CSV"
-msgstr "CSV İndir"
+msgid "Pages"
+msgstr "Sayfalar"
 
 msgid "Locking status"
 msgstr "Kilitli durum"
 
 msgid "Locked"
 msgstr "Kilitlendi"
+
+msgid "Name"
+msgstr "İsim"
 
 msgid "Edit this item"
 msgstr "Bu elemanı düzenle"
@@ -753,8 +736,14 @@ msgstr "Sayfa %(page_num)s / %(total_pages)s."
 msgid "Breadcrumb"
 msgstr "İçerik haritası"
 
-msgid "Root"
-msgstr "Root (kök)"
+msgid "Continue"
+msgstr "Devam et"
+
+msgid "Download XLSX"
+msgstr "XLSX İndir"
+
+msgid "Download CSV"
+msgstr "CSV İndir"
 
 msgid "Filter"
 msgstr "Filtrele"
@@ -803,6 +792,9 @@ msgid_plural "Used %(usage_count)s times"
 msgstr[0] "%(usage_count)s kez kullanıldı"
 msgstr[1] "%(usage_count)s kez kullanıldı"
 
+msgid "Edited"
+msgstr "Düzenlendi"
+
 msgid "Add a child page"
 msgstr "Alt sayfa ekle"
 
@@ -815,8 +807,33 @@ msgstr "Sayfa"
 msgid "New"
 msgstr "Yeni"
 
-msgid "Compare with live version"
-msgstr "Canlı sürümüyle karşılaştır"
+msgid "More"
+msgstr "Daha fazla"
+
+#, python-format
+msgid "%(time_period)s ago"
+msgstr "%(time_period)s önce"
+
+msgid "Log out"
+msgstr "Çıkış yap"
+
+msgid "Undo"
+msgstr "Geri al"
+
+msgid "Redo"
+msgstr "Yeniden"
+
+msgid "Bold"
+msgstr "Kalın"
+
+msgid "Italic"
+msgstr "Yatay"
+
+msgid "Superscript"
+msgstr "Üstyazı"
+
+msgid "Subscript"
+msgstr "Altyazı"
 
 #, python-format
 msgid ""
@@ -833,16 +850,6 @@ msgid ""
 msgstr ""
 "'%(parent)s' sayfasına ait olan alt sayfaları '%(label)s' göre azalan "
 "şekilde sırala."
-
-msgid "More"
-msgstr "Daha fazla"
-
-#, python-format
-msgid "%(time_period)s ago"
-msgstr "%(time_period)s önce"
-
-msgid "Log out"
-msgstr "Çıkış yap"
 
 msgid "Password"
 msgstr "Parola"
@@ -880,6 +887,18 @@ msgstr "Koleksiyon '%(object)s' silindi."
 msgid "Are you sure you want to delete this collection?"
 msgstr "Bu koleksiyonu silmek istediğinizden emin misiniz?"
 
+msgid "Home"
+msgstr "Anasayfa"
+
+msgid "Live version"
+msgstr "Canlı sürüm"
+
+msgid "Current draft"
+msgstr "Şimdiki taslak"
+
+msgid "Cancel scheduled publish"
+msgstr "Zamanlanmış yayını iptal et"
+
 #, python-format
 msgid "%(model_name)s '%(object)s' updated."
 msgstr "%(model_name)s '%(object)s' güncellendi."
@@ -888,17 +907,28 @@ msgstr "%(model_name)s '%(object)s' güncellendi."
 msgid "%(model_name)s '%(object)s' created."
 msgstr "%(model_name)s '%(object)s' oluşturuldu."
 
+#, python-format
+msgid "Edit '%(title)s'"
+msgstr "'%(title)s' düzenle"
+
+msgid "Inspect"
+msgstr "Denetle"
+
 msgid "Editing"
 msgstr "Düzenleniyor"
+
+#, python-format
+msgid "%(model_name)s '%(object)s' deleted."
+msgstr "%(model_name)s '%(object)s' silindi."
+
+msgid "Inspecting"
+msgstr "İnceleniyor"
 
 msgid "Earliest"
 msgstr "En eski"
 
 msgid "Latest"
 msgstr "En yeni"
-
-msgid "Usage of"
-msgstr "Kullanımı"
 
 #, python-format
 msgid "Edit this %(object)s"
@@ -945,9 +975,6 @@ msgstr "Sayfa, doğrulama hataları nedeniyle oluşturulamadı"
 msgid "Page '%(page_title)s' deleted."
 msgstr "Sayfa '%(page_title)s' silindi."
 
-msgid "This page is currently awaiting moderation"
-msgstr "Bu sayfa kontrol edilmek üzere bekliyor"
-
 #, python-format
 msgid "Page '%(page_title)s' has been updated."
 msgstr "Sayfa '%(page_title)s' güncellendi."
@@ -970,27 +997,12 @@ msgstr "Sayfa kilitli olduğu için kaydedilemedi"
 msgid "The page could not be saved due to validation errors"
 msgstr "Sayfa doğrulama hatalarından dolayı kaydedilemedi"
 
+msgid "Site"
+msgstr "Site"
+
 #, python-format
 msgid "Page '%(page_title)s' is now unlocked."
 msgstr "Sayfa '%(page_title)s' şuan kilitli değil."
-
-#, python-format
-msgid "The page '%(page_title)s' is not currently awaiting moderation."
-msgstr "Sayfa '%(page_title)s' şuan kontrol edilmek üzere beklemiyor."
-
-#, python-format
-msgid "Page '%(page_title)s' published."
-msgstr "Sayfa '%(page_title)s' yayınlandı."
-
-msgid "Failed to send approval notifications"
-msgstr "Onay bildirimleri gönderilemedi"
-
-#, python-format
-msgid "Page '%(page_title)s' rejected for publication."
-msgstr "'%(page_title)s' sayfasının yayınlanması reddedildi."
-
-msgid "Failed to send rejection notifications"
-msgstr "Red bildirimleri gönderilemedi"
 
 #, python-format
 msgid ""
@@ -1008,15 +1020,15 @@ msgstr "Sayfa '%(page_title)s' taşındı."
 msgid "Page '%(page_title)s' unpublished."
 msgstr "Sayfa '%(page_title)s' yayından kaldırıldı."
 
-msgid "Show"
-msgstr "Göster"
-
-msgid "Pages"
-msgstr "Sayfalar"
+msgid "Pages using"
+msgstr "Kullanan sayfalar"
 
 #, python-format
-msgid "Edit '%(title)s'"
-msgstr "'%(title)s' düzenle"
+msgid "The page '%(page_title)s' is not currently awaiting moderation."
+msgstr "Sayfa '%(page_title)s' şuan kontrol edilmek üzere beklemiyor."
+
+msgid "Show"
+msgstr "Göster"
 
 #, python-format
 msgid "Preview draft version of '%(title)s'"
@@ -1025,17 +1037,6 @@ msgstr "'%(title)s' sayfasının taslak sürümünü önizle"
 #, python-format
 msgid "View live version of '%(title)s'"
 msgstr "'%(title)s' sayfasının canlı sürümünü gör"
-
-msgid "Add child page"
-msgstr "Alt sayfa ekle"
-
-#, python-format
-msgid "Add a child page to '%(title)s' "
-msgstr "'%(title)s' sayfasına alt sayfalar ekle "
-
-#, python-format
-msgid "View more options for '%(title)s'"
-msgstr "'%(title)s' için daha fazla seçenek gör"
 
 #, python-format
 msgid "Move page '%(title)s'"
@@ -1066,20 +1067,8 @@ msgstr "Numaralı liste"
 msgid "Blockquote"
 msgstr "Alıntı"
 
-msgid "Bold"
-msgstr "Kalın"
-
-msgid "Italic"
-msgstr "Yatay"
-
 msgid "Link"
 msgstr "Bağlantı"
-
-msgid "Superscript"
-msgstr "Üstyazı"
-
-msgid "Subscript"
-msgstr "Altyazı"
 
 msgid "Strikethrough"
 msgstr "Üstü çizgili"

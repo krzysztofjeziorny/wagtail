@@ -1,33 +1,34 @@
 import json
-from datetime import timedelta
+import unittest
+from datetime import datetime, timedelta
+from datetime import timezone as dt_timezone
 from unittest import mock
 
 from django.conf import settings
 from django.template import Context, Template, TemplateSyntaxError
-from django.test import TestCase
+from django.test import SimpleTestCase, TestCase
 from django.test.utils import override_settings
 from django.utils import timezone
-from django.utils.html import format_html
 from freezegun import freeze_time
 
-from wagtail.admin.staticfiles import versioned_static
+from wagtail.admin.localization import get_js_translation_strings
+from wagtail.admin.staticfiles import VERSION_HASH, versioned_static
 from wagtail.admin.templatetags.wagtailadmin_tags import (
     avatar_url,
     i18n_enabled,
     locale_label_from_id,
-)
-from wagtail.admin.templatetags.wagtailadmin_tags import locales as locales_tag
-from wagtail.admin.templatetags.wagtailadmin_tags import (
     notification_static,
     timesince_last_update,
     timesince_simple,
 )
-from wagtail.admin.ui.components import Component
+from wagtail.admin.templatetags.wagtailadmin_tags import locales as locales_tag
+from wagtail.coreutils import get_dummy_request
 from wagtail.images.tests.utils import get_test_image_file
-from wagtail.models import Locale
+from wagtail.models import Locale, Page
 from wagtail.test.utils import WagtailTestUtils
+from wagtail.test.utils.template_tests import AdminTemplateTestUtils
 from wagtail.users.models import UserProfile
-from wagtail.utils.deprecation import RemovedInWagtail60Warning
+from wagtail.utils.deprecation import RemovedInWagtail70Warning
 
 
 class TestAvatarTemplateTag(WagtailTestUtils, TestCase):
@@ -67,7 +68,7 @@ class TestAvatarTemplateTag(WagtailTestUtils, TestCase):
         self.assertIn("custom-avatar", url)
 
 
-class TestNotificationStaticTemplateTag(TestCase):
+class TestNotificationStaticTemplateTag(SimpleTestCase):
     @override_settings(STATIC_URL="/static/")
     def test_local_notification_static(self):
         url = notification_static("wagtailadmin/images/email-header.jpg")
@@ -99,10 +100,13 @@ class TestNotificationStaticTemplateTag(TestCase):
         )
 
 
-class TestVersionedStatic(TestCase):
+class TestVersionedStatic(SimpleTestCase):
+    def test_version_hash(self):
+        self.assertEqual(len(VERSION_HASH), 8)
+
     def test_versioned_static(self):
         result = versioned_static("wagtailadmin/js/core.js")
-        self.assertRegex(result, r"^/static/wagtailadmin/js/core.js\?v=(\w+)$")
+        self.assertRegex(result, r"^/static/wagtailadmin/js/core.js\?v=(\w{8})$")
 
     @mock.patch("wagtail.admin.staticfiles.static")
     def test_versioned_static_version_string(self, mock_static):
@@ -120,44 +124,108 @@ class TestVersionedStatic(TestCase):
         self.assertEqual(result, "http://example.org/static/wagtailadmin/js/core.js")
 
 
-@freeze_time("2020-07-01 12:00:00")
-class TestTimesinceTags(TestCase):
+class TestTimesinceTags(SimpleTestCase):
+    # timezone matches TIME_ZONE = "Asia/Tokyo" in tests/settings.py
+    @freeze_time("2020-07-01 12:00:00+09:00")
     def test_timesince_simple(self):
-        now = timezone.now()
+        now = timezone.make_aware(
+            datetime(2020, 7, 1, 12, 0, 0)
+        )  # aware date in Asia/Tokyo
         ts = timesince_simple(now)
         self.assertEqual(ts, "just now")
 
-        ts = timesince_simple(now - timedelta(hours=1, minutes=10))
+        now = timezone.make_aware(
+            datetime(2020, 7, 1, 3, 0, 0), timezone=dt_timezone.utc
+        )  # aware date in UTC
+        ts = timesince_simple(now)
+        self.assertEqual(ts, "just now")
+
+        seventy_minutes_ago = timezone.make_aware(datetime(2020, 7, 1, 10, 50, 0))
+        ts = timesince_simple(seventy_minutes_ago)
         self.assertEqual(ts, "1\xa0hour ago")
 
-        ts = timesince_simple(now - timedelta(weeks=2, hours=1, minutes=10))
+        two_weeks_ago = timezone.make_aware(datetime(2020, 6, 17, 10, 50, 0))
+        ts = timesince_simple(two_weeks_ago)
         self.assertEqual(ts, "2\xa0weeks ago")
 
+    @unittest.skipIf(not settings.USE_TZ, "Test assumes timezone support is active")
+    @freeze_time("2020-07-01 06:00:00+09:00")
     def test_timesince_last_update_today_shows_time(self):
-        dt = timezone.now() - timedelta(hours=1)
-        formatted_time = dt.astimezone(timezone.get_current_timezone()).strftime(
-            "%H:%M"
-        )
-
-        timesince = timesince_last_update(dt)
-        self.assertEqual(timesince, formatted_time)
+        one_hour_ago = timezone.make_aware(
+            datetime(2020, 7, 1, 5, 0, 0)
+        )  # aware date in Asia/Tokyo
+        timesince = timesince_last_update(one_hour_ago)
+        self.assertEqual(timesince, "05:00")
 
         # Check prefix output
-        timesince = timesince_last_update(dt, show_time_prefix=True)
-        self.assertEqual(timesince, "at {}".format(formatted_time))
+        timesince = timesince_last_update(one_hour_ago, show_time_prefix=True)
+        self.assertEqual(timesince, "at 05:00")
 
         # Check user output
-        timesince = timesince_last_update(dt, user_display_name="Gary")
-        self.assertEqual(timesince, "{} by Gary".format(formatted_time))
+        timesince = timesince_last_update(one_hour_ago, user_display_name="Gary")
+        self.assertEqual(timesince, "05:00 by Gary")
 
         # Check user and prefix output
         timesince = timesince_last_update(
-            dt, show_time_prefix=True, user_display_name="Gary"
+            one_hour_ago, show_time_prefix=True, user_display_name="Gary"
         )
-        self.assertEqual(timesince, "at {} by Gary".format(formatted_time))
+        self.assertEqual(timesince, "at 05:00 by Gary")
 
+        one_hour_ago = timezone.make_aware(
+            datetime(2020, 6, 30, 20, 0, 0), timezone=dt_timezone.utc
+        )  # aware date in UTC
+        timesince = timesince_last_update(one_hour_ago)
+        self.assertEqual(timesince, "05:00")
+
+    @unittest.skipIf(settings.USE_TZ, "Test assumes timezone support is disabled")
+    @freeze_time("2020-07-01 06:00:00")
+    def test_timesince_last_update_today_shows_time_without_tz(self):
+        one_hour_ago = datetime(2020, 7, 1, 5, 0, 0)
+        timesince = timesince_last_update(one_hour_ago)
+        self.assertEqual(timesince, "05:00")
+
+        # Check prefix output
+        timesince = timesince_last_update(one_hour_ago, show_time_prefix=True)
+        self.assertEqual(timesince, "at 05:00")
+
+        # Check user output
+        timesince = timesince_last_update(one_hour_ago, user_display_name="Gary")
+        self.assertEqual(timesince, "05:00 by Gary")
+
+        # Check user and prefix output
+        timesince = timesince_last_update(
+            one_hour_ago, show_time_prefix=True, user_display_name="Gary"
+        )
+        self.assertEqual(timesince, "at 05:00 by Gary")
+
+    @unittest.skipIf(not settings.USE_TZ, "Test assumes timezone support is active")
+    @freeze_time("2020-07-01 06:00:00+09:00")
+    def test_timesince_last_update_before_midnight_shows_timeago(self):
+        """
+        If the last update was yesterday in local time, we show "x hours ago" even if it was less
+        than 24 hours ago (and even if it matches today's date in UTC)
+        """
+        eight_hours_ago = timezone.make_aware(
+            datetime(2020, 6, 30, 21, 50, 0)
+        )  # aware date in Asia/Tokyo
+        timesince = timesince_last_update(eight_hours_ago)
+        self.assertEqual(timesince, "8\xa0hours ago")
+
+    @unittest.skipIf(settings.USE_TZ, "Test assumes timezone support is disabled")
+    @freeze_time("2020-07-01 06:00:00")
+    def test_timesince_last_update_before_midnight_shows_timeago_without_tz(self):
+        """
+        If the last update was yesterday in local time, we show "x hours ago" even if it was less
+        than 24 hours ago
+        """
+        eight_hours_ago = datetime(2020, 6, 30, 21, 50, 0)
+        timesince = timesince_last_update(eight_hours_ago)
+        self.assertEqual(timesince, "8\xa0hours ago")
+
+    @unittest.skipIf(not settings.USE_TZ, "Test assumes timezone support is active")
+    @freeze_time("2020-07-01 12:00:00+09:00")
     def test_timesince_last_update_before_today_shows_timeago(self):
-        dt = timezone.now() - timedelta(weeks=1, days=2)
+        dt = timezone.make_aware(datetime(2020, 6, 22, 12, 0, 0))
 
         # 1) use_shorthand=False
 
@@ -194,6 +262,48 @@ class TestTimesinceTags(TestCase):
             timesince,
         )
 
+    @unittest.skipIf(settings.USE_TZ, "Test assumes timezone support is disabled")
+    @freeze_time("2020-07-01 12:00:00")
+    def test_timesince_last_update_before_today_shows_timeago_without_tz(self):
+        dt = timezone.make_aware(datetime(2020, 6, 22, 12, 0, 0))
+
+        # 1) use_shorthand=False
+
+        timesince = timesince_last_update(dt, use_shorthand=False)
+        self.assertEqual(timesince, "1\xa0week, 2\xa0days ago")
+        # The prefix is not used, if the date is older than the current day.
+        self.assertEqual(
+            timesince_last_update(dt, use_shorthand=False, show_time_prefix=True),
+            timesince,
+        )
+
+        # Check user output
+        timesince = timesince_last_update(
+            dt, use_shorthand=False, user_display_name="Gary"
+        )
+        self.assertEqual(timesince, "1\xa0week, 2\xa0days ago by Gary")
+        self.assertEqual(
+            timesince_last_update(
+                dt, use_shorthand=False, user_display_name="Gary", show_time_prefix=True
+            ),
+            timesince,
+        )
+
+        # 2) use_shorthand=True
+
+        timesince = timesince_last_update(dt)
+        self.assertEqual(timesince, "1\xa0week ago")
+        self.assertEqual(timesince_last_update(dt, show_time_prefix=True), timesince)
+
+        timesince = timesince_last_update(dt, user_display_name="Gary")
+        self.assertEqual(timesince, "1\xa0week ago by Gary")
+        self.assertEqual(
+            timesince_last_update(dt, user_display_name="Gary", show_time_prefix=True),
+            timesince,
+        )
+
+    @override_settings(USE_TZ=False)
+    @freeze_time("2020-07-01 12:00:00")
     def test_human_readable_date(self):
         now = timezone.now()
         template = """
@@ -208,43 +318,42 @@ class TestTimesinceTags(TestCase):
             Context({"date": now - timedelta(hours=1, minutes=10)})
         )
         self.assertIn("1\xa0hour ago", html)
+        self.assertIn('data-w-tooltip-placement-value="top"', html)
+        self.assertIn('data-w-tooltip-content-value="July 1, 2020, 10:50 a.m."', html)
 
+    @override_settings(USE_TZ=False)
+    @freeze_time("2020-07-01 12:00:00")
+    def test_human_readable_date_with_date_object(self):
+        today = timezone.now().date()
+        template = """
+            {% load wagtailadmin_tags %}
+            {% human_readable_date date %}
+        """
 
-class TestComponentTag(TestCase):
-    def test_passing_context_to_component(self):
-        class MyComponent(Component):
-            def render_html(self, parent_context):
-                return format_html(
-                    "<h1>{} was here</h1>", parent_context.get("first_name")
-                )
+        html = Template(template).render(Context({"date": today}))
+        self.assertIn("12\xa0hours ago", html)
 
-        template = Template(
-            "{% load wagtailadmin_tags %}{% with first_name='Kilroy' %}{% component my_component %}{% endwith %}"
+        html = Template(template).render(
+            Context({"date": today - timedelta(days=1, hours=1)})
         )
-        html = template.render(Context({"my_component": MyComponent()}))
-        self.assertEqual(html, "<h1>Kilroy was here</h1>")
+        self.assertIn("1\xa0day ago", html)
+        self.assertIn('data-w-tooltip-placement-value="top"', html)
+        self.assertIn('data-w-tooltip-content-value="June 30, 2020"', html)
 
-    def test_component_escapes_unsafe_strings(self):
-        class MyComponent(Component):
-            def render_html(self, parent_context):
-                return "Look, I'm running with scissors! 8< 8< 8<"
+    @freeze_time("2020-07-01 12:00:00")
+    def test_human_readable_date_with_args(self):
+        now = timezone.now()
+        template = """
+            {% load wagtailadmin_tags %}
+            {% human_readable_date date "The clock ticked" "bottom" %}
+        """
 
-        template = Template(
-            "{% load wagtailadmin_tags %}<h1>{% component my_component %}</h1>"
+        html = Template(template).render(Context({"date": now}))
+        self.assertIn(
+            '<span class="w-human-readable-date__description">The clock ticked</span>',
+            html,
         )
-        html = template.render(Context({"my_component": MyComponent()}))
-        self.assertEqual(
-            html, "<h1>Look, I&#x27;m running with scissors! 8&lt; 8&lt; 8&lt;</h1>"
-        )
-
-    def test_error_on_rendering_non_component(self):
-        template = Template(
-            "{% load wagtailadmin_tags %}<h1>{% component my_component %}</h1>"
-        )
-
-        with self.assertRaises(ValueError) as cm:
-            template.render(Context({"my_component": "hello"}))
-        self.assertEqual(str(cm.exception), "Cannot render 'hello' as a component")
+        self.assertIn('data-w-tooltip-placement-value="bottom"', html)
 
 
 @override_settings(
@@ -253,7 +362,8 @@ class TestComponentTag(TestCase):
         ("fr", "French"),
         ("ro", "Romanian"),
         ("ru", "Russian"),
-    ]
+    ],
+    CACHES={"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}},
 )
 class TestInternationalisationTags(TestCase):
     def setUp(self):
@@ -270,7 +380,12 @@ class TestInternationalisationTags(TestCase):
             self.assertTrue(i18n_enabled())
 
     def test_locales(self):
-        locales_output = locales_tag()
+        with self.assertWarnsMessage(
+            RemovedInWagtail70Warning,
+            "The `locales` template tag will be removed in a future release.",
+        ):
+            locales_output = locales_tag()
+
         self.assertIsInstance(locales_output, str)
         self.assertEqual(
             json.loads(locales_output),
@@ -293,8 +408,22 @@ class TestInternationalisationTags(TestCase):
         with self.assertNumQueries(0):
             self.assertIsNone(locale_label_from_id(self.locale_ids[-1] + 100), None)
 
+    def test_js_translation_strings(self):
+        template = """
+            {% load wagtailadmin_tags %}
+            {% js_translation_strings %}
+        """
 
-class ComponentTest(TestCase):
+        expected = json.dumps(get_js_translation_strings())
+
+        with self.assertWarnsMessage(
+            RemovedInWagtail70Warning,
+            "The `js_translation_strings` template tag will be removed in a future release.",
+        ):
+            self.assertHTMLEqual(expected, Template(template).render(Context()))
+
+
+class ComponentTest(SimpleTestCase):
     def test_render_block_component(self):
         template = """
             {% load wagtailadmin_tags %}
@@ -364,7 +493,7 @@ class ComponentTest(TestCase):
         self.assertHTMLEqual(expected, Template(template).render(Context()))
 
 
-class FragmentTagTest(TestCase):
+class FragmentTagTest(SimpleTestCase):
     def test_basic(self):
         context = Context({})
 
@@ -416,7 +545,7 @@ class FragmentTagTest(TestCase):
         self.assertHTMLEqual(expected, Template(template).render(context))
 
 
-class ClassnamesTagTest(TestCase):
+class ClassnamesTagTest(SimpleTestCase):
     def test_with_single_arg(self):
         template = """
             {% load wagtailadmin_tags %}
@@ -485,8 +614,30 @@ class ClassnamesTagTest(TestCase):
 
         self.assertEqual(expected.strip(), actual.strip())
 
+    def test_with_nested_lists(self):
+        context = Context(
+            {
+                "nested": ["button-add", "button-base "],
+                "has_falsey": ["", False, [], {}],
+                "simple": " wagtail ",
+            }
+        )
 
-class IconTagTest(TestCase):
+        template = """
+            {% load wagtailadmin_tags %}
+            <button class="{% classnames nested "add-second " has_falsey simple %}">Hello!</button>
+        """
+
+        expected = """
+            <button class="button-add button-base add-second wagtail">Hello!</button>
+        """
+
+        actual = Template(template).render(context)
+
+        self.assertEqual(expected.strip(), actual.strip())
+
+
+class IconTagTest(SimpleTestCase):
     def test_basic(self):
         template = """
             {% load wagtailadmin_tags %}
@@ -523,66 +674,8 @@ class IconTagTest(TestCase):
 
         self.assertHTMLEqual(expected, Template(template).render(Context()))
 
-    def test_with_classes_obsolete_keyword(self):
-        template = """
-            {% load wagtailadmin_tags %}
-            {% icon name="doc-empty" class_name="myclass" %}
-        """
 
-        expected = """
-            <svg aria-hidden="true" class="icon icon-doc-empty myclass"><use href="#icon-doc-empty"></svg>
-        """
-
-        with self.assertWarnsMessage(
-            RemovedInWagtail60Warning,
-            (
-                "Icon template tag `class_name` has been renamed to `classname`, "
-                "please adopt the new usage instead. Replace "
-                '`{% icon ... class_name="myclass" %}` with '
-                '`{% icon ... classname="myclass" %}`'
-            ),
-        ):
-            self.assertHTMLEqual(expected, Template(template).render(Context()))
-
-    def test_with_deprecated_icon(self):
-        template = """
-            {% load wagtailadmin_tags %}
-            {% icon name="reset" %}
-        """
-
-        expected = """
-            <svg aria-hidden="true" class="icon icon-reset icon"><use href="#icon-reset"></svg>
-        """
-
-        with self.assertWarnsMessage(
-            RemovedInWagtail60Warning,
-            ("Icon `reset` is deprecated and will be removed in a future release."),
-        ):
-            self.assertHTMLEqual(expected, Template(template).render(Context()))
-
-    def test_with_renamed_icon(self):
-        template = """
-            {% load wagtailadmin_tags %}
-            {% icon name="download-alt" %}
-        """
-
-        expected = """
-            <svg aria-hidden="true" class="icon icon-download icon"><use href="#icon-download"></svg>
-        """
-
-        with self.assertWarnsMessage(
-            RemovedInWagtail60Warning,
-            (
-                "Icon `download-alt` has been renamed to `download`, "
-                "please adopt the new usage instead. Replace "
-                '`{% icon name="download-alt" ... %}` with '
-                '`{% icon name="download" ... %}'
-            ),
-        ):
-            self.assertHTMLEqual(expected, Template(template).render(Context()))
-
-
-class StatusTagTest(TestCase):
+class StatusTagTest(SimpleTestCase):
     def test_render_block_component_span_variations(self):
         template = """
             {% load wagtailadmin_tags i18n %}
@@ -596,7 +689,7 @@ class StatusTagTest(TestCase):
         expected = """
             <span class="w-status w-status--primary">live</span>
             <span class="w-status">live</span>
-            <span class="w-status w-status--primary"><span class="visuallyhidden">hidden translated label</span>live</span>
+            <span class="w-status w-status--primary"><span class="w-sr-only">hidden translated label</span>live</span>
             <span class="w-status"></span>
         """
 
@@ -615,7 +708,7 @@ class StatusTagTest(TestCase):
 
         expected = """
             <a href="/test-url/" class="w-status w-status--primary" title="title" target="_blank" rel="noreferrer">
-                <span class="visuallyhidden">hidden label</span>
+                <span class="w-sr-only">hidden label</span>
                 live
             </a>
             <a href="/test-url/" class="w-status w-status--primary" title="title">
@@ -644,13 +737,315 @@ class StatusTagTest(TestCase):
 
         expected = """
             <a href="/test-url/" class="w-status w-status--primary" title="title" target="_blank" rel="noreferrer">
-                <span class="visuallyhidden">hidden label</span>
+                <span class="w-sr-only">hidden label</span>
                 live
             </a>
             <span class="w-status w-status--primary" data-example='present'>
-                <span class="visuallyhidden">hidden label</span>
+                <span class="w-sr-only">hidden label</span>
                 live
             </span>
         """
 
         self.assertHTMLEqual(expected, Template(template).render(Context()))
+
+
+class BreadcrumbsTagTest(AdminTemplateTestUtils, WagtailTestUtils, SimpleTestCase):
+    base_breadcrumb_items = []
+    template = """
+        {% load wagtailadmin_tags %}
+        {% breadcrumbs items %}
+    """
+
+    def test_single_item(self):
+        items = [{"label": "Something", "url": "/admin/something/"}]
+        rendered = Template(self.template).render(Context({"items": items}))
+        self.assertBreadcrumbsItemsRendered(items, rendered)
+        # Without specifying is_expanded=False, the breadcrumbs should not be
+        # collapsible anyway, so it is not controlled by Stimulus
+        soup = self.get_soup(rendered)
+        breadcrumbs = soup.select_one(".w-breadcrumbs")
+        self.assertIsNotNone(breadcrumbs)
+        self.assertIsNone(breadcrumbs.get("data-controller"))
+
+    def test_trailing_no_url(self):
+        items = [
+            {"label": "Snippets", "url": "/admin/snippets/"},
+            {"label": "People", "url": "/admin/snippets/people/"},
+            {"label": "New: Person"},
+        ]
+        rendered = Template(self.template).render(Context({"items": items}))
+        self.assertBreadcrumbsItemsRendered(items, rendered)
+
+    def test_not_is_expanded(self):
+        items = [
+            {"label": "Snippets", "url": "/admin/snippets/"},
+            {"label": "People", "url": "/admin/snippets/people/"},
+            {"label": "Muddy Waters", "url": "/admin/snippets/people/1/edit/"},
+        ]
+        rendered = Template(self.template).render(Context({"items": items}))
+        self.assertBreadcrumbsItemsRendered(items, rendered)
+
+        soup = self.get_soup(rendered)
+        controller = soup.select_one('[data-controller="w-breadcrumbs"]')
+        toggle_button = soup.select_one('button[data-w-breadcrumbs-target="toggle"]')
+        self.assertIsNotNone(controller)
+        self.assertIsNotNone(toggle_button)
+        # If is_expanded=False (the default), the breadcrumbs should be
+        # collapsible via Stimulus
+        soup = self.get_soup(rendered)
+        breadcrumbs = soup.select_one(".w-breadcrumbs")
+        self.assertIsNotNone(breadcrumbs)
+        self.assertEqual(breadcrumbs.get("data-controller"), "w-breadcrumbs")
+
+    def test_is_expanded(self):
+        template = """
+            {% load wagtailadmin_tags %}
+            {% breadcrumbs items is_expanded=True %}
+        """
+        items = [
+            {"label": "Snippets", "url": "/admin/snippets/"},
+            {"label": "People", "url": "/admin/snippets/people/"},
+            {"label": "Muddy Waters", "url": "/admin/snippets/people/1/edit/"},
+        ]
+        rendered = Template(template).render(Context({"items": items}))
+        self.assertBreadcrumbsItemsRendered(items, rendered)
+
+        soup = self.get_soup(rendered)
+        controller = soup.select_one('[data-controller="w-breadcrumbs"]')
+        toggle_button = soup.select_one('button[data-w-breadcrumbs-target="toggle"]')
+        self.assertIsNone(controller)
+        self.assertIsNone(toggle_button)
+        # If is_expanded=True, the breadcrumbs should not be collapsible, so it
+        # is not controlled by Stimulus
+        soup = self.get_soup(rendered)
+        breadcrumbs = soup.select_one(".w-breadcrumbs")
+        self.assertIsNotNone(breadcrumbs)
+        self.assertIsNone(breadcrumbs.get("data-controller"))
+
+    def test_classname(self):
+        template = """
+            {% load wagtailadmin_tags %}
+            {% breadcrumbs items classname="my-class" %}
+        """
+        items = [{"label": "Home", "url": "/admin/"}]
+        rendered = Template(template).render(Context({"items": items}))
+        self.assertBreadcrumbsItemsRendered(items, rendered)
+
+        soup = self.get_soup(rendered)
+        div = soup.select_one("div.w-breadcrumbs")
+        self.assertIsNotNone(div)
+        self.assertIn("my-class", div["class"])
+
+    def test_icon_name(self):
+        template = """
+            {% load wagtailadmin_tags %}
+            {% breadcrumbs items icon_name="site" %}
+        """
+        items = [
+            {"label": "Home", "url": "/admin/"},
+            {"label": "Something", "url": "/admin/something/"},
+        ]
+        rendered = Template(template).render(Context({"items": items}))
+        self.assertBreadcrumbsItemsRendered(items, rendered)
+
+        soup = self.get_soup(rendered)
+        invalid_icons = soup.select("ol li:not(:last-child) svg use[href='#icon-site']")
+        self.assertEqual(len(invalid_icons), 0)
+        icon = soup.select_one("ol li:last-child svg use[href='#icon-site']")
+        self.assertIsNotNone(icon)
+
+
+class PageBreadcrumbsTagTest(AdminTemplateTestUtils, WagtailTestUtils, TestCase):
+    fixtures = ["test.json"]
+    base_breadcrumb_items = []
+
+    def setUp(self):
+        self.request = get_dummy_request()
+        self.user = self.login()
+        self.request.user = self.user
+
+    def test_root_single_item(self):
+        template = """
+            {% load wagtailadmin_tags %}
+            {% page_breadcrumbs page 'wagtailadmin_explore' url_root_name='wagtailadmin_explore_root' %}
+        """
+        page = Page.objects.get(id=1)
+        items = [{"label": "Root", "url": "/admin/pages/"}]
+        rendered = Template(template).render(
+            Context({"page": page, "request": self.request})
+        )
+        self.assertBreadcrumbsItemsRendered(items, rendered)
+        # Without specifying is_expanded=False, the breadcrumbs should not be
+        # collapsible anyway, so it is not controlled by Stimulus
+        soup = self.get_soup(rendered)
+        breadcrumbs = soup.select_one(".w-breadcrumbs")
+        self.assertIsNotNone(breadcrumbs)
+        self.assertIsNone(breadcrumbs.get("data-controller"))
+
+    def test_url_name(self):
+        template = """
+            {% load wagtailadmin_tags %}
+            {% page_breadcrumbs page 'wagtailadmin_choose_page_child' %}
+        """
+        page = Page.objects.get(id=15)
+        items = [
+            {
+                "label": "Root",
+                "url": "/admin/choose-page/1/",
+            },
+            {
+                "label": "Welcome to the Wagtail test site!",
+                "url": "/admin/choose-page/2/",
+            },
+            {
+                "label": "Events",
+                "url": "/admin/choose-page/3/",
+            },
+            {
+                "label": "Businessy events",
+                "url": "/admin/choose-page/15/",
+            },
+        ]
+        rendered = Template(template).render(
+            Context({"page": page, "request": self.request})
+        )
+        self.assertBreadcrumbsItemsRendered(items, rendered)
+
+    def test_not_include_self(self):
+        template = """
+            {% load wagtailadmin_tags %}
+            {% page_breadcrumbs page 'wagtailadmin_explore' url_root_name='wagtailadmin_explore_root' include_self=False %}
+        """
+        page = Page.objects.get(id=15)
+        items = [
+            {"label": "Root", "url": "/admin/pages/"},
+            {"label": "Welcome to the Wagtail test site!", "url": "/admin/pages/2/"},
+            {"label": "Events", "url": "/admin/pages/3/"},
+        ]
+        rendered = Template(template).render(
+            Context({"page": page, "request": self.request})
+        )
+        self.assertBreadcrumbsItemsRendered(items, rendered)
+
+    def test_not_is_expanded(self):
+        template = """
+            {% load wagtailadmin_tags %}
+            {% page_breadcrumbs page 'wagtailadmin_explore' url_root_name='wagtailadmin_explore_root' %}
+        """
+        page = Page.objects.get(id=15)
+        items = [
+            {"label": "Root", "url": "/admin/pages/"},
+            {"label": "Welcome to the Wagtail test site!", "url": "/admin/pages/2/"},
+            {"label": "Events", "url": "/admin/pages/3/"},
+            {"label": "Businessy events", "url": "/admin/pages/15/"},
+        ]
+        rendered = Template(template).render(
+            Context({"page": page, "request": self.request})
+        )
+        self.assertBreadcrumbsItemsRendered(items, rendered)
+        # If is_expanded=False, the breadcrumbs should be collapsible via Stimulus
+        soup = self.get_soup(rendered)
+        breadcrumbs = soup.select_one(".w-breadcrumbs")
+        self.assertIsNotNone(breadcrumbs)
+        self.assertEqual(breadcrumbs.get("data-controller"), "w-breadcrumbs")
+
+    def test_is_expanded(self):
+        template = """
+            {% load wagtailadmin_tags %}
+            {% page_breadcrumbs page 'wagtailadmin_explore' url_root_name='wagtailadmin_explore_root' is_expanded=True %}
+        """
+        page = Page.objects.get(id=15)
+        items = [
+            {"label": "Root", "url": "/admin/pages/"},
+            {"label": "Welcome to the Wagtail test site!", "url": "/admin/pages/2/"},
+            {"label": "Events", "url": "/admin/pages/3/"},
+            {"label": "Businessy events", "url": "/admin/pages/15/"},
+        ]
+        rendered = Template(template).render(
+            Context({"page": page, "request": self.request})
+        )
+        self.assertBreadcrumbsItemsRendered(items, rendered)
+        # If is_expanded=True, the breadcrumbs should not be collapsible, so it
+        # is not controlled by Stimulus
+        soup = self.get_soup(rendered)
+        breadcrumbs = soup.select_one(".w-breadcrumbs")
+        self.assertIsNotNone(breadcrumbs)
+        self.assertIsNone(breadcrumbs.get("data-controller"))
+
+    def test_querystring_value(self):
+        template = """
+            {% load wagtailadmin_tags %}
+            {% page_breadcrumbs page 'wagtailadmin_explore' url_root_name='wagtailadmin_explore_root' querystring_value='?site=2&has_child_pages=true' %}
+        """
+        page = Page.objects.get(id=15)
+        params = "?site=2&has_child_pages=true"
+        items = [
+            {"label": "Root", "url": f"/admin/pages/{params}"},
+            {
+                "label": "Welcome to the Wagtail test site!",
+                "url": f"/admin/pages/2/{params}",
+            },
+            {"label": "Events", "url": f"/admin/pages/3/{params}"},
+            {"label": "Businessy events", "url": f"/admin/pages/15/{params}"},
+        ]
+        rendered = Template(template).render(
+            Context({"page": page, "request": self.request})
+        )
+        self.assertBreadcrumbsItemsRendered(items, rendered)
+
+    def test_trailing_breadcrumb_title(self):
+        template = """
+            {% load wagtailadmin_tags %}
+            {% page_breadcrumbs page 'wagtailadmin_explore' url_root_name='wagtailadmin_explore_root' trailing_breadcrumb_title='New: Simple Page' %}
+        """
+        page = Page.objects.get(id=15)
+        items = [
+            {"label": "Root", "url": "/admin/pages/"},
+            {"label": "Welcome to the Wagtail test site!", "url": "/admin/pages/2/"},
+            {"label": "Events", "url": "/admin/pages/3/"},
+            {"label": "Businessy events", "url": "/admin/pages/15/"},
+            {"label": "New: Simple Page"},
+        ]
+        rendered = Template(template).render(
+            Context({"page": page, "request": self.request})
+        )
+        self.assertBreadcrumbsItemsRendered(items, rendered)
+
+    def test_classname(self):
+        template = """
+            {% load wagtailadmin_tags %}
+            {% page_breadcrumbs page 'wagtailadmin_choose_page_child' classname='my-class' %}
+        """
+        page = Page.objects.get(id=1)
+        items = [{"label": "Root", "url": "/admin/choose-page/1/"}]
+        rendered = Template(template).render(
+            Context({"page": page, "request": self.request})
+        )
+        self.assertBreadcrumbsItemsRendered(items, rendered)
+
+        soup = self.get_soup(rendered)
+        div = soup.select_one("div.w-breadcrumbs")
+        self.assertIsNotNone(div)
+        self.assertIn("my-class", div["class"])
+
+    def test_icon_name(self):
+        template = """
+            {% load wagtailadmin_tags %}
+            {% page_breadcrumbs page 'wagtailadmin_explore' icon_name='site' %}
+        """
+        page = Page.objects.get(id=3)
+        items = [
+            {"label": "Root", "url": "/admin/pages/1/"},
+            {"label": "Welcome to the Wagtail test site!", "url": "/admin/pages/2/"},
+            {"label": "Events", "url": "/admin/pages/3/"},
+        ]
+        rendered = Template(template).render(
+            Context({"page": page, "request": self.request})
+        )
+        self.assertBreadcrumbsItemsRendered(items, rendered)
+
+        soup = self.get_soup(rendered)
+        invalid_icons = soup.select("ol li:not(:last-child) svg use[href='#icon-site']")
+        self.assertEqual(len(invalid_icons), 0)
+        icon = soup.select_one("ol li:last-child svg use[href='#icon-site']")
+        self.assertIsNotNone(icon)

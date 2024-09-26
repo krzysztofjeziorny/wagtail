@@ -2,6 +2,7 @@ import json
 
 from django.conf import settings
 from django.contrib.admin.utils import quote
+from django.contrib.contenttypes.models import ContentType
 from django.db import models, transaction
 from django.forms import Media
 from django.shortcuts import get_object_or_404
@@ -16,9 +17,11 @@ from django.utils.translation import gettext as _
 
 from wagtail import hooks
 from wagtail.admin import messages
+from wagtail.admin.models import EditingSession
 from wagtail.admin.templatetags.wagtailadmin_tags import user_display_name
+from wagtail.admin.ui.editing_sessions import EditingSessionsModule
 from wagtail.admin.ui.tables import TitleColumn
-from wagtail.admin.utils import get_latest_str
+from wagtail.admin.utils import get_latest_str, set_query_params
 from wagtail.locks import BasicLock, ScheduledForPublishLock, WorkflowLock
 from wagtail.log_actions import log
 from wagtail.log_actions import registry as log_registry
@@ -26,11 +29,13 @@ from wagtail.models import (
     DraftStateMixin,
     Locale,
     LockableMixin,
+    PreviewableMixin,
     RevisionMixin,
     TranslatableMixin,
     WorkflowMixin,
     WorkflowState,
 )
+from wagtail.utils.timestamps import render_timestamp
 
 
 class HookResponseMixin:
@@ -99,16 +104,20 @@ class BeforeAfterHookMixin(HookResponseMixin):
 
 
 class LocaleMixin:
-    def setup(self, request, *args, **kwargs):
-        super().setup(request, *args, **kwargs)
-        self.locale = self.get_locale()
+    @cached_property
+    def locale(self):
+        return self.get_locale()
+
+    @cached_property
+    def translations(self):
+        return self.get_translations() if self.locale else []
 
     def get_locale(self):
-        i18n_enabled = getattr(settings, "WAGTAIL_I18N_ENABLED", False)
-        if hasattr(self, "model") and self.model:
-            i18n_enabled = i18n_enabled and issubclass(self.model, TranslatableMixin)
+        if not getattr(self, "model", None):
+            return None
 
-        if not i18n_enabled:
+        i18n_enabled = getattr(settings, "WAGTAIL_I18N_ENABLED", False)
+        if not i18n_enabled or not issubclass(self.model, TranslatableMixin):
             return None
 
         if hasattr(self, "object") and self.object:
@@ -119,13 +128,23 @@ class LocaleMixin:
             return get_object_or_404(Locale, language_code=selected_locale)
         return Locale.get_default()
 
+    def get_translations(self):
+        # Return a list of {"locale": Locale, "url": str} objects for available locales
+        return []
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         if not self.locale:
             return context
 
         context["locale"] = self.locale
+        context["translations"] = self.translations
         return context
+
+    def _set_locale_query_param(self, url, locale=None):
+        if not (locale := locale or self.locale):
+            return url
+        return set_query_params(url, {"locale": locale.language_code})
 
 
 class PanelMixin:
@@ -207,9 +226,11 @@ class CreateEditViewOptionalFeaturesMixin:
     """
 
     view_name = "create"
+    preview_url_name = None
     lock_url_name = None
     unlock_url_name = None
     revisions_unschedule_url_name = None
+    revisions_compare_url_name = None
     workflow_history_url_name = None
     confirm_workflow_cancellation_url_name = None
 
@@ -219,6 +240,7 @@ class CreateEditViewOptionalFeaturesMixin:
         self.args = args
         self.kwargs = kwargs
 
+        self.preview_enabled = self.model and issubclass(self.model, PreviewableMixin)
         self.revision_enabled = self.model and issubclass(self.model, RevisionMixin)
         self.draftstate_enabled = self.model and issubclass(self.model, DraftStateMixin)
         self.locking_enabled = (
@@ -268,14 +290,19 @@ class CreateEditViewOptionalFeaturesMixin:
 
     def user_has_permission(self, permission):
         user = self.request.user
-        if user.is_superuser:
-            return True
-
         # Workflow lock/unlock methods take precedence before the base
         # "lock" and "unlock" permissions -- see PagePermissionTester for reference
         if permission == "lock" and self.current_workflow_task:
+            # Follow the logic in PagePermissionTester.user_can_lock()
+            # (superusers can always lock)
+            if user.is_superuser:
+                return True
             return self.current_workflow_task.user_can_lock(self.object, user)
         if permission == "unlock":
+            # Follow the logic in PagePermissionTester.user_can_unlock()
+            # (superusers can always unlock)
+            if user.is_superuser:
+                return True
             # Allow unlocking even if the user does not have the 'unlock' permission
             # if they are the user who locked the object
             if self.object.locked_by_id == user.pk:
@@ -365,6 +392,12 @@ class CreateEditViewOptionalFeaturesMixin:
             return None
         return reverse(self.unlock_url_name, args=[quote(self.object.pk)])
 
+    def get_preview_url(self):
+        if not self.preview_enabled or not self.preview_url_name:
+            return None
+        args = [] if self.view_name == "create" else [quote(self.object.pk)]
+        return reverse(self.preview_url_name, args=args)
+
     def get_workflow_history_url(self):
         if not self.workflow_enabled or not self.workflow_history_url_name:
             return None
@@ -451,7 +484,9 @@ class CreateEditViewOptionalFeaturesMixin:
         and returns the new object. Override this to implement custom save logic.
         """
         if self.draftstate_enabled:
-            instance = self.form.save(commit=False)
+            instance = self.form.save(
+                commit=self.view_name == "edit" and not self.object.live
+            )
 
             # If DraftStateMixin is applied, only save to the database in CreateView,
             # and make sure the live field is set to False.
@@ -565,7 +600,7 @@ class CreateEditViewOptionalFeaturesMixin:
             self.locked_for_user = self.lock and self.lock.for_user(self.request.user)
         return super().form_invalid(form)
 
-    def get_live_last_updated_info(self):
+    def get_last_updated_info(self):
         # Create view doesn't have last updated info
         if self.view_name == "create":
             return None
@@ -650,13 +685,43 @@ class CreateEditViewOptionalFeaturesMixin:
 
         return context
 
+    def get_editing_sessions(self):
+        if self.view_name == "create":
+            return None
+        EditingSession.cleanup()
+        content_type = ContentType.objects.get_for_model(self.model)
+        session = EditingSession.objects.create(
+            user=self.request.user,
+            content_type=content_type,
+            object_id=self.object.pk,
+            last_seen_at=timezone.now(),
+        )
+        revision_id = self.object.latest_revision_id if self.revision_enabled else None
+        return EditingSessionsModule(
+            session,
+            reverse(
+                "wagtailadmin_editing_sessions:ping",
+                args=(
+                    self.model._meta.app_label,
+                    self.model._meta.model_name,
+                    quote(self.object.pk),
+                    session.id,
+                ),
+            ),
+            reverse(
+                "wagtailadmin_editing_sessions:release",
+                args=(session.id,),
+            ),
+            [],
+            revision_id,
+        )
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context.update(self.get_lock_context())
         context["revision_enabled"] = self.revision_enabled
         context["draftstate_enabled"] = self.draftstate_enabled
         context["workflow_enabled"] = self.workflow_enabled
-        context["live_last_updated_info"] = self.get_live_last_updated_info()
         context["workflow_history_url"] = self.get_workflow_history_url()
         context[
             "confirm_workflow_cancellation_url"
@@ -664,6 +729,8 @@ class CreateEditViewOptionalFeaturesMixin:
         context["publishing_will_cancel_workflow"] = getattr(
             settings, "WAGTAIL_WORKFLOW_CANCEL_ON_PUBLISH", True
         ) and bool(self.workflow_tasks)
+        context["revisions_compare_url_name"] = self.revisions_compare_url_name
+        context["editing_sessions"] = self.get_editing_sessions()
         return context
 
     def post(self, request, *args, **kwargs):
@@ -702,7 +769,7 @@ class RevisionsRevertMixin:
         )
         message_data = {
             "model_name": capfirst(self.model._meta.verbose_name),
-            "created_at": self.revision.created_at.strftime("%d %b %Y %H:%M"),
+            "created_at": render_timestamp(self.revision.created_at),
             "user": user_avatar,
         }
         message = mark_safe(message_string % message_data)
@@ -717,7 +784,7 @@ class RevisionsRevertMixin:
         return self.revision.as_object()
 
     def save_instance(self):
-        commit = not issubclass(self.model, DraftStateMixin)
+        commit = not issubclass(self.model, DraftStateMixin) or not self.object.live
         instance = self.form.save(commit=commit)
 
         self.has_content_changes = self.form.has_changed()
@@ -747,7 +814,7 @@ class RevisionsRevertMixin:
         return message % {
             "model_name": capfirst(self.model._meta.verbose_name),
             "object": self.object,
-            "timestamp": self.revision.created_at.strftime("%d %b %Y %H:%M"),
+            "timestamp": render_timestamp(self.revision.created_at),
         }
 
     def get_context_data(self, **kwargs):

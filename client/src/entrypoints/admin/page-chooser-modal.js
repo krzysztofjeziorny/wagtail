@@ -1,8 +1,5 @@
 import $ from 'jquery';
 import { ChooserModal } from '../../includes/chooserModal';
-import { initTooltips } from '../../includes/initTooltips';
-
-/* global wagtail */
 
 const PAGE_CHOOSER_MODAL_ONLOAD_HANDLERS = {
   browse(modal, jsonData) {
@@ -13,11 +10,9 @@ const PAGE_CHOOSER_MODAL_ONLOAD_HANDLERS = {
       return false;
     });
 
-    /* Initialize dropdowns */
-    wagtail.ui.initDropDowns();
     /* Set up dropdown links to open in the modal */
     // eslint-disable-next-line func-names
-    $('.c-dropdown__item .u-link', modal.body).on('click', function () {
+    $('[data-locale-selector-link]', modal.body).on('click', function () {
       modal.loadUrl(this.href);
       return false;
     });
@@ -88,7 +83,7 @@ const PAGE_CHOOSER_MODAL_ONLOAD_HANDLERS = {
       /* pagination links within search results should be AJAX-fetched
       and the result loaded into .page-results (and ajaxified) */
       $(
-        '.page-results a.navigate-pages, .page-results [data-breadcrumb-item] a',
+        '.page-results a.navigate-pages, .page-results [data-w-breadcrumbs-target~="content"] a',
         modal.body,
       ).on('click', function handleLinkClick() {
         $('.page-results', modal.body).load(this.href, ajaxifySearchResults);
@@ -115,7 +110,7 @@ const PAGE_CHOOSER_MODAL_ONLOAD_HANDLERS = {
     function ajaxifyBrowseResults() {
       /* Set up page navigation links to open in the modal */
       $(
-        '.page-results a.navigate-pages, .page-results [data-breadcrumb-item] a',
+        '.page-results a.navigate-pages, .page-results [data-w-breadcrumbs-target~="content"] a',
         modal.body,
       ).on('click', function handleLinkClick() {
         modal.loadUrl(this.href);
@@ -133,12 +128,10 @@ const PAGE_CHOOSER_MODAL_ONLOAD_HANDLERS = {
         return false;
       });
       // eslint-disable-next-line func-names
-      $('.c-dropdown__item .u-link', modal.body).on('click', function () {
+      $('[data-locale-selector-link]', modal.body).on('click', function () {
         modal.loadUrl(this.href);
         return false;
       });
-
-      wagtail.ui.initDropDowns();
 
       updateMultipleChoiceSubmitEnabledState();
       $('[data-multiple-choice-select]', modal.body).on('change', () => {
@@ -146,7 +139,6 @@ const PAGE_CHOOSER_MODAL_ONLOAD_HANDLERS = {
       });
     }
     ajaxifyBrowseResults();
-    initTooltips();
 
     /*
     Focus on the search box when opening the modal.

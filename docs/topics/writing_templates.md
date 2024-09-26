@@ -3,16 +3,16 @@
 # Writing templates
 
 Wagtail uses Django's templating language. For developers new to Django, start with Django's own template documentation:
-[](django:topics/templates)
+[](inv:django#topics/templates)
 
 Python programmers new to Django/Wagtail may prefer more technical documentation:
-[](django:ref/templates/api)
+[](inv:django#ref/templates/api)
 
 You should be familiar with Django templating basics before continuing with this documentation.
 
 ## Templates
 
-Every type of page or "content type" in Wagtail is defined as a "model" in a file called `models.py`. If your site has a blog, you might have a `BlogPage` model and another called `BlogPageListing`. The names of the models are up to the Django developer.
+Every type of page or "content-type" in Wagtail is defined as a "model" in a file called `models.py`. If your site has a blog, you might have a `BlogPage` model and another called `BlogPageListing`. The names of the models are up to the Django developer.
 
 For each page model in `models.py`, Wagtail assumes an HTML template file exists of (almost) the same name. The Front End developer may need to create these templates themselves by referring to `models.py` to infer template names from the models defined therein.
 
@@ -29,7 +29,7 @@ name_of_project/
         models.py
 ```
 
-For more information, see the Django documentation for the [application directories template loader](django:ref/templates/api).
+For more information, see the Django documentation for the [application directories template loader](inv:django#ref/templates/api).
 
 ### Page content
 
@@ -41,7 +41,7 @@ Additionally, `request.` is available and contains Django's request object.
 
 ## Static assets
 
-Static files (such as CSS, JS and images) are typically stored here:
+Static files (such as CSS, JS, and images) are typically stored here:
 
 ```
 name_of_project/
@@ -72,11 +72,11 @@ Read more about the image manipulation syntax here: [](image_tag).
 
 ## Template tags & filters
 
-In addition to Django's standard tags and filters, Wagtail provides some of its own, which can be `load`-ed [just like any other](django:howto/custom-template-tags).
+In addition to Django's standard tags and filters, Wagtail provides some of its own, which can be `load`-ed [just like any other](inv:django#howto/custom-template-tags).
 
 ## Images (tag)
 
-The `image` tag inserts an XHTML-compatible `img` element into the page, setting its `src`, `width`, `height` and `alt`. See also [](image_tag_alt).
+The `image` tag inserts an XHTML-compatible `img` element into the page, setting its `src`, `width`, `height`, and `alt`. See also [](image_tag_alt).
 
 The syntax for the `image` tag is thus:
 
@@ -98,11 +98,47 @@ For example:
 
 See [](image_tag) for full documentation.
 
+### Images in multiple formats
+
+The `picture` tag works like `image`, but allows specifying multiple formats to generate a `<picture>` element with `<source>` elements and a fallback `<img>`.
+
+For example:
+
+```html+django
+{% load wagtailimages_tags %}
+...
+
+{% picture page.photo format-{avif,webp,jpeg} width-400 %}
+```
+
+See [](multiple_formats) for full documentation.
+
+### Images in multiple sizes
+
+The `srcset_image` tag works like `image`, but allows specifying multiple sizes to generate a `srcset` attribute and leverage [responsive image rules](https://developer.mozilla.org/en-US/docs/Learn/HTML/Multimedia_and_embedding/Responsive_images).
+
+For example:
+
+```html+django
+{% load wagtailimages_tags %}
+...
+
+{% srcset_image page.photo width-{400,800} sizes="(max-width: 600px) 400px, 80vw" %}
+```
+
+This can also be done with `picture`, to generate multiple formats and sizes at once:
+
+```html+django
+{% picture page.photo format-{avif,webp,jpeg} width-{400,800} sizes="80vw" %}
+```
+
+See [](responsive_images) for full documentation.
+
 (rich_text_filter)=
 
 ## Rich text (filter)
 
-This filter takes a chunk of HTML content and renders it as safe HTML in the page. Importantly, it also expands internal shorthand references to embedded images and links made in the Wagtail editor, into fully-baked HTML ready for display.
+This filter takes a chunk of HTML content and renders it as safe HTML on the page. Importantly, it also expands internal shorthand references to embedded images and links made in the Wagtail editor, into fully-baked HTML ready for display.
 
 Only fields using `RichTextField` need this applied in the template.
 
@@ -116,7 +152,7 @@ Only fields using `RichTextField` need this applied in the template.
 
 ### Responsive Embeds
 
-As Wagtail does not impose any styling of its own on templates, images and embedded media will be displayed at a fixed width as determined by the HTML. Images can be made to resize to fit their container using a CSS rule such as the following:
+As Wagtail does not impose any styling of its own on templates, images, and embedded media will be displayed at a fixed width as determined by the HTML. Images can be made to resize to fit their container using a CSS rule such as the following:
 
 ```css
 .body img {
@@ -193,7 +229,7 @@ Much like `pageurl`, a `fallback` keyword argument may be provided.
 
 Takes any `slug` as defined in a page's "Promote" tab and returns the URL for the matching Page. If multiple pages exist with the same slug, the page chosen is undetermined.
 
-Like `pageurl`, this will try to provide a relative link if possible, but will default to an absolute link if the Page is on a different Site. This is most useful when creating shared page furniture, for example, top-level navigation or site-wide links.
+Like `pageurl`, this will try to provide a relative link if possible but will default to an absolute link if the Page is on a different Site. This is most useful when creating shared page furniture, for example, top-level navigation or site-wide links.
 
 ```html+django
 {% load wagtailcore_tags %}
@@ -273,7 +309,7 @@ wagtail-userbar::part(userbar) {
 }
 ```
 
-To customise the items shown in the user bar, you can use the [`construct_wagtail_userbar`](construct_wagtail_userbar) hook.
+To customize the items shown in the user bar, you can use the [`construct_wagtail_userbar`](construct_wagtail_userbar) hook.
 
 ## Varying output between preview and live
 
@@ -290,3 +326,61 @@ Sometimes you may wish to vary the template output depending on whether the page
 
 If the page is being previewed, `request.preview_mode` can be used to determine the specific preview mode being used,
 if the page supports [multiple preview modes](wagtail.models.Page.preview_modes).
+
+(template_fragment_caching)=
+
+## Template fragment caching
+
+Django supports [template fragment caching](https://docs.djangoproject.com/en/stable/topics/cache/#template-fragment-caching), which allows caching portions of a template. Using Django's `{% cache %}` tag natively with Wagtail can be [dangerous](https://github.com/wagtail/wagtail/issues/5074) as it can result in preview content being shown to end users. Instead, Wagtail provides 2 extra template tags which can be loaded from `wagtail_cache`:
+
+(wagtailcache)=
+
+### Preview-aware caching
+
+The `{% wagtailcache %}` tag functions similarly to Django's `{% cache %}` tag, but will neither cache nor serve cached content when previewing a page (or other model) in Wagtail.
+
+```html+django
+{% load wagtail_cache %}
+
+{% wagtailcache 500 "sidebar" %}
+    <!-- sidebar -->
+{% endwagtailcache %}
+```
+
+Much like `{% cache %}`, you can use [`make_template_fragment_key`](django.core.cache.utils.make_template_fragment_key) to obtain the cache key.
+
+(wagtailpagecache)=
+
+### Page-aware caching
+
+`{% wagtailpagecache %}` is an extension of `{% wagtailcache %}`, but is also aware of the current `page` and `site`, and includes those as part of the cache key. This makes it possible to easily add caching around parts of the page without worrying about the page it's on. `{% wagtailpagecache %}` intentionally makes assumptions - for more customization it's recommended to use `{% wagtailcache %}`.
+
+```html+django
+{% load wagtail_cache %}
+
+{% wagtailpagecache 500 "hero" %}
+    <!-- hero -->
+{% endwagtailpagecache %}
+```
+
+This is identical to:
+
+```html+django
+{% wagtail_site as current_site %}
+
+{% wagtailcache 500 "hero" page.cache_key current_site.id %}
+    <!-- hero -->
+{% endwagtailcache %}
+```
+
+Note the use of the page's [cache key](page_cache_key), which ensures that when a page is updated, the cache is automatically invalidated.
+
+If you want to obtain the cache key, you can use `make_wagtail_template_fragment_key` (based on Django's [`make_template_fragment_key`](django.core.cache.utils.make_template_fragment_key)):
+
+```python
+from django.core.cache import cache
+from wagtail.coreutils import make_wagtail_template_fragment_key
+
+key = make_wagtail_template_fragment_key("hero", page, site)
+cache.delete(key)  # invalidates cached template fragment
+```

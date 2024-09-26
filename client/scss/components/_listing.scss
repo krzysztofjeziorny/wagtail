@@ -1,3 +1,4 @@
+/* stylelint-disable selector-max-combinators */
 // General listings, like for pages, images or snippets
 ul.listing {
   @include unlist();
@@ -10,6 +11,7 @@ ul.listing {
 
   ul {
     list-style-type: none;
+    margin: 0;
     padding-inline-start: 0;
   }
 
@@ -25,7 +27,12 @@ ul.listing {
 
   td,
   th {
-    padding: 1.2em 1em;
+    text-align: start;
+    padding: calc(1em * var(--w-density-factor)) 0.3em;
+
+    @include media-breakpoint-up(sm) {
+      padding: calc(1em * var(--w-density-factor)) 1em;
+    }
 
     &.no-padding {
       padding: 0;
@@ -34,7 +41,19 @@ ul.listing {
 
   &.small td,
   th {
-    padding: 0.6em 1em;
+    padding: 0.6em 0.3em;
+
+    @include media-breakpoint-up(sm) {
+      padding: 0.6em 1em;
+    }
+  }
+
+  td {
+    vertical-align: middle;
+  }
+
+  td.title {
+    line-height: 2em;
   }
 
   thead {
@@ -44,16 +63,19 @@ ul.listing {
 
     th {
       font-size: 0.9em;
-      text-align: start;
       font-weight: normal;
       white-space: nowrap;
+    }
+
+    th.title {
+      white-space: normal;
     }
 
     th.children {
       border: 0;
     }
 
-    th a {
+    th a.label:not(.teal) {
       text-decoration: none;
       color: inherit;
       position: relative;
@@ -64,13 +86,21 @@ ul.listing {
     }
   }
 
-  &.full-width td:first-child,
-  &.full-width th:first-child {
-    padding-inline-start: 20px;
-    padding-inline-end: 20px;
+  &:has(
+      td:first-child input[type='checkbox']:only-child,
+      th:first-child input[type='checkbox']:only-child
+    ) {
+    td:first-child,
+    th:first-child {
+      // Bulk actions, use smaller width (48px) for smaller screens
+      // (no need to match where the breadcrumbs are)
+      width: theme('spacing.10');
+      text-align: center;
 
-    input[type='checkbox'] {
-      margin-inline-end: 0;
+      // stylelint-disable-next-line selector-max-specificity
+      input[type='checkbox'] {
+        margin-inline-end: 0;
+      }
     }
   }
 
@@ -86,14 +116,10 @@ ul.listing {
     border-bottom: 1px dashed theme('colors.border-field-default');
 
     tr {
-      border-top: 1px dashed theme('colors.border-field-default');
+      border-top: 1px dashed theme('colors.border-furniture');
 
       &:first-child {
-        border-top: 1px dashed theme('colors.border-field-default');
-      }
-
-      &:hover {
-        background-color: theme('colors.white-10');
+        border-top: 1px dashed theme('colors.border-furniture');
       }
     }
 
@@ -129,20 +155,20 @@ ul.listing {
 
     tbody tr:hover {
       background-color: theme('colors.surface-button-hover');
-      color: theme('colors.surface-page');
+      color: theme('colors.text-button');
 
       .title a,
       .title a:hover,
       .title label {
-        color: theme('colors.surface-page');
+        color: theme('colors.text-button');
       }
 
       .parent a {
-        color: theme('colors.surface-page');
+        color: theme('colors.text-button');
       }
 
       .w-status {
-        border-color: theme('colors.surface-page');
+        border-color: theme('colors.text-button');
       }
     }
 
@@ -188,7 +214,7 @@ ul.listing {
     }
 
     label span {
-      @include visuallyhidden();
+      @apply w-sr-only;
     }
 
     input {
@@ -202,7 +228,9 @@ ul.listing {
     .title-wrapper,
     h2 {
       @apply w-label-1;
+      display: inline;
       margin: 0;
+      vertical-align: middle;
 
       a {
         color: inherit;
@@ -214,72 +242,42 @@ ul.listing {
         }
       }
     }
+
+    .icon-folder {
+      margin: 3px 0.3em 0 0;
+      vertical-align: top;
+    }
   }
 
   .actions {
-    @include clearfix();
-    margin-top: 0.8em;
-    margin-bottom: -0.5em;
+    float: inline-end;
     font-size: 0.8rem;
+    margin: 0;
 
     a {
       text-decoration: none;
     }
 
     > li {
-      float: left;
+      float: inline-start;
       padding: 0 0.5em 0 0;
-      margin: 0 0 0.5em;
-
-      // line-height: 1em;
-    }
-  }
-
-  &--inline-actions td.title {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-
-    .title-wrapper {
-      margin-inline-end: 2.5em;
-    }
-
-    .w-status {
-      margin: 0;
-    }
-  }
-
-  &--inline-actions .actions {
-    display: inline-block;
-    margin-top: 0;
-    vertical-align: inherit;
-
-    li {
-      margin-bottom: 0;
-    }
-
-    .button {
-      vertical-align: inherit;
+      vertical-align: middle;
     }
   }
 
   .moderate-actions form {
-    float: left;
+    float: inline-start;
     margin: 0 1em 1em 0;
   }
 
   .children,
   .no-children {
     padding: 0;
-
-    &:hover {
-      background-color: theme('colors.white-10');
-    }
+    vertical-align: middle;
 
     a {
       display: block;
-      padding: 2em 0;
+      padding: 0;
     }
   }
 
@@ -298,6 +296,7 @@ ul.listing {
     color: theme('colors.text-button-outline-default');
     display: block;
     text-align: center;
+    line-height: 3rem;
 
     .icon {
       width: 1.5rem;
@@ -306,7 +305,7 @@ ul.listing {
 
     &:hover,
     &:focus {
-      color: theme('colors.text-button-outline-default');
+      color: theme('colors.text-button-outline-hover');
     }
 
     &:focus {
@@ -331,21 +330,11 @@ ul.listing {
 
     &--active a,
     a:hover {
-      color: theme('colors.text-button-outline-default');
+      color: theme('colors.text-button-outline-hover');
     }
   }
 
-  .handle {
-    cursor: move;
-    width: 20px;
-    color: theme('colors.icon-secondary');
-
-    &:hover {
-      color: theme('colors.icon-secondary-hover');
-    }
-  }
-
-  .ui-sortable-helper {
+  .w-orderable__item--active {
     border: 1px dashed theme('colors.border-field-default');
     border-width: 1px 0;
 
@@ -359,12 +348,12 @@ ul.listing {
     }
   }
 
-  table .no-results-message {
-    padding-inline-start: 20px;
+  .w-orderable__item__handle {
+    cursor: move;
   }
 
-  .unpublished .title-wrapper {
-    opacity: 0.7;
+  table .no-results-message {
+    padding-inline-start: 20px;
   }
 
   .w-status {
@@ -403,33 +392,12 @@ table.listing {
   }
 }
 
-.page-explorer .w-breadcrumb {
-  li[hidden] ~ li:last-child,
-  li:only-child {
-    a {
-      font-size: theme('fontSize.18');
-      font-weight: theme('fontWeight.extrabold');
-
-      @include media-breakpoint-up(md) {
-        font-size: theme('fontSize.30');
-      }
-    }
-  }
-}
-
 .page-explorer .listing {
   position: relative;
 
-  .table-headers {
+  .table-headers,
+  thead tr {
     height: 35px;
-
-    .title {
-      padding-inline-start: 0;
-    }
-  }
-
-  tbody .title {
-    padding-inline-start: 0;
   }
 }
 
@@ -450,11 +418,11 @@ table.listing {
   }
 
   .prev {
-    float: left;
+    float: inline-start;
   }
 
   .next {
-    float: right;
+    float: inline-end;
   }
 }
 
@@ -473,7 +441,7 @@ table.listing {
 }
 
 .filter-title {
-  float: left;
+  float: inline-start;
   font-size: 0.95em;
   padding: 1em;
   margin: 0 1em 0 0;
@@ -487,7 +455,7 @@ table.listing {
 
   li {
     padding: 0.8em;
-    float: left;
+    float: inline-start;
   }
 
   &__icon {
@@ -521,7 +489,7 @@ table.listing {
         border: 0;
 
         .bulk-action-checkbox {
-          float: left;
+          float: inline-start;
           margin: -0.5em 0.5em 0.5em -0.75em;
         }
 
@@ -534,6 +502,7 @@ table.listing {
           text-align: center;
           height: 180px;
 
+          // Vertically center the image.
           &:before {
             content: '';
             display: inline-block;
@@ -554,19 +523,6 @@ table.listing {
           }
         }
       }
-    }
-
-    .actions {
-      visibility: hidden;
-    }
-
-    .index .actions {
-      visibility: visible;
-    }
-
-    td:hover .actions,
-    td:focus-within .actions {
-      visibility: visible;
     }
 
     .bulk-action-checkbox {
@@ -618,17 +574,59 @@ table.listing {
       padding-inline-start: 50px;
     }
 
-    &.full-width td:first-child,
-    &.full-width th:first-child {
-      padding-inline-start: 30px;
-      padding-inline-end: 30px;
+    &:has(
+        td:first-child input[type='checkbox']:only-child,
+        th:first-child input[type='checkbox']:only-child
+      ) {
+      // Bulk actions, match the width of the header spacing up until
+      // the page title (final breadcrumb item):
+      // Breadcrumbs left padding: 20px
+      // Breadcrumbs toggle: 50px
+      // Breadcrumbs toggle margin right: 10px
+      // Total: 80px
+      th:first-child,
+      td:first-child {
+        width: theme('spacing.20');
+        // Follow the left padding for the breadcrumbs (20px)
+        // so the checkbox align with the breadcrumbs toggle.
+        padding-inline-start: theme('spacing.5');
+      }
     }
 
-    // Reduce padding on sort order controls so total width matches previous state
-    &.full-width td.ord,
-    &.full-width th.ord {
-      padding-inline-end: 20px;
-      padding-inline-start: 20px;
+    // Remove left padding from the second column if either bulk action or
+    // custom ordering is active, as the padding to match the breadcrumbs is
+    // already handled by the first column.
+    &:has(
+        td:first-child input[type='checkbox']:only-child,
+        th:first-child input[type='checkbox']:only-child,
+        .ord
+      ) {
+      th:nth-child(2),
+      td:nth-child(2) {
+        padding-inline-start: 0;
+      }
+    }
+
+    // If either:
+    // - no nice padding is applied,
+    // - we're not in a report listing,
+    // - we're not in the editor view,
+    // and:
+    // - no bulk actions are present,
+    // - we're not in the "custom ordering" mode,
+    // then apply the same 80px padding via the first column's left padding.
+    &:not(.nice-padding &, .report &, .editor-view &):not(
+        :has(
+            td:first-child input[type='checkbox']:only-child,
+            th:first-child input[type='checkbox']:only-child,
+            .ord
+          )
+      ) {
+      // stylelint-disable-next-line selector-max-specificity
+      th:first-child,
+      td:first-child {
+        padding-inline-start: theme('spacing.20');
+      }
     }
 
     &.full-width .divider td {
@@ -648,10 +646,6 @@ table.listing {
 
 // Transitions
 .listing {
-  thead .dropdown ul {
-    @include transition(none);
-  }
-
   .children,
   .no-children {
     @include transition(background-color 0.2s ease);
@@ -667,15 +661,27 @@ table.listing {
 td.ord {
   // Align with the row's title text, and the column's label.
   vertical-align: top;
-
-  .handle {
-    width: 100%;
-    text-align: center;
-  }
 }
 
 table.listing {
   th.ordered {
     color: theme('colors.text-link-default');
+  }
+}
+
+.w-title-ellipsis {
+  display: inline-block;
+  vertical-align: bottom;
+  max-width: 20ch;
+  overflow-x: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  @include media-breakpoint-up(sm) {
+    max-width: 30ch;
+  }
+
+  @include media-breakpoint-up(md) {
+    max-width: none;
   }
 }

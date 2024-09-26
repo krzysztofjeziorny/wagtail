@@ -4,7 +4,7 @@
 
 Wagtail comes with [various image operations](image_tag). To add custom image operation, add `register_image_operations` hook to your `wagtail_hooks.py` file.
 
-In this example, the `willow.image` is a Pillow Image instance. If you use another image library, or like to support multiple image libraries, you need to update the filter code accordingly. See the [Willow documentation](https://willow.readthedocs.io/en/latest/index.html) for more information.
+In this example, the `willow.image` is a Pillow Image instance. If you use another image library, or like to support multiple image libraries, you need to update the filter code accordingly. See the [Willow documentation](https://willow.wagtail.org/stable/) for more information.
 
 ```python
 from PIL import ImageFilter
@@ -35,4 +35,17 @@ Use the filter in a template, like so:
 {% load wagtailimages_tags %}
 
 {% image page.photo width-400 blur-7 %}
+```
+
+If your custom image filter depends on fields within the `Image`, for instance those defining the focal point, add a `vary_fields` property listing those field names to the subclassed `FilterOperation`. This ensures that a new rendition is created whenever the focal point is changed:
+
+```python
+class BlurOutsideFocusPointOperation(FilterOperation):
+    vary_fields = (
+        "focal_point_width",
+        "focal_point_height",
+        "focal_point_x",
+        "focal_point_y",
+    )
+    # ...
 ```

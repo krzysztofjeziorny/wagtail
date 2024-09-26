@@ -3,14 +3,14 @@
 # This file is distributed under the same license as the PACKAGE package.
 #
 # Translators:
-# Dino Aljević <dino8890@protonmail.com>, 2020,2022-2023
+# Dino Aljević <dino8890@protonmail.com>, 2020,2022-2024
 msgid ""
 msgstr ""
 "Project-Id-Version: Wagtail\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-04-20 11:47+0100\n"
+"POT-Creation-Date: 2024-08-07 10:06+0100\n"
 "PO-Revision-Date: 2014-02-19 19:01+0000\n"
-"Last-Translator: Dino Aljević <dino8890@protonmail.com>, 2020,2022-2023\n"
+"Last-Translator: Dino Aljević <dino8890@protonmail.com>, 2020,2022-2024\n"
 "Language-Team: Croatian (Croatia) (http://app.transifex.com/torchbox/wagtail/"
 "language/hr_HR/)\n"
 "MIME-Version: 1.0\n"
@@ -124,12 +124,6 @@ msgstr ""
 "href=\"%(wagtailsnippets_create_snippet_url)s\" target=\"_blank\" "
 "rel=\"noopener noreferrer\">stvorite jedan</a>?"
 
-msgid "Last updated"
-msgstr "Zadnji put ažurirano"
-
-msgid "History"
-msgstr "Povijest"
-
 msgid "Publishing…"
 msgstr "Objava u tijeku..."
 
@@ -142,103 +136,44 @@ msgstr "Spremanje..."
 msgid "Replace current draft"
 msgstr "Zamijeni trenutnu skicu"
 
+msgid "Replace current revision"
+msgstr "Zamijeni trenutnu verziju"
+
 msgid "Save draft"
 msgstr "Spremi skicu"
-
-#, python-format
-msgid "New  %(snippet_type_name)s"
-msgstr "Novi %(snippet_type_name)s"
-
-msgid "New"
-msgstr "Novi"
 
 msgid "Actions"
 msgstr "Postupci"
 
-msgid "Snippets"
-msgstr "Izresci"
-
-msgid "Usage"
-msgstr "Upotreba"
-
-msgid "No log entries found."
-msgstr "Nema pronađenih zapisa."
-
-#, python-format
-msgid "Snippets %(snippet_type_name_plural)s"
-msgstr "Izresci %(snippet_type_name_plural)s"
-
-#, python-format
-msgid "Add %(snippet_type_name)s"
-msgstr "Dodaj %(snippet_type_name)s"
-
-#, python-format
-msgid "There is %(counter)s match"
-msgid_plural "There are %(counter)s matches"
-msgstr[0] "Pronađen je %(counter)s rezultat"
-msgstr[1] "Pronađeno je %(counter)s"
-msgstr[2] "Pronađeno je %(counter)s rezultata"
-
-#, python-format
-msgid ""
-"No %(snippet_type_name_plural)s have been created. Why not <a "
-"href=\"%(wagtailsnippets_create_url)s\">add one</a>?"
-msgstr ""
-"Nema %(snippet_type_name_plural)s. Zašto ne <a "
-"href=\"%(wagtailsnippets_create_url)s\">dodate jedan</a>?"
-
-msgid "Live version"
-msgstr "Verzija uživo"
-
-msgid "Current draft"
-msgstr "Trenutna skica"
-
-msgid "Preview"
-msgstr "Pregled"
-
-msgid "Edit"
-msgstr "Uredi"
-
-msgid "Review this version"
-msgstr "Pregledaj ovu verziju"
-
-msgid "Compare with previous version"
-msgstr "Usporedi sa prijašnjom verzijom"
-
-msgid "Compare with current version"
-msgstr "Usporedi sa trenutnom verzijom"
+msgid "Select all snippets in listing"
+msgstr "Odaberi sve izreske iz popisa"
 
 msgid "Choose"
 msgstr "Odaberi"
 
+msgid "Snippets"
+msgstr "Izresci"
+
 msgid "Name"
 msgstr "Naziv"
 
-msgid "The snippet could not be created due to errors."
-msgstr "Nije moguće stvoriti izrezak zbog grešaka."
-
-msgid "The snippet could not be saved due to errors."
-msgstr "Nije moguće sačuvati izrezak zbog grešaka."
-
-msgid "Action"
-msgstr "Radnja"
-
-msgid "User"
-msgstr "Korisnik"
-
-msgid "Date"
-msgstr "Datum"
-
-msgid "Snippet history"
-msgstr "Povijest izreska"
+msgid "Instances"
+msgstr "Broj instanci"
 
 #, python-format
-msgid "Edit '%(title)s'"
-msgstr "Uredi '%(title)s'"
+msgid "More options for '%(title)s'"
+msgstr "Više opcija za '%(title)s'"
 
 #, python-format
-msgid "Delete '%(title)s'"
-msgstr "Izbriši '%(title)s'"
+msgid "Edit this %(model_name)s"
+msgstr "Uredi ovaj %(model_name)s"
+
+#, python-format
+msgid "%(model_name)s history"
+msgstr "Povijest %(model_name)s"
+
+msgid "Home"
+msgstr "Naslovna"
 
 #, python-format
 msgid "Choose %(object)s"

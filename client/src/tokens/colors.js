@@ -17,7 +17,7 @@
 }} Colors */
 
 /** @type {Colors} */
-const colors = {
+const staticColors = {
   black: {
     DEFAULT: {
       hex: '#000000',
@@ -30,6 +30,24 @@ const colors = {
     },
   },
   grey: {
+    800: {
+      hex: '#1D1D1D',
+      hsl: 'hsl(0 0% 11.4%)',
+      bgUtility: 'w-bg-grey-800',
+      textUtility: 'w-text-grey-800',
+      cssVariable: '--w-color-grey-800',
+      usage: 'Backgrounds for panels in dark theme',
+      contrastText: 'white',
+    },
+    700: {
+      hex: '#222222',
+      hsl: 'hsl(0 0% 13.3%)',
+      bgUtility: 'w-bg-grey-700',
+      textUtility: 'w-text-grey-700',
+      cssVariable: '--w-color-grey-700',
+      usage: 'Backgrounds for panels in dark theme',
+      contrastText: 'white',
+    },
     600: {
       hex: '#262626',
       hsl: 'hsl(0 0% 14.9%)',
@@ -183,14 +201,32 @@ const colors = {
     },
   },
   info: {
+    125: {
+      hex: '#186076',
+      hsl: 'hsl(194.0, 66.2%, 27.8%)',
+      bgUtility: 'w-bg-info-125',
+      textUtility: 'w-text-info-125',
+      cssVariable: '--w-color-info-125',
+      usage: 'Hover background only, for information messages',
+      contrastText: 'white',
+    },
     100: {
-      hex: '#1F7E9A',
-      hsl: 'hsl(193.7 66.5% 36.3%)',
+      hex: '#1D7792',
+      hsl: 'hsl(193.9 66.9% 34.3%)',
       bgUtility: 'w-bg-info-100',
       textUtility: 'w-text-info-100',
       cssVariable: '--w-color-info-100',
       usage: 'Background and icons for information messages',
       contrastText: 'white',
+    },
+    75: {
+      hex: '#80B6C7',
+      hsl: 'hsl(194.4, 38.8%, 64.1%)',
+      bgUtility: 'w-bg-info-75',
+      textUtility: 'w-text-info-75',
+      cssVariable: '--w-color-info-75',
+      usage: 'Info text in the dark theme',
+      contrastText: 'primary',
     },
     50: {
       hex: '#E2F5FC',
@@ -244,8 +280,8 @@ const colors = {
   },
   critical: {
     200: {
-      hex: '#CD4444',
-      hsl: 'hsl(0 57.8% 53.5%)',
+      hex: '#CA3B3B',
+      hsl: 'hsl(0 57.4% 51.2%)',
       bgUtility: 'w-bg-critical-200',
       textUtility: 'w-text-critical-200',
       cssVariable: '--w-color-critical-200',
@@ -262,8 +298,8 @@ const colors = {
       contrastText: 'primary',
     },
     50: {
-      hex: '#FDE9E9',
-      hsl: 'hsl(0 83.3% 95.3%)',
+      hex: '#FEF0F0',
+      hsl: 'hsl(0 87.5% 96.9%)',
       bgUtility: 'w-bg-critical-50',
       textUtility: 'w-text-critical-50',
       cssVariable: '--w-color-critical-50',
@@ -273,4 +309,20 @@ const colors = {
   },
 };
 
-module.exports = colors;
+const transparencies = {
+  '--w-color-white-10': 'rgba(255, 255, 255, 0.10)',
+  '--w-color-white-15': 'rgba(255, 255, 255, 0.15)',
+  '--w-color-white-50': 'rgba(255, 255, 255, 0.50)',
+  '--w-color-white-80': 'rgba(255, 255, 255, 0.80)',
+  '--w-color-black-5': 'rgba(0, 0, 0, 0.05)',
+  '--w-color-black-10': 'rgba(0, 0, 0, 0.10)',
+  '--w-color-black-20': 'rgba(0, 0, 0, 0.20)',
+  '--w-color-black-25': 'rgba(0, 0, 0, 0.25)',
+  '--w-color-black-35': 'rgba(0, 0, 0, 0.35)',
+  '--w-color-black-50': 'rgba(0, 0, 0, 0.50)',
+};
+
+module.exports = {
+  staticColors,
+  transparencies,
+};

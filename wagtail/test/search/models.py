@@ -20,6 +20,7 @@ class Author(index.Indexed, models.Model):
 
 class Book(index.Indexed, models.Model):
     title = models.CharField(max_length=255)
+    summary = models.TextField(blank=True)
     authors = models.ManyToManyField(Author, related_name="books")
     publication_date = models.DateField()
     number_of_pages = models.IntegerField()
@@ -27,6 +28,7 @@ class Book(index.Indexed, models.Model):
 
     search_fields = [
         index.SearchField("title", boost=2.0),
+        index.SearchField("summary"),
         index.AutocompleteField("title"),
         index.FilterField("title"),
         index.FilterField("authors"),
@@ -45,7 +47,7 @@ class Book(index.Indexed, models.Model):
 
     @classmethod
     def get_indexed_objects(cls):
-        indexed_objects = super(Book, cls).get_indexed_objects()
+        indexed_objects = super().get_indexed_objects()
 
         # Don't index books using Book class that they have a more specific type
         if cls is Book:

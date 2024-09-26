@@ -2,10 +2,6 @@
 
 # StreamField validation
 
-```{versionadded} 5.0
-Support for custom validation logic on StreamField blocks was improved and simplified.
-```
-
 All StreamField blocks implement a `clean` method which accepts a block value and returns a cleaned version of that value, or raises a `ValidationError` if the value fails validation. Built-in validation rules, such as checking that a URLBlock value is a correctly-formatted URL, are implemented through this method. Additionally, for blocks that act as containers for other blocks, such as StructBlock, the `clean` method recursively calls the `clean` methods of its child blocks and handles raising validation errors back to the caller as required.
 
 The `clean` method can be overridden on block subclasses to implement custom validation logic. For example, a StructBlock that requires either one of its child blocks to be filled in could be implemented as follows:
@@ -23,6 +19,14 @@ class LinkBlock(StructBlock):
         if not(result['page'] or result['url']):
             raise ValidationError("Either page or URL must be specified")
         return result
+```
+
+```{note}
+The validation of the blocks in the `StreamField` happens through the form field (`wagtail.blocks.base.BlockField`), not the model field (`wagtail.fields.StreamField`).
+
+This means that calling validation methods on your page instance (such as `my_page.full_clean()`) won't catch invalid blocks in the `StreamField` data.
+
+This should only be relevant when the data in the `StreamField` is added programmatically, through other paths than the form field.
 ```
 
 ## Controlling where error messages are rendered

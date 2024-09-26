@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Wagtail\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-04-20 11:47+0100\n"
+"POT-Creation-Date: 2024-08-07 10:06+0100\n"
 "PO-Revision-Date: 2015-08-26 14:04+0000\n"
 "Last-Translator: Tatsiana Tsygan <art.tatsiana@gmail.com>, 2018,2020\n"
 "Language-Team: Belarusian (http://app.transifex.com/torchbox/wagtail/"
@@ -92,30 +92,6 @@ msgstr "Перамясціць уніз"
 msgid "Promoted search results"
 msgstr "Высокі вынік пошуку"
 
-msgid "Add recommended page"
-msgstr "Дадаць рэкамендуемую старонку"
-
-msgid "Search Terms"
-msgstr "Умовы пошуку"
-
-msgid "Add new promoted result"
-msgstr "Дадаць новы высокі вынік пошуку"
-
-msgid "Search term(s)"
-msgstr "Пошукавы(я) запыт(ы)"
-
-msgid "Promoted results"
-msgstr "Рэклама вынікаў"
-
-msgid "Views (past week)"
-msgstr "Прагляды (за тыдзень)"
-
-msgid "Edit this promotion"
-msgstr "Змяніць гэтую рэкламу"
-
-msgid "None"
-msgstr "Нікодны"
-
 #, python-format
 msgid "Sorry, no promoted results match \"<em>%(query_string)s</em>\""
 msgstr "На жаль, няма вынікаў рэкламы \"<em>%(query_string)s</em>\""
@@ -128,8 +104,41 @@ msgstr ""
 "Ніякіх рэкламных вынікаў не было знойдзена, супадаючых з <a "
 "href=\"%(wagtailsearchpromotions_add_url)s\">add one</a>?"
 
-msgid "Search promoted results"
-msgstr "Пошук рэкламных вынікаў"
+msgid "Popular search terms"
+msgstr "Папулярныя пошукавыя запыты"
+
+msgid "Search"
+msgstr "Пошук"
+
+msgid "Terms"
+msgstr "Тэрміны"
+
+msgid "Views (past week)"
+msgstr "Прагляды (за тыдзень)"
+
+msgid "No results found"
+msgstr "Нічога не знойдзена"
+
+msgid "Choose from popular search terms"
+msgstr "Выбраць з папулярных пошукавых запытаў"
+
+msgid "External link"
+msgstr "Знешняя спасылка"
+
+msgid "None"
+msgstr "Нікодны"
+
+msgid "Search Terms"
+msgstr "Умовы пошуку"
+
+msgid "Add new promoted result"
+msgstr "Дадаць новы высокі вынік пошуку"
+
+msgid "Search term(s)"
+msgstr "Пошукавы(я) запыт(ы)"
+
+msgid "Promoted results"
+msgstr "Рэклама вынікаў"
 
 #, python-format
 msgid "Editor's picks for '%(query)s' created."

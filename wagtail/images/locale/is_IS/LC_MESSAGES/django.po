@@ -3,16 +3,16 @@
 # This file is distributed under the same license as the PACKAGE package.
 #
 # Translators:
-# Arnar Tumi Þorsteinsson <arnartumi@gmail.com>, 2015-2018,2021-2023
+# Arnar Tumi Þorsteinsson <arnartumi@gmail.com>, 2015-2018,2021-2024
 # saevarom <saevar@saevar.is>, 2015,2019-2022
 msgid ""
 msgstr ""
 "Project-Id-Version: Wagtail\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-04-20 11:47+0100\n"
+"POT-Creation-Date: 2024-08-07 10:06+0100\n"
 "PO-Revision-Date: 2014-02-20 21:05+0000\n"
 "Last-Translator: Arnar Tumi Þorsteinsson <arnartumi@gmail.com>, "
-"2015-2018,2021-2023\n"
+"2015-2018,2021-2024\n"
 "Language-Team: Icelandic (Iceland) (http://app.transifex.com/torchbox/"
 "wagtail/language/is_IS/)\n"
 "MIME-Version: 1.0\n"
@@ -296,16 +296,16 @@ msgstr "Setja inn mynd"
 
 #, python-format
 msgid ""
-"<span>%(total)s</span> Image <span class=\"visuallyhidden\">created in "
+"<span>%(total)s</span> Image <span class=\"w-sr-only\">created in "
 "%(site_name)s</span>"
 msgid_plural ""
-"<span>%(total)s</span> Images <span class=\"visuallyhidden\">created in "
+"<span>%(total)s</span> Images <span class=\"w-sr-only\">created in "
 "%(site_name)s</span>"
 msgstr[0] ""
-"<span>%(total)s</span> Mynd <span class=\"visuallyhidden\">búin til í "
+"<span>%(total)s</span> mynd <span class=\"w-sr-only\">búin til í "
 "%(site_name)s</span>"
 msgstr[1] ""
-"<span>%(total)s</span> Myndir <span class=\"visuallyhidden\">búnar til í "
+"<span>%(total)s</span> myndir <span class=\"w-sr-only\">búnar til í "
 "%(site_name)s</span>"
 
 msgid "Change image file:"
@@ -373,35 +373,11 @@ msgstr "Skrá fannst ekki"
 msgid "Usage"
 msgstr "Notkun"
 
-msgid "Images"
-msgstr "Myndir"
-
 msgid "Sort by"
 msgstr "Raða eftir"
 
-msgid "Entries per page"
-msgstr "Atriði á síðu"
-
-msgid "Popular Tags:"
-msgstr "Vinsæl merki:"
-
-msgid "Clear"
-msgstr "Hreinsa"
-
 msgid "Select all images in listing"
 msgstr "Velja allar myndir"
-
-#, python-format
-msgid "There is %(counter)s match"
-msgid_plural "There are %(counter)s matches"
-msgstr[0] "Það er %(counter)s niðurstaða"
-msgstr[1] "Það eru %(counter)s niðurstöður"
-
-msgid "Select image"
-msgstr "Velja mynd"
-
-msgid "pixels"
-msgstr "pixlar"
 
 #, python-format
 msgid "Sorry, no images match \"<em>%(query_string)s</em>\""
@@ -423,21 +399,23 @@ msgstr ""
 "Þú hefur ekki hlaðið neinum myndum. Hví ekki að<a "
 "href=\"%(wagtailimages_add_image_url)s\">smella inn nokkrum núna</a>?"
 
-msgid "Generating URL"
-msgstr "Bý til slóð"
+msgid "Preview"
+msgstr "Forskoðun"
 
 msgid "URL"
 msgstr "Slóð"
 
-msgid "Preview"
-msgstr "Forskoðun"
+msgid "Image URL"
+msgstr "vefslóð myndar"
 
-msgid ""
-"Note that images generated larger than the screen will appear smaller when "
-"previewed here, so they fit the screen."
-msgstr ""
-"Athugið að myndir sem búnar eru til stærri en skjárinn verða minni þegar þær "
-"eru skoðaðar hér til að passa á skjáinn."
+msgid "Copy URL"
+msgstr "Afrita slóð"
+
+msgid "Copied to clipboard"
+msgstr "Afritað á klemmuspjald"
+
+msgid "Copying to clipboard failed"
+msgstr "Ekki tókst að afrita á klemmuspjald"
 
 msgid "Add multiple images"
 msgstr "Bæta við mörgum myndum"
@@ -562,8 +540,8 @@ msgstr "Skráarstærð: (litlar fyrst)"
 msgid "File size: (high to low)"
 msgstr "Skráarstærð: (stórar fyrst)"
 
-msgid "Search images"
-msgstr "Leita að myndum"
+msgid "Images"
+msgstr "Myndir"
 
 #, python-format
 msgid "Image '%(image_title)s' updated."

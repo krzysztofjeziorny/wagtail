@@ -3,6 +3,7 @@ from django.shortcuts import resolve_url
 from django.template.defaulttags import token_kwargs
 from django.template.loader import render_to_string
 from django.utils.encoding import force_str
+from django.utils.functional import Promise
 from django.utils.html import conditional_escape
 
 from wagtail import VERSION, __version__
@@ -98,11 +99,17 @@ def wagtail_release_notes_path():
 
 @register.simple_tag
 def wagtail_feature_release_whats_new_link():
+    major, minor, patch, release, num = VERSION
+    if release == "final":
+        return f"https://guide.wagtail.org/en-{major}.{minor}.x/releases/new-in-wagtail-{major}-{minor}/"
     return "https://guide.wagtail.org/en-latest/releases/latest/"
 
 
 @register.simple_tag
 def wagtail_feature_release_editor_guide_link():
+    major, minor, patch, release, num = VERSION
+    if release == "final":
+        return f"https://guide.wagtail.org/en-{major}.{minor}.x/"
     return "https://guide.wagtail.org/"
 
 
@@ -114,6 +121,8 @@ def richtext(value):
     elif value is None:
         html = ""
     else:
+        if isinstance(value, Promise):
+            value = str(value)
         if isinstance(value, str):
             html = expand_db_html(value)
         else:
@@ -188,7 +197,7 @@ def include_block(parser, token):
 
     if tokens:
         raise template.TemplateSyntaxError(
-            "Unexpected argument to %r tag: %r" % (tag_name, tokens[0])
+            f"Unexpected argument to {tag_name!r} tag: {tokens[0]!r}"
         )
 
     return IncludeBlockNode(block_var, extra_context, use_parent_context)

@@ -3,12 +3,17 @@ import inspect
 import logging
 import re
 import unicodedata
-from typing import TYPE_CHECKING, Any, Dict, Iterable, Union
+from collections.abc import Iterable
+from hashlib import md5
+from typing import TYPE_CHECKING, Any, Union
+from warnings import warn
 
 from anyascii import anyascii
 from django.apps import apps
 from django.conf import settings
 from django.conf.locale import LANG_INFO
+from django.core.cache import cache
+from django.core.cache.utils import make_template_fragment_key
 from django.core.exceptions import ImproperlyConfigured, SuspiciousOperation
 from django.core.signals import setting_changed
 from django.db.models import Model
@@ -20,7 +25,8 @@ from django.utils.encoding import force_str
 from django.utils.text import capfirst, slugify
 from django.utils.translation import check_for_language, get_supported_language_variant
 from django.utils.translation import gettext_lazy as _
-from hashlib import md5
+
+from wagtail.utils.deprecation import RemovedInWagtail70Warning
 
 if TYPE_CHECKING:
     from wagtail.models import Site
@@ -74,20 +80,18 @@ def resolve_model_string(model_string, default_app=None):
                 model_name = model_string
             else:
                 raise ValueError(
-                    "Can not resolve {0!r} into a model. Model names "
+                    "Can not resolve {!r} into a model. Model names "
                     "should be in the form app_label.model_name".format(model_string),
                     model_string,
                 )
 
         return apps.get_model(app_label, model_name)
 
-    elif isinstance(model_string, type) and issubclass(model_string, Model):
+    elif isinstance(model_string, type):
         return model_string
 
     else:
-        raise ValueError(
-            "Can not resolve {0!r} into a model".format(model_string), model_string
-        )
+        raise ValueError(f"Can not resolve {model_string!r} into a model", model_string)
 
 
 SCRIPT_RE = re.compile(r"<(-*)/script>")
@@ -99,6 +103,10 @@ def escape_script(text):
     accidentally closing it. A '-' character will be inserted for each time it is escaped:
     `<-/script>`, `<--/script>` etc.
     """
+    warn(
+        "The `escape_script` hook is deprecated - use `template` elements instead.",
+        category=RemovedInWagtail70Warning,
+    )
     return SCRIPT_RE.sub(r"<-\1/script>", text)
 
 
@@ -139,7 +147,7 @@ def cautious_slugify(value):
 
 def safe_snake_case(value):
     """
-    Convert a string to ASCII similar to Django's slugify, with catious handling of
+    Convert a string to ASCII similar to Django's slugify, with cautious handling of
     non-ASCII alphanumeric characters. See `cautious_slugify`.
 
     Any inner whitespace, hyphens or dashes will be converted to underscores and
@@ -249,7 +257,7 @@ def find_available_slug(parent, requested_slug, ignore_page_id=None):
     return slug
 
 
-@functools.lru_cache()
+@functools.cache
 def get_content_languages():
     """
     Cache of settings.WAGTAIL_CONTENT_LANGUAGES in a dictionary for easy lookups by key.
@@ -328,17 +336,21 @@ def get_supported_content_language_variant(lang_code, strict=False):
     raise LookupError(lang_code)
 
 
-@functools.lru_cache()
 def get_locales_display_names() -> dict:
     """
     Cache of the locale id -> locale display name mapping
     """
     from wagtail.models import Locale  # inlined to avoid circular imports
 
-    locales_map = {
-        locale.pk: locale.get_display_name() for locale in Locale.objects.all()
-    }
-    return locales_map
+    cached_map = cache.get("wagtail_locales_display_name")
+
+    if cached_map is None:
+        cached_map = {
+            locale.pk: locale.get_display_name() for locale in Locale.objects.all()
+        }
+        cache.set("wagtail_locales_display_name", cached_map)
+
+    return cached_map
 
 
 @receiver(setting_changed)
@@ -385,14 +397,12 @@ def multigetattr(item, accessor):
                     TypeError,  # unsubscriptable object
                 ):
                     raise AttributeError(
-                        "Failed lookup for key [%s] in %r" % (bit, current)
+                        f"Failed lookup for key [{bit}] in {current!r}"
                     )
 
         if callable(current):
             if getattr(current, "alters_data", False):
-                raise SuspiciousOperation(
-                    "Cannot call %r from multigetattr" % (current,)
-                )
+                raise SuspiciousOperation(f"Cannot call {current!r} from multigetattr")
 
             # if calling without arguments is invalid, let the exception bubble up
             current = current()
@@ -413,10 +423,11 @@ def get_dummy_request(*, path: str = "/", site: "Site" = None) -> HttpRequest:
     if site:
         server_name = site.hostname
         server_port = site.port
-    elif settings.ALLOWED_HOSTS == ["*"]:
-        server_name = "example.com"
     else:
         server_name = settings.ALLOWED_HOSTS[0]
+
+        if server_name == "*":
+            server_name = "example.com"
 
     # `SERVER_PORT` doesn't work when passed to the constructor
     return RequestFactory(SERVER_NAME=server_name).get(path, SERVER_PORT=server_port)
@@ -433,14 +444,7 @@ def safe_md5(data=b"", usedforsecurity=True):
     to use the digest for secure purposes and to please just go ahead and
     allow it to happen.
     """
-
-    # Although ``accepts_kwarg`` works great on Python 3.8+, on Python 3.7 it
-    # raises a ValueError, saying "no signature found for builtin". So, back
-    # to the try/except.
-    try:
-        return md5(data, usedforsecurity=usedforsecurity)
-    except TypeError:
-        return md5(data)
+    return md5(data, usedforsecurity=usedforsecurity)
 
 
 class BatchProcessor:
@@ -542,7 +546,7 @@ class BatchCreator(BatchProcessor):
         if self.max_size and len(self.items) == self.max_size:
             self.process()
 
-    def extend(self, iterable: Iterable[Union[Model, Dict[str, Any]]]) -> None:
+    def extend(self, iterable: Iterable[Union[Model, dict[str, Any]]]) -> None:
         for value in iterable:
             if isinstance(value, self.model):
                 self.add(instance=value)
@@ -564,3 +568,14 @@ class BatchCreator(BatchProcessor):
     def get_summary(self):
         opts = self.model._meta
         return f"{self.created_count}/{self.added_count} {opts.verbose_name_plural} were created successfully."
+
+
+def make_wagtail_template_fragment_key(fragment_name, page, site, vary_on=None):
+    """
+    A modified version of `make_template_fragment_key` which varies on page and
+    site for use with `{% wagtailpagecache %}`.
+    """
+    if vary_on is None:
+        vary_on = []
+    vary_on.extend([page.cache_key, site.id])
+    return make_template_fragment_key(fragment_name, vary_on)

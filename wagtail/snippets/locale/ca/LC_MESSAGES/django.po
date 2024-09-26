@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Wagtail\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-04-20 11:47+0100\n"
+"POT-Creation-Date: 2024-08-07 10:06+0100\n"
 "PO-Revision-Date: 2014-02-19 19:01+0000\n"
 "Last-Translator: Roger Pons <rogerpons@gmail.com>, 2016,2022-2023\n"
 "Language-Team: Catalan (http://app.transifex.com/torchbox/wagtail/language/"
@@ -123,17 +123,11 @@ msgstr ""
 "href=\"%(wagtailsnippets_create_snippet_url)s\" target=\"_blank\" "
 "rel=\"noreferrer\">crear-ne un ara</a>?"
 
-msgid "Last updated"
-msgstr "Última actualització"
-
-msgid "History"
-msgstr "Historial"
-
 msgid "Publishing…"
 msgstr "Publicant..."
 
 msgid "Publish this version"
-msgstr "Publica aquesta versió"
+msgstr "Publicar aquesta versió"
 
 msgid "Saving…"
 msgstr "Desant…"
@@ -147,105 +141,17 @@ msgstr "Substituir la revisió actual"
 msgid "Save draft"
 msgstr "Desa esborrany"
 
-#, python-format
-msgid "New  %(snippet_type_name)s"
-msgstr "Nou %(snippet_type_name)s"
-
-msgid "New"
-msgstr "Nou"
-
 msgid "Actions"
 msgstr "Accions"
-
-#, python-format
-msgid "Editing %(snippet_type_name)s - %(object)s"
-msgstr "Editant %(snippet_type_name)s - %(object)s"
-
-msgid "Toggle breadcrumbs"
-msgstr "Commutar rutes de navegació"
-
-msgid "Breadcrumb"
-msgstr "Ruta de navegació"
-
-msgid "Snippets"
-msgstr "Fragments"
-
-#, python-format
-msgid "New: %(model_name)s"
-msgstr "Nou: %(model_name)s"
-
-#, python-format
-msgid "Editing %(snippet_type)s %(title)s"
-msgstr "Editant %(snippet_type)s %(title)s"
-
-msgid "Usage"
-msgstr "Ús"
-
-#, python-format
-msgid "Snippet history for %(subtitle)s"
-msgstr "Historial de fragment de %(subtitle)s"
-
-msgid "Edit this snippet"
-msgstr "Editar aquest fragment"
-
-msgid "No log entries found."
-msgstr "No s'han trobat entrades de registre."
-
-#, python-format
-msgid "Snippets %(snippet_type_name_plural)s"
-msgstr "Fragments %(snippet_type_name_plural)s"
-
-#, python-format
-msgid "Add %(snippet_type_name)s"
-msgstr "Afegeix %(snippet_type_name)s"
 
 msgid "Select all snippets in listing"
 msgstr "Seleccionar tots els fragments de la llista"
 
-#, python-format
-msgid "There is %(counter)s match"
-msgid_plural "There are %(counter)s matches"
-msgstr[0] "S'ha trobat %(counter)s coincidència"
-msgstr[1] "S'ha trobat %(counter)s coincidències"
-
-#, python-format
-msgid "Sorry, no %(snippet_type_name_plural)s match your query"
-msgstr "Cap %(snippet_type_name_plural)s coincideix amb la vostra consulta"
-
-#, python-format
-msgid ""
-"No %(snippet_type_name_plural)s have been created. Why not <a "
-"href=\"%(wagtailsnippets_create_url)s\">add one</a>?"
-msgstr ""
-"No s'ha creat cap %(snippet_type_name_plural)s. Per què no <a "
-"href=\"%(wagtailsnippets_create_url)s\">afeixes un</a>?"
-
-msgid "Live version"
-msgstr "Versió en viu"
-
-msgid "Current draft"
-msgstr "Esborrany actual"
-
-msgid "Preview"
-msgstr "Previsualització"
-
-msgid "Edit"
-msgstr "Editar"
-
-msgid "Review this version"
-msgstr "Revisar aquesta versió"
-
-msgid "Compare with previous version"
-msgstr "Compara amb la versió anterior"
-
-msgid "Compare with current version"
-msgstr "Compara amb la versió actual"
-
-msgid "Cancel scheduled publish"
-msgstr "Cancel·lar la publicació programada"
-
 msgid "Choose"
 msgstr "Triar"
+
+msgid "Snippets"
+msgstr "Fragments"
 
 msgid "Name"
 msgstr "Nom"
@@ -253,23 +159,9 @@ msgstr "Nom"
 msgid "Instances"
 msgstr "Instàncies"
 
-msgid "The snippet could not be created due to errors."
-msgstr "El fragment no s'ha pogut crear degut a errors."
-
-msgid "The snippet could not be saved due to errors."
-msgstr "El fragment no s'ha pogut desar degut a errors."
-
-msgid "Action"
-msgstr "Acció"
-
-msgid "User"
-msgstr "Usuari"
-
-msgid "Date"
-msgstr "Data"
-
-msgid "Snippet history"
-msgstr "Historial del fragment"
+#, python-format
+msgid "More options for '%(title)s'"
+msgstr "Més opcions per '%(title)s'"
 
 #, python-format
 msgid "Edit this %(model_name)s"
@@ -279,13 +171,8 @@ msgstr "Editar aquest %(model_name)s"
 msgid "%(model_name)s history"
 msgstr "Historial de %(model_name)s"
 
-#, python-format
-msgid "Edit '%(title)s'"
-msgstr "Editar '%(title)s'"
-
-#, python-format
-msgid "Delete '%(title)s'"
-msgstr "Esborrar '%(title)s'"
+msgid "Home"
+msgstr "Inici"
 
 #, python-format
 msgid "Choose %(object)s"

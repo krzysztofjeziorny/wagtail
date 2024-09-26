@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Wagtail\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-04-20 11:47+0100\n"
+"POT-Creation-Date: 2024-08-07 10:06+0100\n"
 "PO-Revision-Date: 2014-09-11 15:42+0000\n"
 "Last-Translator: Ole Kristian Losvik <ole@losol.no>, 2020\n"
 "Language-Team: Norwegian Bokmål (http://app.transifex.com/torchbox/wagtail/"
@@ -148,20 +148,12 @@ msgstr "Slett skjemadata"
 msgid "Delete"
 msgstr "Slett"
 
-msgid "Forms"
-msgstr "Skjemaer"
-
-msgid "Pages"
-msgstr "Sider"
-
-msgid "Title"
-msgstr "Tittel"
-
-msgid "Origin"
-msgstr "Opphav"
-
 msgid "Delete selected submissions"
 msgstr "Slett valgte innsendinger"
+
+#, python-format
+msgid "There have been no submissions of the '%(title)s' form."
+msgstr "Det er ingen innsendte skjemaer for \"%(title)s\"."
 
 msgid "Total submissions"
 msgstr "Alle innsendinger"
@@ -169,25 +161,21 @@ msgstr "Alle innsendinger"
 msgid "Latest submission"
 msgstr "Siste innsendinger"
 
-msgid "No form pages have been created."
-msgstr "Ingen skjemasider har blitt opprettet."
-
 #, python-format
 msgid "Submissions of %(form_title)s"
 msgstr "Innsendte %(form_title)s"
 
-msgid "Download XLSX"
-msgstr "Last ned XLSX"
+msgid "Forms"
+msgstr "Skjemaer"
 
-msgid "Download CSV"
-msgstr "Last ned CSV"
+msgid "Title"
+msgstr "Tittel"
 
-#, python-format
-msgid "There have been no submissions of the '%(title)s' form."
-msgstr "Det er ingen innsendte skjemaer for \"%(title)s\"."
+msgid "Origin"
+msgstr "Opphav"
 
-msgid "Filter"
-msgstr "Filter"
+msgid "Pages"
+msgstr "Sider"
 
 #, python-format
 msgid "One submission has been deleted."

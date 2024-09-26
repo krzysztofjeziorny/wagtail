@@ -273,7 +273,7 @@ class Index:
 
         data_sql = ", ".join(
             [
-                "(%%s, %%s, %s, %s, %s, 1.0)" % (a, b, c)
+                f"(%s, %s, {a}, {b}, {c}, 1.0)"
                 for a, b, c in zip(title_sql, autocomplete_sql, body_sql)
             ]
         )
@@ -353,7 +353,7 @@ class Index:
             update_method(content_type_pk, indexers)
 
     def delete_item(self, item):
-        item.index_entries.using(self.db_alias).delete()
+        item.index_entries.all()._raw_delete(using=self.db_alias)
 
     def __str__(self):
         return self.name
@@ -434,7 +434,7 @@ class PostgresSearchQueryCompiler(BaseSearchQueryCompiler):
             return SearchQuery(lexemes, search_type="raw", config=config)
 
         elif isinstance(query, Phrase):
-            return SearchQuery(query.query_string, search_type="phrase")
+            return SearchQuery(query.query_string, search_type="phrase", config=config)
 
         elif isinstance(query, Boost):
             # Not supported
@@ -762,7 +762,7 @@ class PostgresSearchBackend(BaseSearchBackend):
             for connection in connections.all()
             if connection.vendor == "postgresql"
         ]:
-            IndexEntry._default_manager.using(connection.alias).delete()
+            IndexEntry._default_manager.all()._raw_delete(using=connection.alias)
 
     def add_type(self, model):
         pass  # Not needed.

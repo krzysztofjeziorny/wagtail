@@ -3,14 +3,14 @@
 # This file is distributed under the same license as the PACKAGE package.
 #
 # Translators:
-# Erlend <debcf78e@opayq.com>, 2020
-# Erlend <debcf78e@opayq.com>, 2020
+# Erlend Eelmets <debcf78e@opayq.com>, 2020
+# Erlend Eelmets <debcf78e@opayq.com>, 2020
 # Matt Westcott <matthew@torchbox.com>, 2020
 msgid ""
 msgstr ""
 "Project-Id-Version: Wagtail\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-20 13:09+0000\n"
+"POT-Creation-Date: 2024-08-07 10:06+0100\n"
 "PO-Revision-Date: 2014-02-20 21:04+0000\n"
 "Last-Translator: Matt Westcott <matthew@torchbox.com>, 2020\n"
 "Language-Team: Estonian (http://app.transifex.com/torchbox/wagtail/language/"
@@ -123,16 +123,6 @@ msgstr "Tühista"
 msgid "Preview"
 msgstr "Eelvaade"
 
-#, python-format
-msgid "Editing %(title)s"
-msgstr "%(title)s muutmine"
-
-msgid "Editing"
-msgstr "Redigeerimine"
-
-msgid "Delete redirect"
-msgstr "Kustuta ümbersuunamine"
-
 msgid "Summary"
 msgstr "Kokkuvõte"
 
@@ -157,12 +147,6 @@ msgstr "Viga"
 msgid "Continue"
 msgstr "Jätka"
 
-msgid "Site"
-msgstr "Sait"
-
-msgid "Edit this redirect"
-msgstr "Muutke seda ümbersuunamist"
-
 #, python-format
 msgid "Sorry, no redirects match \"<em>%(query_string)s</em>\""
 msgstr ""
@@ -176,18 +160,15 @@ msgstr ""
 "Ümbersuunamisi pole loodud. Miks mitte <a "
 "href=\"%(wagtailredirects_add_redirect_url)s\">lisada üks</a>?"
 
-msgid "Search redirects"
-msgstr "Otsingu ümbersuunamised"
+msgid "Site"
+msgstr "Sait"
+
+msgid "The redirect could not be saved due to errors."
+msgstr "Ümbersuunamist ei õnnestunud vigade tõttu salvestada."
 
 #, python-format
 msgid "Redirect '%(redirect_title)s' updated."
 msgstr "Ümbersuunamine „%(redirect_title)s” on värskendatud."
-
-msgid "Edit"
-msgstr "Muuda"
-
-msgid "The redirect could not be saved due to errors."
-msgstr "Ümbersuunamist ei õnnestunud vigade tõttu salvestada."
 
 #, python-format
 msgid "Redirect '%(redirect_title)s' deleted."
@@ -197,8 +178,14 @@ msgstr "Ümbersuunamine '%(redirect_title)s' on kustutatud."
 msgid "Redirect '%(redirect_title)s' added."
 msgstr "Ümbersuunamine'%(redirect_title)s' on lisatud."
 
+msgid "Edit"
+msgstr "Muuda"
+
 msgid "The redirect could not be created due to errors."
 msgstr "Ümbersuunamist ei saanud vigade tõttu luua."
+
+msgid "Search redirects"
+msgstr "Otsingu ümbersuunamised"
 
 #, python-format
 msgid "File format of type \"%(extension)s\" is not supported"

@@ -13,6 +13,7 @@
 # Joaquín T <joaquintita@gmail.com>, 2014
 # José Luis <alagunajs@gmail.com>, 2015-2016
 # José Luis <alagunajs@gmail.com>, 2017-2018
+# Matt Westcott <matthew@torchbox.com>, 2024
 # Maylon Pedroso <maylonpedroso@gmail.com>, 2020
 # Oscar Luciano Espirilla Flores, 2020
 # Oscar Luciano Espirilla Flores, 2020
@@ -25,9 +26,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Wagtail\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-04-20 11:47+0100\n"
+"POT-Creation-Date: 2024-08-07 10:05+0100\n"
 "PO-Revision-Date: 2014-02-21 15:51+0000\n"
-"Last-Translator: X Bello <xbello@gmail.com>, 2022\n"
+"Last-Translator: Matt Westcott <matthew@torchbox.com>, 2024\n"
 "Language-Team: Spanish (http://app.transifex.com/torchbox/wagtail/language/"
 "es/)\n"
 "MIME-Version: 1.0\n"
@@ -83,7 +84,7 @@ msgid "Wagtail frontend cache"
 msgstr "Cache frontal Wagtail"
 
 msgid "Wagtail routablepage"
-msgstr "Página enrutable Wagtal"
+msgstr "Página enrutable Wagtail"
 
 msgid "Wagtail sitemaps"
 msgstr "Mapas de sitio Wagtail"
@@ -160,6 +161,39 @@ msgstr "en moderación"
 msgid "live + in moderation"
 msgstr "en vivo + en moderación"
 
+msgid "Add/edit pages you own"
+msgstr "Añadir/editar tus propias páginas"
+
+msgid "Bulk delete"
+msgstr "Eliminar volumen."
+
+msgid "Delete pages with children"
+msgstr "Eliminar páginas con hijos."
+
+msgid "Edit"
+msgstr "Editar"
+
+msgid "Edit any page"
+msgstr "Editar cualquier página"
+
+msgid "Lock"
+msgstr "Bloquear"
+
+msgid "Lock/unlock pages you've locked"
+msgstr "Bloquear/desbloquear páginas que usted bloqueó"
+
+msgid "Publish"
+msgstr "Publicar"
+
+msgid "Publish any page"
+msgstr "Publicar cualquier página"
+
+msgid "Unlock"
+msgstr "Desbloquear"
+
+msgid "Unlock any page"
+msgstr "Desbloquear cualquier página"
+
 msgid "title"
 msgstr "Título"
 
@@ -224,9 +258,6 @@ msgstr "páginas"
 msgid "object id"
 msgstr "id del objeto"
 
-msgid "submitted for moderation"
-msgstr "enviado para moderación"
-
 msgid "created at"
 msgstr "creado el"
 
@@ -245,44 +276,11 @@ msgstr "revisión"
 msgid "revisions"
 msgstr "revisiones"
 
-msgid "Add/edit pages you own"
-msgstr "Añadir/editar tus propias páginas"
-
-msgid "Edit"
-msgstr "Editar"
-
-msgid "Edit any page"
-msgstr "Editar cualquier página"
-
-msgid "Publish"
-msgstr "Publicar"
-
-msgid "Publish any page"
-msgstr "Publicar cualquier página"
-
-msgid "Bulk delete"
-msgstr "Eliminar volumen."
-
-msgid "Delete pages with children"
-msgstr "Eliminar páginas con hijos."
-
-msgid "Lock"
-msgstr "Bloquear"
-
-msgid "Lock/unlock pages you've locked"
-msgstr "Bloquear/desbloquear páginas que usted bloqueó"
-
-msgid "Unlock"
-msgstr "Desbloquear"
-
-msgid "Unlock any page"
-msgstr "Desbloquear cualquier página"
-
 msgid "group"
 msgstr "grupo"
 
-msgid "permission type"
-msgstr "tipo de permiso"
+msgid "permission"
+msgstr "permiso"
 
 msgid "group page permission"
 msgstr "grupo de permisos de página"
@@ -471,14 +469,14 @@ msgstr "Restriciones de vista de la colección"
 msgid "collections"
 msgstr "coleciones"
 
-msgid "permission"
-msgstr "permiso"
-
 msgid "group collection permission"
 msgstr "permiso de colección de grupo"
 
 msgid "group collection permissions"
 msgstr "permisos de colección de grupo"
+
+msgid "uploaded by user"
+msgstr "subido por el usuario"
 
 msgid "hostname"
 msgstr "nombre del host"
@@ -535,17 +533,8 @@ msgstr ""
 msgid "Public"
 msgstr "Público"
 
-msgid "Private, accessible to logged-in users"
-msgstr "Privado, accesible para usuarios que han iniciado sesión"
-
-msgid "Private, accessible with the following password"
-msgstr "Privado, accesible con la siguiente contraseña"
-
 msgid "Private, accessible to users in specific groups"
 msgstr "Privado, accesible para usuarios en grupos específicos"
-
-msgid "password"
-msgstr "contraseña"
 
 msgid "view restriction"
 msgstr "restricción de vista"
@@ -758,10 +747,6 @@ msgstr "Actualizada la restricción de vista"
 
 msgid "Remove view restrictions"
 msgstr "Eliminar restricciones de vista"
-
-#, python-format
-msgid "Removed the '%(restriction)s' view restriction"
-msgstr "Eliminada la restricción de vista '%(restriction)s'"
 
 msgid "Removed view restriction"
 msgstr "Eliminada restricción de vista"

@@ -3,6 +3,7 @@ import hashlib
 import hmac
 
 from django.conf import settings
+from django.utils.crypto import constant_time_compare
 from django.utils.encoding import force_str
 
 
@@ -87,14 +88,16 @@ def generate_signature(image_id, filter_spec, key=None):
 
     # Based on libthumbor hmac generation
     # https://github.com/thumbor/libthumbor/blob/b19dc58cf84787e08c8e397ab322e86268bb4345/libthumbor/crypto.py#L50
-    url = "{}/{}/".format(image_id, filter_spec)
+    url = f"{image_id}/{filter_spec}/"
     return force_str(
         base64.urlsafe_b64encode(hmac.new(key, url.encode(), hashlib.sha1).digest())
     )
 
 
 def verify_signature(signature, image_id, filter_spec, key=None):
-    return force_str(signature) == generate_signature(image_id, filter_spec, key=key)
+    return constant_time_compare(
+        signature, generate_signature(image_id, filter_spec, key=key)
+    )
 
 
 def find_image_duplicates(image, user, permission_policy):

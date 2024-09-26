@@ -5,11 +5,7 @@
   margin: 0.5em 0 0;
   font-size: 1em;
   font-weight: bold;
-  color: theme('colors.critical.200');
-
-  @media (forced-colors: active) {
-    forced-color-adjust: none;
-  }
+  color: theme('colors.text-error');
 
   &::before {
     content: '';

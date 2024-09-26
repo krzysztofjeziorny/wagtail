@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Wagtail\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-04-20 11:47+0100\n"
+"POT-Creation-Date: 2024-08-07 10:06+0100\n"
 "PO-Revision-Date: 2014-02-19 11:54+0000\n"
 "Last-Translator: Lyuboslav  Petrov <petrov.lyuboslav@gmail.com>, 2014\n"
 "Language-Team: Bulgarian (http://app.transifex.com/torchbox/wagtail/language/"
@@ -59,9 +59,6 @@ msgstr "Изтрий"
 msgid "Yes, delete"
 msgstr "Да, изтрий го"
 
-msgid "Editing"
-msgstr "Редактиране"
-
 msgid "Save"
 msgstr "Запази"
 
@@ -71,29 +68,14 @@ msgstr "Име"
 msgid "Publish"
 msgstr "Публикувай"
 
-msgid "Add user"
-msgstr "Добави потребител"
-
 msgid "Account"
 msgstr "Потребителски профил"
 
 msgid "Roles"
 msgstr "Роля"
 
-msgid "Users"
-msgstr "Потребители"
-
-msgid "Add a user"
+msgid "Add user"
 msgstr "Добави потребител"
-
-msgid "Username"
-msgstr "Потребителско име"
-
-msgid "Status"
-msgstr "Статус"
-
-msgid "Admin"
-msgstr "Админ"
 
 msgid "Active"
 msgstr "Активен"
@@ -101,12 +83,24 @@ msgstr "Активен"
 msgid "Inactive"
 msgstr "Неактивен"
 
+msgid "Add a user"
+msgstr "Добави потребител"
+
+msgid "Users"
+msgstr "Потребители"
+
+msgid "Username"
+msgstr "Потребителско име"
+
+msgid "Admin"
+msgstr "Админ"
+
+msgid "Status"
+msgstr "Статус"
+
 #, python-format
 msgid "User '%(object)s' updated."
 msgstr "Потребител '%(object)s' обновен."
 
 msgid "The user could not be saved due to errors."
 msgstr "Потребителя не можеше да бъде запазен заради грешки."
-
-msgid "Edit"
-msgstr "Редакция"

@@ -12,7 +12,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Wagtail\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-20 13:09+0000\n"
+"POT-Creation-Date: 2024-08-07 10:06+0100\n"
 "PO-Revision-Date: 2014-02-20 21:04+0000\n"
 "Last-Translator: Andrej Marsetič, 2022-2023\n"
 "Language-Team: Slovenian (http://app.transifex.com/torchbox/wagtail/language/"
@@ -120,6 +120,17 @@ msgstr "Preusmeritve"
 msgid "Import redirects"
 msgstr "Uvozite preusmeritve"
 
+msgid ""
+"<p>Select a file where redirects are separated into rows and contains the "
+"columns representing <code>from</code> and <code>to</code> (they can be "
+"named anything).</p> <p>After submitting you will be taken to a confirmation "
+"view where you can customize your redirects before import.</p>"
+msgstr ""
+"<p>Izberite datoteko, kjer so preusmeritve ločene v vrstice in vsebuje "
+"stolpce, ki predstavljajo <code>od</code> in <code>do</code> (lahko jih "
+"poljubno poimenujete).</p> <p>Po oddaji boste preusmerjeni v potrditveni "
+"pogled, kjer lahko prilagodite svoje preusmeritve pred uvozom.</p>"
+
 msgid "Import"
 msgstr "preusmeri"
 
@@ -148,16 +159,6 @@ msgstr "Prekliči"
 msgid "Preview"
 msgstr "Predogled"
 
-#, python-format
-msgid "Editing %(title)s"
-msgstr "Urejanje %(title)s"
-
-msgid "Editing"
-msgstr "Urejanje"
-
-msgid "Delete redirect"
-msgstr "Izbriši preusmeritev"
-
 msgid "Summary"
 msgstr "Povzetek"
 
@@ -180,26 +181,6 @@ msgstr "Napaka"
 msgid "Continue"
 msgstr "Nadaljuj"
 
-msgid "Export redirects"
-msgstr "Izvozite preusmeritve"
-
-msgid "Site"
-msgstr "Spletno mesto"
-
-msgid "Edit this redirect"
-msgstr "Uredi preusmeritev"
-
-msgid "No redirects found."
-msgstr "Preusmeritve niso bile najdene."
-
-#, python-format
-msgid "There is %(counter)s match"
-msgid_plural "There are %(counter)s matches"
-msgstr[0] "%(counter)s zadetek"
-msgstr[1] "%(counter)s zadetka"
-msgstr[2] "%(counter)s zadetkov"
-msgstr[3] "%(counter)s zadetkov"
-
 #, python-format
 msgid "Sorry, no redirects match \"<em>%(query_string)s</em>\""
 msgstr ""
@@ -213,18 +194,15 @@ msgstr ""
 "Dodana ni še nobena preusmeritev. Zakaj je nebi <a "
 "href=\"%(wagtailredirects_add_redirect_url)s\">dodali</a>?"
 
-msgid "Search redirects"
-msgstr "Iskanje po preusmeritvah"
+msgid "Site"
+msgstr "Spletno mesto"
+
+msgid "The redirect could not be saved due to errors."
+msgstr "Preusmeritve, zaradi napak, ni bilo možno shraniti."
 
 #, python-format
 msgid "Redirect '%(redirect_title)s' updated."
 msgstr "Preusmeritev '%(redirect_title)s' posodobljena."
-
-msgid "Edit"
-msgstr "Uredi"
-
-msgid "The redirect could not be saved due to errors."
-msgstr "Preusmeritve, zaradi napak, ni bilo možno shraniti."
 
 #, python-format
 msgid "Redirect '%(redirect_title)s' deleted."
@@ -234,12 +212,27 @@ msgstr "Preusmeritev '%(redirect_title)s' izbrisana."
 msgid "Redirect '%(redirect_title)s' added."
 msgstr "Preusmeritev '%(redirect_title)s' dodana."
 
+msgid "Edit"
+msgstr "Uredi"
+
 msgid "The redirect could not be created due to errors."
 msgstr "Preusmeritve, zaradi napak, ni bilo možno ustvariti."
+
+msgid "Search redirects"
+msgstr "Iskanje po preusmeritvah"
+
+#, python-format
+msgid "File format of type \"%(extension)s\" is not supported"
+msgstr "Format datoteke vrste '%(extension)s' ni podprt"
 
 #, python-format
 msgid "Imported file has a wrong encoding: %(error_message)s"
 msgstr "Uvožena datoteka ima napačno kodiranje: %(error_message)s"
+
+#, python-format
+msgid "%(error)s encountered while trying to read file: %(filename)s"
+msgstr ""
+"med poskusom branja datoteke %(filename)s je prišlo do napake %(error)s"
 
 #, python-format
 msgid "Imported %(total)d redirect"
@@ -248,6 +241,3 @@ msgstr[0] "Uvožena%(total)d preusmeritev"
 msgstr[1] "Uvoženi%(total)d preusmeritvi"
 msgstr[2] "Uvoženih %(total)d preusmeritev"
 msgstr[3] "Uvoženih %(total)d preusmeritev"
-
-msgid "Export Redirects"
-msgstr "Izvozite preusmeritve"

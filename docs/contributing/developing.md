@@ -62,10 +62,9 @@ If you are confident with Python and Node development on Windows and wish to pro
 
 We recommend [Chocolatey](https://chocolatey.org/install) for managing packages in Windows. Once Chocolatey is installed you can then install the [`make`](https://community.chocolatey.org/packages/make) utility in order to run common build and development commands.
 
-To effectively collaborate with other developers on different operating systems, we use CRLF to handle our line endings. You can configure this in Git using:
+We use LF for our line endings. To effectively collaborate with other developers on different operating systems, use Git's automatic CRLF handling by setting the `core.autocrlf` config to `true`:
 
 ```doscon
-#  Configures how Git handles line endings and sets the value to True
 git config --global core.autocrlf true
 ```
 
@@ -118,7 +117,7 @@ django-admin makemigrations --settings=wagtail.test.settings
 ### Testing against PostgreSQL
 
 ```{note}
-In order to run these tests, you must install the required modules for PostgreSQL as described in Django's [Databases documentation](https://docs.djangoproject.com/en/stable/ref/databases/).
+In order to run these tests, you must install the required modules for PostgreSQL as described in Django's [Databases documentation](inv:django#ref/databases).
 ```
 
 By default, Wagtail tests against SQLite. You can switch to using PostgreSQL by
@@ -133,7 +132,7 @@ If you need to use a different user, password, host, or port, use the `PGUSER`, 
 ### Testing against a different database
 
 ```{note}
-In order to run these tests, you must install the required client libraries and modules for the given database as described in Django's [Databases documentation](https://docs.djangoproject.com/en/stable/ref/databases/) or the 3rd-party database backend's documentation.
+In order to run these tests, you must install the required client libraries and modules for the given database as described in Django's [Databases documentation](inv:django#ref/databases) or the 3rd-party database backend's documentation.
 ```
 
 If you need to test against a different database, set the `DATABASE_ENGINE`
@@ -159,11 +158,10 @@ It is also possible to set `DATABASE_DRIVER`, which corresponds to the `driver` 
 
 ### Testing Elasticsearch
 
-You can test Wagtail against Elasticsearch by passing the `--elasticsearch`
-argument to `runtests.py`:
+You can test Wagtail against Elasticsearch by passing the argument `--elasticsearch7` or `--elasticsearch8` (corresponding to the version of Elasticsearch you want to test against):
 
 ```sh
-python runtests.py --elasticsearch
+python runtests.py --elasticsearch8
 ```
 
 Wagtail will attempt to connect to a local instance of Elasticsearch
@@ -173,7 +171,7 @@ If your Elasticsearch instance is located somewhere else, you can set the
 `ELASTICSEARCH_URL` environment variable to point to its location:
 
 ```sh
-ELASTICSEARCH_URL=http://my-elasticsearch-instance:9200 python runtests.py --elasticsearch
+ELASTICSEARCH_URL=https://my-elasticsearch-instance:9200 python runtests.py --elasticsearch8
 ```
 
 ### Unit tests for JavaScript
@@ -206,25 +204,18 @@ Integration tests target `http://127.0.0.1:8000` by default. Use the `TEST_ORIGI
 
 Wagtail is meant to be used on a wide variety of devices and browsers. Supported browser / device versions include:
 
-| Browser       | Device/OS  | Version(s) |
-| ------------- | ---------- | ---------- |
-| Mobile Safari | iOS Phone  | Last 2     |
-| Mobile Safari | iOS Tablet | Last 2     |
-| Chrome        | Android    | Last 2     |
-| Chrome        | Desktop    | Last 2     |
-| MS Edge       | Windows    | Last 2     |
-| Firefox       | Desktop    | Latest     |
-| Firefox ESR   | Desktop    | Latest     |
-| Safari        | macOS      | Last 3     |
+| Browser       | Device/OS  | Version(s)         |
+| ------------- | ---------- | ------------------ |
+| Mobile Safari | iOS Phone  | Last 2: 16, 17     |
+| Mobile Safari | iOS Tablet | Last 2: 16, 17     |
+| Chrome        | Android    | Last 2             |
+| Chrome        | Desktop    | Last 2             |
+| MS Edge       | Windows    | Last 2             |
+| Firefox       | Desktop    | Latest             |
+| Firefox ESR   | Desktop    | Latest             |
+| Safari        | macOS      | Last 3: 15, 16, 17 |
 
-We aim for Wagtail to work in those environments, there are known support gaps for Safari 13 introduced in Wagtail 4.0 to provide better support for RTL languages. Our development standards ensure that the site is usable on other browsers **and will work on future browsers**.
-
-IE 11 support has been officially dropped in 2.15 as it is gradually falling out of use. Features already known not to work include:
-
--   Rich text copy-paste in the rich text editor.
--   Sticky toolbar in the rich text editor.
--   Focus outline styles in the main menu & explorer menu.
--   Keyboard access to the actions in page listing tables.
+We aim for Wagtail to work in those environments. Our development standards ensure that the site is usable on other browsers **and will work on future browsers**.
 
 **Unsupported browsers / devices include:**
 
@@ -245,7 +236,7 @@ We want to make Wagtail accessible for users of a wide variety of assistive tech
 -   Mobile [VoiceOver](https://support.apple.com/en-gb/guide/voiceover-guide/welcome/web) on iOS, or [TalkBack](https://support.google.com/accessibility/android/answer/6283677?hl=en-GB) on Android
 -   Windows [High-contrast mode](https://support.microsoft.com/en-us/windows/use-high-contrast-mode-in-windows-10-fedc744c-90ac-69df-aed5-c8a90125e696)
 
-We aim for Wagtail to work in those environments. Our development standards ensure that the site is usable with other assistive technologies. In practice, testing with assistive technology can be a daunting task that requires specialised training – here are tools we rely on to help identify accessibility issues, to use during development and code reviews:
+We aim for Wagtail to work in those environments. Our development standards ensure that the site is usable with other assistive technologies. In practice, testing with assistive technology can be a daunting task that requires specialized training – here are tools we rely on to help identify accessibility issues, to use during development and code reviews:
 
 -   [@wordpress/jest-puppeteer-axe](https://github.com/WordPress/gutenberg/tree/trunk/packages/jest-puppeteer-axe) running Axe checks as part of integration tests.
 -   [Axe](https://chrome.google.com/webstore/detail/axe/lhdoppojpmngadmnindnejefpokejbdd) Chrome extension for more comprehensive automated tests of a given page.
@@ -297,7 +288,8 @@ The last command will start Storybook at `http://localhost:6006/`. It will proxy
 The Wagtail documentation is built by Sphinx. To install Sphinx and compile the documentation, run:
 
 ```sh
-cd /path/to/wagtail
+# Starting from the wagtail root directory:
+
 # Install the documentation dependencies
 pip install -e .[docs]
 # or if using zsh as your shell:
@@ -313,6 +305,8 @@ Python comes with a module that makes it very easy to preview static files in a 
 To start this simple server, run the following commands:
 
 ```sh
+# Starting from the wagtail root directory:
+
 cd docs/_build/html/
 python -m http.server 8080
 ```
@@ -324,6 +318,8 @@ Unfortunately, this cache also hides any warnings thrown by unmodified documenta
 To clear the built HTML and start fresh, so you can see all warnings thrown when building the documentation, run:
 
 ```sh
+# Starting from the wagtail root directory:
+
 cd docs/
 make clean
 make html
@@ -333,6 +329,8 @@ Wagtail also provides a way for documentation to be compiled automatically on ea
 To do this, you can run the following command to see the changes automatically at `localhost:4000`:
 
 ```sh
+# Starting from the wagtail root directory:
+
 cd docs/
 make livehtml
 ```
@@ -346,3 +344,21 @@ pre-commit install
 ```
 
 pre-commit should now run on every commit you make.
+
+(developing_using_a_fork)=
+
+## Using forks for installation
+
+Sometimes it may be necessary to install Wagtail from a fork. For example your site depends on a bug fix that is currently waiting for review, and you cannot afford waiting for a new release.
+
+The Wagtail release process includes steps for static asset building and translations updated which means you cannot update your requirements file to point a particular git commit in the main repository.
+
+To install from your fork, from the root of your Wagtail git checkout (and assuming the tooling for building the static assets has previously been installed using `npm install`), run:
+
+```sh
+python ./setup.py sdist
+```
+
+This will create a `.tar.gz` package within `dist/,` which can be installed with `pip`.
+
+For remote deployments, it's usually most convenient to upload this to a public URL somewhere and place that URL in your project's requirements in place of the standard `wagtail` line.

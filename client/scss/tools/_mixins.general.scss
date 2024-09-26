@@ -57,45 +57,10 @@
   }
 }
 
-@mixin visuallyhidden {
-  border: 0;
-  clip: rect(0 0 0 0);
-  height: 1px;
-  margin: -1px;
-  overflow: hidden;
-  padding: 0;
-  position: absolute;
-  width: 1px;
-}
-
-@mixin visuallyvisible {
-  clip: auto;
-  height: auto;
-  width: auto;
-  margin: initial;
-  overflow: visible;
-  position: initial;
-}
-
 @mixin svg-icon($size: 1em, $position: text-top) {
   width: $size;
   height: $size;
   vertical-align: $position;
-}
-
-@mixin icon() {
-  @include font-smoothing;
-  font-family: $font-wagtail-icons;
-  font-style: normal;
-  font-weight: normal;
-  font-variant: normal;
-  speak: none;
-  text-decoration: none;
-  width: 1.3em;
-  line-height: 1em;
-  text-align: start;
-  vertical-align: middle;
-  margin-inline-end: 0.2em;
 }
 
 // Applies given rules on hover, for devices that support hover.
@@ -111,4 +76,34 @@
 // This is useful when focusable items are tightly packed and there is no space in-between.
 @mixin show-focus-outline-inside {
   outline-offset: -1 * $focus-outline-width;
+}
+
+/**
+ * Apply styles for the dark theme only.
+ */
+@mixin dark-theme() {
+  .w-theme-dark & {
+    @content;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .w-theme-system & {
+      @content;
+    }
+  }
+}
+
+/**
+ * Apply styles for the light theme only.
+ */
+@mixin light-theme() {
+  .w-theme-light & {
+    @content;
+  }
+
+  @media (prefers-color-scheme: light) {
+    .w-theme-system & {
+      @content;
+    }
+  }
 }

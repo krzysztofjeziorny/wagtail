@@ -9,6 +9,7 @@
 # abdulaziz alfuhigi <abajall@gmail.com>, 2016
 # Amr Awad <amro.khir@gmail.com>, 2020
 # HossamElDin Mohamed <garo5070@gmail.com>, 2021
+# Mahmoud Marayef, 2023
 # Mohamed Mayla <mohamed.mayla@gmail.com>, 2015
 # Mohammed Abdul gadir <weekmo@aol.com>, 2019
 # ROGER MICHAEL ASHLEY ALLEN <rogermaallen@gmail.com>, 2015
@@ -20,9 +21,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Wagtail\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-04-20 11:47+0100\n"
+"POT-Creation-Date: 2024-08-07 10:06+0100\n"
 "PO-Revision-Date: 2014-02-21 15:50+0000\n"
-"Last-Translator: Waseem Kntar, 2023\n"
+"Last-Translator: Mahmoud Marayef, 2023\n"
 "Language-Team: Arabic (http://app.transifex.com/torchbox/wagtail/language/"
 "ar/)\n"
 "MIME-Version: 1.0\n"
@@ -41,6 +42,16 @@ msgstr "قدّم للمراجعة"
 #, python-format
 msgid "Resubmit to %(task_name)s"
 msgstr "إعادة اﻹدخال إلي %(task_name)s"
+
+#, python-format
+msgid "Submit to %(workflow_name)s"
+msgstr "ارسال الي %(workflow_name)s"
+
+msgid "Restart workflow "
+msgstr "اعادة تشغيل مكان العمل"
+
+msgid "Cancel workflow "
+msgstr "الغاء مكان العمل"
 
 msgid "Unpublish"
 msgstr "إلغاء نشر"
@@ -76,6 +87,9 @@ msgstr "تاريخ لـ"
 msgid "All"
 msgstr "الكل"
 
+msgid "Collection"
+msgstr "مجموعة"
+
 msgid "Preferred language"
 msgstr "اللغة المفضلة"
 
@@ -98,6 +112,11 @@ msgid "Enter password"
 msgstr "ادخل كلمة المرور"
 
 #, python-format
+msgid "Your %(username_field)s and password didn't match. Please try again."
+msgstr ""
+"لم تتطابق %(username_field)s و كلمة المرور مع كلمة المرور. حاول مرة اخرى."
+
+#, python-format
 msgid "Enter your %(username_field_name)s"
 msgstr "ادخل %(username_field_name)s الخاص بك "
 
@@ -116,9 +135,6 @@ msgstr "بحث"
 msgid "All collections"
 msgstr "جميع المجموعات"
 
-msgid "Collection"
-msgstr "مجموعة"
-
 msgid "Parent"
 msgstr "والد"
 
@@ -128,11 +144,23 @@ msgstr "لا يوجد لديك العديد من الصلاحيات المسجل
 msgid "Add"
 msgstr "اضف"
 
+msgid "Add collections"
+msgstr "اضف مجموعات"
+
 msgid "Edit"
 msgstr "تحرير"
 
+msgid "Edit collections"
+msgstr "تعديل المجموعات"
+
 msgid "Delete"
 msgstr "احذف"
+
+msgid "Delete collections"
+msgstr "ازالة المجموعات"
+
+msgid "You cannot edit another user's comment."
+msgstr "لا يمكنك نعديل مستخدم اخر تعليق"
 
 msgid "Go live date/time must be before expiry date/time"
 msgstr "يجب أن يكون تاريخ / وقت البث المباشر قبل تاريخ / وقت انتهاء الصلاحية"
@@ -203,6 +231,9 @@ msgstr ""
 msgid "You cannot copy a page into itself when copying subpages"
 msgstr "لا يمكنك نسخ صفحة إلى نفسها عند نسخ الصفحات الفرعية"
 
+msgid "Parent page"
+msgstr "صفحة الأم"
+
 #, python-format
 msgid "Tag(s) %(value_too_long)s are over %(max_tag_length)d characters"
 msgstr "الوسم (أو الوسوم) %(value_too_long)s تخطَّو%(max_tag_length)d حرفا "
@@ -239,9 +270,6 @@ msgstr "تم تحديد %(objects)s مُستخدم"
 msgid "1 item selected"
 msgstr "تم تحديد 1 عنصر"
 
-msgid "Page title"
-msgstr "عنوان الصفحة"
-
 msgid "For search engines"
 msgstr "خاص بمحركات البحث"
 
@@ -256,6 +284,12 @@ msgstr "ترويج"
 
 msgid "Settings"
 msgstr "إعدادات"
+
+msgid "Title"
+msgstr "عنوان"
+
+msgid "Page title"
+msgstr "عنوان الصفحة"
 
 msgid "Error 404: Page not found"
 msgstr "خطا 404: الصفحة المطلوبة غير متوفرة"
@@ -383,9 +417,6 @@ msgstr "استكشف الصفحات الفرعية %(title)s"
 msgid "Explore"
 msgstr "استكشف"
 
-msgid "Collection privacy"
-msgstr "مجموعة خصوصية"
-
 msgid "This collection has been made private by a parent collection."
 msgstr "تم جعل هذه المجموعة خاصة من قبل مجموعة الأم."
 
@@ -412,9 +443,6 @@ msgid ""
 "This collection cannot be deleted, because it is not empty. It contains:"
 msgstr "المجموعة لايمكن حذفها. بسبب احتوائها على محتويات:"
 
-msgid "Name"
-msgstr "اسم"
-
 #, python-format
 msgid ""
 "No collections have been created. Why not <a "
@@ -438,6 +466,12 @@ msgstr "نعك ألغ نشره"
 
 msgid "No, don't unpublish"
 msgstr "لا ,ألغ النشر"
+
+msgid "Comment"
+msgstr "تعليق"
+
+msgid "Actions"
+msgstr "النشاطات"
 
 msgid "Update"
 msgstr "حدث"
@@ -469,9 +503,6 @@ msgstr ""
 msgid "Your locked pages"
 msgstr "صفحاتُك المقفلة"
 
-msgid "Title"
-msgstr "عنوان"
-
 msgid "Edit this page"
 msgstr "حرر هذه الصفحة"
 
@@ -483,27 +514,6 @@ msgstr "مسودة"
 
 msgid "Live"
 msgstr "مباشر"
-
-msgid "Pages awaiting moderation"
-msgstr "صفحات في انتظار الاشراف عليها"
-
-msgid "Type"
-msgstr "نوع"
-
-msgid "Edited"
-msgstr "محررة"
-
-msgid "Preview this page"
-msgstr "مراجعة هذة الصفحة"
-
-msgid "Approve"
-msgstr "موافق"
-
-msgid "Reject"
-msgstr "مرفوض"
-
-msgid "Preview"
-msgstr "نظر مقدم"
 
 msgid "Your most recent edits"
 msgstr "أحدث تعديلاتك"
@@ -520,16 +530,17 @@ msgstr "ملحص الموقع"
 msgid "Close"
 msgstr "اغلاق"
 
+msgid "Preview"
+msgstr "نظر مقدم"
+
+msgid "Compare with live version"
+msgstr "مقارنة مع النسخة الحية"
+
 msgid "Sign in"
 msgstr "تسجيل الدخول"
 
 msgid "Sign in to Wagtail"
 msgstr "تسجيل الدخول لـ Wagtail"
-
-#, python-format
-msgid "Your %(username_field)s and password didn't match. Please try again."
-msgstr ""
-"لم تتطابق %(username_field)s و كلمة المرور مع كلمة المرور. حاول مرة اخرى."
 
 msgid "Signing in…"
 msgstr "يتم تسجيل الدخول..."
@@ -563,19 +574,8 @@ msgstr "يمكن تنقيح الصفحة هنا"
 msgid "The page \"%(title)s\" has been rejected"
 msgstr "الصفحة \"%(title)s\" تم رفضها."
 
-#, python-format
-msgid "The page \"%(page)s\" has been submitted for moderation by %(editor)s."
-msgstr "تم إرسال الصفحة \"%(page)s\" للإشراف عليها من قبل \"%(editor)s\""
-
 msgid "You can preview the page here:"
 msgstr "يمكن النظر المقدم في الصفحة هنا"
-
-#, python-format
-msgid "The page \"%(page)s\" has been submitted for moderation"
-msgstr "تم تقديم الصفحة \"%(page)s\" للإشراف"
-
-msgid "Page privacy"
-msgstr "خصوصية الصفحة"
 
 msgid "This page has been made private by a parent page."
 msgstr "لقد تم جعل هذه الصفحة خاصة بواسطة صفحة رئيسية."
@@ -691,13 +691,6 @@ msgid "Publish page"
 msgstr "نشر الصفحة"
 
 #, python-format
-msgid "Pages using %(page_class_verbose_name)s"
-msgstr "صفحات مستخدمة%(page_class_verbose_name)s"
-
-msgid "Pages using"
-msgstr "صفحات تستعمل"
-
-#, python-format
 msgid "Copy %(title)s"
 msgstr "نسخ %(title)s"
 
@@ -707,48 +700,11 @@ msgstr "انسخ"
 msgid "Copy this page"
 msgstr "انسخ هذه الصفحة"
 
-#, python-format
-msgid "New %(page_type)s"
-msgstr "جديد %(page_type)s"
-
-msgid "Actions"
-msgstr "النشاطات"
-
 msgid "This page has unsaved changes."
 msgstr " لم يتم حفظ التعديلات على هذه الصحفه"
 
-#, python-format
-msgid "Editing %(page_type)s: %(title)s"
-msgstr "قيد التعديل %(page_type)s :%(title)s"
-
-msgid "User"
-msgstr "مستعمل"
-
-msgid "Comment"
-msgstr "تعليق"
-
-msgid "Live version"
-msgstr "نسخة حية"
-
-msgid "Current draft"
-msgstr "المسودة الحالية"
-
-#, python-format
-msgid "Exploring %(title)s"
-msgstr "استكشف %(title)s"
-
-msgid "Drag"
-msgstr "اسحب"
-
 msgid "Configure a site now."
 msgstr "تكوين موقع الآن."
-
-msgid "No pages have been created at this location."
-msgstr "لم تنسأ إي صفحات في هذا الموقع"
-
-#, python-format
-msgid "Why not <a href=\"%(add_page_url)s\">create one</a>?"
-msgstr "لماذا لا تنشئ <a href=\"%(add_page_url)s\">واحدة</a>؟"
 
 msgid "This page is locked to further editing"
 msgstr "هذه الصفحة مغلقة لأي تنقيح"
@@ -760,6 +716,18 @@ msgstr "استكشاف الصفحات الفردية '%(title)s'"
 #, python-format
 msgid "Add a child page to '%(title)s'"
 msgstr "اضافة تفرع لصفحة %(title)s"
+
+msgid "Drag"
+msgstr "اسحب"
+
+msgid "Disable ordering of child pages"
+msgstr "تعطيل ترتيب الصفحات الفرعية"
+
+msgid "Sort"
+msgstr "ترتيب"
+
+msgid "Enable ordering of child pages"
+msgstr "تمكين ترتيب الصفحات الفرعية"
 
 msgid "Sites menu"
 msgstr "قائمة الموقع"
@@ -776,20 +744,8 @@ msgstr "قادم"
 msgid "This page is protected from public view"
 msgstr "هذه الصفحة محمية من النظر العمومي"
 
-msgid "Disable ordering of child pages"
-msgstr "تعطيل ترتيب الصفحات الفرعية"
-
-msgid "Sort"
-msgstr "ترتيب"
-
-msgid "Enable ordering of child pages"
-msgstr "تمكين ترتيب الصفحات الفرعية"
-
-msgid "Updated"
-msgstr "مجدد"
-
-msgid "Cancel scheduled publish"
-msgstr "إلغاء النشر المجدول"
+msgid "Add child page"
+msgstr "أضف صفحة لطفل "
 
 msgid "Page types"
 msgstr "انواع الصفحة"
@@ -810,20 +766,29 @@ msgstr "تقدم إلى فوق "
 msgid "Move down"
 msgstr "تقدم إلى تحت"
 
+msgid "Type"
+msgstr "نوع"
+
 msgid "No pages found."
 msgstr "لم يتم العثور على صفحات."
 
-msgid "Download XLSX"
-msgstr "حمل XLSX"
+msgid "Updated"
+msgstr "مجدد"
 
-msgid "Download CSV"
-msgstr "تنزيل ملف CSV"
+msgid "Pages"
+msgstr "صفحات"
 
 msgid "Locked"
 msgstr "مغلق"
 
 msgid "No locked pages found."
 msgstr "لم يتم العثور على صفحات مقفلة"
+
+msgid "Name"
+msgstr "اسم"
+
+msgid "User"
+msgstr "مستعمل"
 
 msgid "Edit this item"
 msgstr "تحرير هذا العنصر"
@@ -832,8 +797,14 @@ msgstr "تحرير هذا العنصر"
 msgid "Page %(page_num)s of %(total_pages)s."
 msgstr "صفحة %(page_num)s من %(total_pages)s"
 
-msgid "Root"
-msgstr "الجذر"
+msgid "Continue"
+msgstr "أكمل"
+
+msgid "Download XLSX"
+msgstr "حمل XLSX"
+
+msgid "Download CSV"
+msgstr "تنزيل ملف CSV"
 
 msgid "Filter"
 msgstr "فلتر"
@@ -879,6 +850,9 @@ msgstr[3] "تم استخدامه %(usage_count)s مرة"
 msgstr[4] "تم استخدامه %(usage_count)s مرة"
 msgstr[5] "تم استخدامه %(usage_count)s مرة"
 
+msgid "Edited"
+msgstr "محررة"
+
 msgid "Add a child page"
 msgstr "إضافة صفحة فرعية"
 
@@ -897,9 +871,6 @@ msgstr "جديد"
 msgid "Published"
 msgstr "تم نشره"
 
-msgid "Compare with live version"
-msgstr "مقارنة مع النسخة الحية"
-
 msgid "More"
 msgstr "المزيد"
 
@@ -909,6 +880,18 @@ msgstr "قبل %(time_period)s"
 
 msgid "Log out"
 msgstr "تسجيل الخروج"
+
+msgid "Undo"
+msgstr "تراجع"
+
+msgid "Redo"
+msgstr "للامام"
+
+msgid "Bold"
+msgstr "Bold"
+
+msgid "Italic"
+msgstr "Italic"
 
 msgid "Password"
 msgstr "كلمة السر"
@@ -946,6 +929,18 @@ msgstr "المجموعة '%(object)s' محذوفة."
 msgid "Are you sure you want to delete this collection?"
 msgstr "هل أنت متأكد من أنك تريد حذف هذه المجموعة؟"
 
+msgid "Home"
+msgstr "الرئيسة"
+
+msgid "Live version"
+msgstr "نسخة حية"
+
+msgid "Current draft"
+msgstr "المسودة الحالية"
+
+msgid "Cancel scheduled publish"
+msgstr "إلغاء النشر المجدول"
+
 #, python-format
 msgid "%(model_name)s '%(object)s' updated."
 msgstr "تم تحديث '%(object)s' '%(model_name)s'."
@@ -954,17 +949,28 @@ msgstr "تم تحديث '%(object)s' '%(model_name)s'."
 msgid "%(model_name)s '%(object)s' created."
 msgstr "تم إنشاء '%(object)s' '%(model_name)s'"
 
+#, python-format
+msgid "Edit '%(title)s'"
+msgstr "عَدِّلْ '%(title)s'"
+
+msgid "Inspect"
+msgstr "فحص"
+
 msgid "Editing"
 msgstr "جاري التعديل"
+
+#, python-format
+msgid "%(model_name)s '%(object)s' deleted."
+msgstr "تم حذف '%(object)s' '%(model_name)s'."
+
+msgid "Inspecting"
+msgstr "يتم الفحص"
 
 msgid "Earliest"
 msgstr "السابقة"
 
 msgid "Latest"
 msgstr "اللاحقة"
-
-msgid "Usage of"
-msgstr "استعمال"
 
 #, python-format
 msgid "Edit this %(object)s"
@@ -1010,9 +1016,6 @@ msgstr "لا يمكن إنشاء الصفحة بسبب أخطاء التحقق �
 msgid "Page '%(page_title)s' deleted."
 msgstr "الصفحة '%(page_title)s' محذوفة."
 
-msgid "This page is currently awaiting moderation"
-msgstr "هذه الصفحة تنتظر حاليا المراقب"
-
 #, python-format
 msgid "Page '%(page_title)s' has been updated."
 msgstr "تم تحديث الصفحة '%(page_title)s'."
@@ -1035,27 +1038,15 @@ msgstr "لا يمكن حفظ الصفحة لأنها مقفلة"
 msgid "The page could not be saved due to validation errors"
 msgstr "لا يمكن حفظ الصفحة بسبب أخطاء التحقق من الصحة"
 
+msgid "Owner"
+msgstr "صاحب"
+
+msgid "Site"
+msgstr "موقع"
+
 #, python-format
 msgid "Page '%(page_title)s' is now unlocked."
 msgstr "الصفحة '%(page_title)s' غير مقفلة الآن."
-
-#, python-format
-msgid "The page '%(page_title)s' is not currently awaiting moderation."
-msgstr "الصفحة '%(page_title)s' لا تنتظر حاليا للاشراف عليها."
-
-#, python-format
-msgid "Page '%(page_title)s' published."
-msgstr "الصفحة '%(page_title)s' المنشورة."
-
-msgid "Failed to send approval notifications"
-msgstr "فشل إرسال إشعارات الموافقة"
-
-#, python-format
-msgid "Page '%(page_title)s' rejected for publication."
-msgstr "الصفحة '%(page_title)s' مرفوضة للنشر."
-
-msgid "Failed to send rejection notifications"
-msgstr "فشل إرسال إشعارات الرفض"
 
 #, python-format
 msgid "Page '%(page_title)s' moved."
@@ -1064,6 +1055,13 @@ msgstr "تم نقل الصفحة '%(page_title)s'."
 #, python-format
 msgid "Page '%(page_title)s' unpublished."
 msgstr "الصفحة '%(page_title)s' غير منشورة."
+
+msgid "Pages using"
+msgstr "صفحات تستعمل"
+
+#, python-format
+msgid "The page '%(page_title)s' is not currently awaiting moderation."
+msgstr "الصفحة '%(page_title)s' لا تنتظر حاليا للاشراف عليها."
 
 msgid "ID"
 msgstr "المُعَرِّفْ"
@@ -1074,13 +1072,6 @@ msgstr "التاريخ/التوقيت"
 msgid "Locked pages"
 msgstr "الصفحات المقفلة"
 
-msgid "Pages"
-msgstr "صفحات"
-
-#, python-format
-msgid "Edit '%(title)s'"
-msgstr "عَدِّلْ '%(title)s'"
-
 #, python-format
 msgid "Preview draft version of '%(title)s'"
 msgstr "معاينة النسخة المسودة من '%(title)s'"
@@ -1088,13 +1079,6 @@ msgstr "معاينة النسخة المسودة من '%(title)s'"
 #, python-format
 msgid "View live version of '%(title)s'"
 msgstr "معاينة النسخة المباشرة من '%(title)s'"
-
-msgid "Add child page"
-msgstr "أضف صفحة لطفل "
-
-#, python-format
-msgid "Add a child page to '%(title)s' "
-msgstr "أضف صفحة فرعية إلى '%(title)s'"
 
 #, python-format
 msgid "Move page '%(title)s'"
@@ -1121,12 +1105,6 @@ msgstr "قائمة ذات تعداد نقطي"
 
 msgid "Numbered list"
 msgstr "قائمة مرقمة"
-
-msgid "Bold"
-msgstr "Bold"
-
-msgid "Italic"
-msgstr "Italic"
 
 msgid "Link"
 msgstr "رابط"

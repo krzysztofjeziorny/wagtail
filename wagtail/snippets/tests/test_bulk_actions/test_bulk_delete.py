@@ -1,3 +1,4 @@
+from django.contrib.admin.utils import quote
 from django.contrib.auth.models import Permission
 from django.http import HttpRequest, HttpResponse
 from django.test import TestCase
@@ -32,11 +33,13 @@ class TestSnippetDeleteView(WagtailTestUtils, TestCase):
             )
             + "?"
         )
-        for snippet in self.test_snippets:
-            self.url += f"id={snippet.pk}&"
+
+    def get_url(self, items=()):
+        items = items or self.test_snippets
+        return self.url + "&".join(f"id={item.pk}" for item in items)
 
     def test_simple(self):
-        response = self.client.get(self.url)
+        response = self.client.get(self.get_url())
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(
             response, "wagtailsnippets/bulk_actions/confirm_bulk_delete.html"
@@ -45,8 +48,32 @@ class TestSnippetDeleteView(WagtailTestUtils, TestCase):
         self.assertEqual(response.context["header_icon"], "cog")
         self.assertContains(response, "icon icon-cog", count=1)
 
+    def test_get_single_delete(self):
+        item = self.test_snippets[0]
+        response = self.client.get(self.get_url(items=(item,)))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(
+            response, "wagtailsnippets/bulk_actions/confirm_bulk_delete.html"
+        )
+        self.assertTemplateUsed(response, "wagtailadmin/shared/header.html")
+        self.assertEqual(response.context["header_icon"], "cog")
+        self.assertContains(response, "icon icon-cog", count=1)
+        self.assertContains(
+            response,
+            "<title>Delete full-featured snippet - Title-1 - Wagtail</title>",
+            html=True,
+        )
+        self.assertContains(
+            response,
+            reverse(
+                self.snippet_model.snippet_viewset.get_url_name("usage"),
+                args=(quote(item.pk),),
+            ),
+        )
+        self.assertContains(response, "Used 0 times")
+
     def test_bulk_delete(self):
-        response = self.client.post(self.url)
+        response = self.client.post(self.get_url())
 
         # Should redirect back to index
         self.assertEqual(response.status_code, 302)
@@ -64,7 +91,7 @@ class TestSnippetDeleteView(WagtailTestUtils, TestCase):
         )
         self.user.save()
 
-        response = self.client.get(self.url)
+        response = self.client.get(self.get_url())
         self.assertEqual(response.status_code, 200)
 
         html = response.content.decode()
@@ -76,7 +103,7 @@ class TestSnippetDeleteView(WagtailTestUtils, TestCase):
         for snippet in self.test_snippets:
             self.assertInHTML(f"<li>{snippet.text}</li>", html)
 
-        response = self.client.post(self.url)
+        response = self.client.post(self.get_url())
         # User should be redirected back to the index
         self.assertEqual(response.status_code, 302)
 
@@ -88,7 +115,7 @@ class TestSnippetDeleteView(WagtailTestUtils, TestCase):
         with self.register_hook(
             "before_bulk_action", lambda *args: HttpResponse("Overridden!")
         ):
-            response = self.client.get(self.url)
+            response = self.client.get(self.get_url())
 
         self.assertEqual(response.status_code, 200)
 
@@ -96,7 +123,7 @@ class TestSnippetDeleteView(WagtailTestUtils, TestCase):
         self.assertNotEqual(response.content, b"Overridden!")
 
         # The instances were not deleted
-        self.assertQuerysetEqual(
+        self.assertQuerySetEqual(
             self.snippet_model.objects.filter(
                 pk__in=[snippet.pk for snippet in self.test_snippets]
             ),
@@ -108,18 +135,18 @@ class TestSnippetDeleteView(WagtailTestUtils, TestCase):
         def hook_func(request, action_type, instances, action_class_instance):
             self.assertIsInstance(request, HttpRequest)
             self.assertEqual(action_type, "delete")
-            self.assertQuerysetEqual(instances, self.test_snippets)
+            self.assertEqual(set(instances), set(self.test_snippets))
             self.assertIsInstance(action_class_instance, DeleteBulkAction)
             return HttpResponse("Overridden!")
 
         with self.register_hook("before_bulk_action", hook_func):
-            response = self.client.post(self.url)
+            response = self.client.post(self.get_url())
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.content, b"Overridden!")
 
         # Request intercepted before the snippets were deleted
-        self.assertQuerysetEqual(
+        self.assertQuerySetEqual(
             self.snippet_model.objects.filter(
                 pk__in=[snippet.pk for snippet in self.test_snippets]
             ),
@@ -131,12 +158,12 @@ class TestSnippetDeleteView(WagtailTestUtils, TestCase):
         def hook_func(request, action_type, instances, action_class_instance):
             self.assertIsInstance(request, HttpRequest)
             self.assertEqual(action_type, "delete")
-            self.assertQuerysetEqual(instances, self.test_snippets)
+            self.assertEqual(set(instances), set(self.test_snippets))
             self.assertIsInstance(action_class_instance, DeleteBulkAction)
             return HttpResponse("Overridden!")
 
         with self.register_hook("after_bulk_action", hook_func):
-            response = self.client.post(self.url)
+            response = self.client.post(self.get_url())
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.content, b"Overridden!")
@@ -155,17 +182,17 @@ class TestSnippetDeleteView(WagtailTestUtils, TestCase):
     def test_before_delete_snippet_hook_get(self):
         def hook_func(request, instances):
             self.assertIsInstance(request, HttpRequest)
-            self.assertQuerysetEqual(instances, self.test_snippets)
+            self.assertEqual(set(instances), set(self.test_snippets))
             return HttpResponse("Overridden!")
 
         with self.register_hook("before_delete_snippet", hook_func):
-            response = self.client.get(self.url)
+            response = self.client.get(self.get_url())
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.content, b"Overridden!")
 
         # Request intercepted before the snippets were deleted
-        self.assertQuerysetEqual(
+        self.assertQuerySetEqual(
             self.snippet_model.objects.filter(
                 pk__in=[snippet.pk for snippet in self.test_snippets]
             ),
@@ -176,17 +203,17 @@ class TestSnippetDeleteView(WagtailTestUtils, TestCase):
     def test_before_delete_snippet_hook_post(self):
         def hook_func(request, instances):
             self.assertIsInstance(request, HttpRequest)
-            self.assertQuerysetEqual(instances, self.test_snippets)
+            self.assertEqual(set(instances), set(self.test_snippets))
             return HttpResponse("Overridden!")
 
         with self.register_hook("before_delete_snippet", hook_func):
-            response = self.client.post(self.url)
+            response = self.client.post(self.get_url())
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.content, b"Overridden!")
 
         # Request intercepted before the snippets were deleted
-        self.assertQuerysetEqual(
+        self.assertQuerySetEqual(
             self.snippet_model.objects.filter(
                 pk__in=[snippet.pk for snippet in self.test_snippets]
             ),
@@ -197,11 +224,11 @@ class TestSnippetDeleteView(WagtailTestUtils, TestCase):
     def test_after_delete_snippet_hook(self):
         def hook_func(request, instances):
             self.assertIsInstance(request, HttpRequest)
-            self.assertQuerysetEqual(instances, self.test_snippets)
+            self.assertEqual(set(instances), set(self.test_snippets))
             return HttpResponse("Overridden!")
 
         with self.register_hook("after_delete_snippet", hook_func):
-            response = self.client.post(self.url)
+            response = self.client.post(self.get_url())
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.content, b"Overridden!")

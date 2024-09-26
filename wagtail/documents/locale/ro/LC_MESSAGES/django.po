@@ -5,14 +5,14 @@
 # Translators:
 # Bogdan Mateescu, 2019
 # Bogdan Mateescu, 2019
-# Dan Braghis, 2014-2022
+# Dan Braghis, 2014-2022,2024
 msgid ""
 msgstr ""
 "Project-Id-Version: Wagtail\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-04-20 11:47+0100\n"
+"POT-Creation-Date: 2024-08-07 10:06+0100\n"
 "PO-Revision-Date: 2014-02-20 21:06+0000\n"
-"Last-Translator: Dan Braghis, 2014-2022\n"
+"Last-Translator: Dan Braghis, 2014-2022,2024\n"
 "Language-Team: Romanian (http://app.transifex.com/torchbox/wagtail/language/"
 "ro/)\n"
 "MIME-Version: 1.0\n"
@@ -217,30 +217,8 @@ msgstr "Fișierul nu a fost găsit"
 msgid "Usage"
 msgstr "Utilizare"
 
-msgid "Documents"
-msgstr "Documente"
-
 msgid "Select all documents in listing"
 msgstr "Selectează toate documentele din listă"
-
-msgid "Title"
-msgstr "Titlu"
-
-msgid "File"
-msgstr "Fișier"
-
-msgid "Created"
-msgstr "Creat la"
-
-msgid "Select document"
-msgstr "Selecteaă document"
-
-#, python-format
-msgid "There is %(counter)s match"
-msgid_plural "There are %(counter)s matches"
-msgstr[0] "Există %(counter)s potrivire"
-msgstr[1] "Sunt %(counter)s potriviri"
-msgstr[2] "Sunt %(counter)s potriviri"
 
 #, python-format
 msgid "Sorry, no documents match \"<em>%(query_string)s</em>\""
@@ -266,19 +244,19 @@ msgstr ""
 
 #, python-format
 msgid ""
-"<span>%(total)s</span> Document <span class=\"visuallyhidden\">created in "
+"<span>%(total)s</span> Document <span class=\"w-sr-only\">created in "
 "%(site_name)s</span>"
 msgid_plural ""
-"<span>%(total)s</span> Documents <span class=\"visuallyhidden\">created in "
+"<span>%(total)s</span> Documents <span class=\"w-sr-only\">created in "
 "%(site_name)s</span>"
 msgstr[0] ""
-"<span>%(total)s</span> document <span class=\"visuallyhidden\">creat în "
+"<span>%(total)s</span> Document <span class=\"w-sr-only\">creat în "
 "%(site_name)s</span>"
 msgstr[1] ""
-"<span>%(total)s</span> documente <span class=\"visuallyhidden\">create în "
+"<span>%(total)s</span> Documente <span class=\"w-sr-only\">create în "
 "%(site_name)s</span>"
 msgstr[2] ""
-"<span>%(total)s</span> documente <span class=\"visuallyhidden\">create în "
+"<span>%(total)s</span> Documente <span class=\"w-sr-only\">create în "
 "%(site_name)s</span>"
 
 msgid "Add multiple documents"
@@ -364,6 +342,12 @@ msgstr[0] "%(num_parent_objects)d document a fost șters"
 msgstr[1] "%(num_parent_objects)d documente au fost șterse"
 msgstr[2] "%(num_parent_objects)d documente au fost șterse"
 
+msgid "File"
+msgstr "Fișier"
+
+msgid "Created"
+msgstr "Creat la"
+
 msgid "Choose a document"
 msgstr "Alege document"
 
@@ -373,8 +357,11 @@ msgstr "Alege alt document"
 msgid "Edit this document"
 msgstr "Editează acest document"
 
-msgid "Search documents"
-msgstr "Caută documente"
+msgid "Documents"
+msgstr "Documente"
+
+msgid "Title"
+msgstr "Titlu"
 
 #, python-format
 msgid "Document '%(document_title)s' added."

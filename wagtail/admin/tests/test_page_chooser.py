@@ -1,12 +1,14 @@
 import json
+from urllib.parse import parse_qs, urlsplit
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase, TransactionTestCase, override_settings
 from django.urls import reverse
+from django.utils.html import escape
 from django.utils.http import urlencode
 
 from wagtail.admin.views.chooser import can_choose_page
-from wagtail.models import Locale, Page, UserPagePermissionsProxy
+from wagtail.models import Locale, Page
 from wagtail.test.testapp.models import (
     EventIndex,
     EventPage,
@@ -49,6 +51,44 @@ class TestChooserBrowse(WagtailTestUtils, TestCase):
         # 'results' in the template context consists of the parent page followed by the queryset
         self.assertEqual(len(response.context["table"].data), 2)
         self.assertEqual(response.context["table"].data[1].specific, page)
+
+    @override_settings(USE_THOUSAND_SEPARATOR=True)
+    def test_multiple_chooser_view(self):
+        self.page = Page.objects.get(id=1)
+
+        self.child_page = SimplePage(
+            title="test_child_page", content="test content", pk=10022
+        )
+        self.page.add_child(instance=self.child_page)
+
+        response = self.get({"multiple": "1"})
+
+        checkbox_value = str(self.child_page.id)
+        decoded_content = response.content.decode()
+
+        self.assertIn(f'value=\\"{checkbox_value}\\"', decoded_content)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "wagtailadmin/chooser/browse.html")
+
+    @override_settings(USE_THOUSAND_SEPARATOR=False)
+    def test_multiple_chooser_view_without_thousand_separator(self):
+        self.page = Page.objects.get(id=1)
+
+        self.child_page = SimplePage(
+            title="test_child_page", content="test content", pk=10050
+        )
+        self.page.add_child(instance=self.child_page)
+
+        response = self.get({"multiple": "1"})
+
+        checkbox_value = str(self.child_page.id)
+        decoded_content = response.content.decode()
+
+        self.assertIn(f'value=\\"{checkbox_value}\\"', decoded_content)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "wagtailadmin/chooser/browse.html")
 
 
 class TestCanChooseRootFlag(WagtailTestUtils, TestCase):
@@ -257,8 +297,8 @@ class TestChooserBrowseChild(WagtailTestUtils, TestCase):
 
         # Look for a link element in the breadcrumbs with the admin title
         expected = """
-            <li class="w-h-full w-flex w-items-center w-overflow-hidden w-transition w-duration-300 w-whitespace-nowrap w-flex-shrink-0 w-font-bold " data-breadcrumb-item>
-                <a class="w-flex w-items-center w-h-full w-text-text-label w-pr-0.5 w-text-14 w-no-underline w-outline-offset-inside hover:w-underline hover:w-text-text-label w-h-full" href="/admin/choose-page/{page_id}/?">
+            <li class="w-h-full w-flex w-items-center w-overflow-hidden w-transition w-duration-300 w-whitespace-nowrap w-flex-shrink-0 w-font-bold " data-w-breadcrumbs-target="content">
+                <a class="w-flex w-items-center w-text-text-label w-pr-0.5 w-text-14 w-no-underline w-outline-offset-inside w-border-b w-border-b-2 w-border-transparent w-box-content hover:w-border-current hover:w-text-text-label" href="/admin/choose-page/{page_id}/?">
                     {page_title}
                 </a>
                 <svg class="icon icon-arrow-right w-w-4 w-h-4 w-ml-3" aria-hidden="true">
@@ -298,13 +338,13 @@ class TestChooserBrowseChild(WagtailTestUtils, TestCase):
         self.setup_pagination_test_data()
 
         response = self.get({"p": "foo"})
-        self.assertEqual(response.context["pagination_page"].number, 1)
+        self.assertEqual(response.status_code, 404)
 
     def test_pagination_out_of_range_page(self):
         self.setup_pagination_test_data()
 
         response = self.get({"p": 100})
-        self.assertEqual(response.context["pagination_page"].number, 5)
+        self.assertEqual(response.status_code, 404)
 
 
 class TestChooserSearch(WagtailTestUtils, TransactionTestCase):
@@ -684,6 +724,7 @@ class TestChooserExternalLink(WagtailTestUtils, TestCase):
         self.assertEqual(
             response_json["external"]["url"], "http://localhost/about?test=1"
         )
+        self.assertEqual(response_json["internal"]["url"], "/about/")
         self.assertEqual(response_json["internal"]["id"], self.internal_page.pk)
 
     def test_convert_relative_external_link_to_internal_link(self):
@@ -712,6 +753,7 @@ class TestChooserExternalLink(WagtailTestUtils, TestCase):
 
         self.assertEqual(response_json["result"]["url"], url)
         self.assertEqual(response_json["result"]["title"], title)
+        self.assertNotIn("id", response_json["result"])
 
     @override_settings(WAGTAILADMIN_EXTERNAL_LINK_CONVERSION="exact")
     def test_no_confirm_external_to_internal_link_when_exact(self):
@@ -727,6 +769,7 @@ class TestChooserExternalLink(WagtailTestUtils, TestCase):
 
         self.assertEqual(response_json["result"]["url"], url)
         self.assertEqual(response_json["result"]["title"], title)
+        self.assertNotIn("id", response_json["result"])
 
     @override_settings(WAGTAILADMIN_EXTERNAL_LINK_CONVERSION="confirm")
     def test_convert_external_link_to_internal_link_with_confirm_setting(self):
@@ -745,7 +788,306 @@ class TestChooserExternalLink(WagtailTestUtils, TestCase):
         self.assertEqual(response_json["step"], "confirm_external_to_internal")
 
         self.assertEqual(response_json["external"]["url"], url)
+        self.assertEqual(response_json["internal"]["url"], "/about/")
         self.assertEqual(response_json["internal"]["id"], self.internal_page.pk)
+
+
+@override_settings(ROOT_URLCONF="wagtail.test.headless_urls")
+class TestChooserExternalLinkWithNoServePath(TestChooserExternalLink):
+    def test_convert_external_to_internal_link(self):
+        # Normally this should be converted without any confirmation, but since
+        # the serve path is not registered, the page route will resolve to None,
+        # so the user should be asked to confirm the conversion.
+        # As a result, this test is now identical to
+        # test_convert_external_link_to_internal_link_with_confirm_setting
+        response = self.post(
+            {
+                "external-link-chooser-url": "http://localhost/about/",
+                "external-link-chooser-link_text": "about",
+            }
+        )
+        self.assertEqual(response.status_code, 200)
+        response_json = json.loads(response.content.decode())
+        self.assertEqual(response_json["step"], "confirm_external_to_internal")
+        self.assertEqual(response_json["external"]["url"], "http://localhost/about/")
+        self.assertIsNone(response_json["internal"]["url"])
+        self.assertEqual(response_json["internal"]["id"], self.internal_page.pk)
+
+    def test_convert_external_link_with_query_parameters_to_internal_link(self):
+        response = self.post(
+            {
+                "external-link-chooser-url": "http://localhost/about?test=1",
+                "external-link-chooser-link_text": "about",
+            }
+        )
+        self.assertEqual(response.status_code, 200)
+        response_json = json.loads(response.content.decode())
+
+        # Query parameters will get stripped, so the user should get asked to confirm the conversion
+        self.assertEqual(response_json["step"], "confirm_external_to_internal")
+
+        self.assertEqual(
+            response_json["external"]["url"], "http://localhost/about?test=1"
+        )
+        # The serve path is not registered, so the page route will resolve to None
+        self.assertIsNone(response_json["internal"]["url"])
+        self.assertEqual(response_json["internal"]["id"], self.internal_page.pk)
+
+    def test_convert_relative_external_link_to_internal_link(self):
+        response = self.post(
+            {
+                "external-link-chooser-url": "/about/",
+                "external-link-chooser-link_text": "about",
+            }
+        )
+        self.assertEqual(response.status_code, 200)
+        response_json = json.loads(response.content.decode())
+        # As with test_convert_external_to_internal_link, normally this doesn't
+        # require confirmation, but since the serve path is not registered, the
+        # full URL of the page is None, thus triggering the confirmation
+        self.assertEqual(response_json["step"], "confirm_external_to_internal")
+        self.assertEqual(response_json["external"]["url"], "/about/")
+        # The serve path is not registered, so the page route will resolve to None
+        self.assertIsNone(response_json["internal"]["url"])
+        self.assertEqual(response_json["internal"]["id"], self.internal_page.pk)
+
+    @override_settings(WAGTAILADMIN_EXTERNAL_LINK_CONVERSION="confirm")
+    def test_convert_external_link_to_internal_link_with_confirm_setting(self):
+        url = "http://localhost/about/"
+        response = self.post(
+            {
+                "external-link-chooser-url": url,
+                "external-link-chooser-link_text": "about",
+            }
+        )
+        self.assertEqual(response.status_code, 200)
+        response_json = json.loads(response.content.decode())
+
+        # The serve path is not registered so the URL can never be identical,
+        # which means the setting doesn't matter in this case, but we keep the
+        # test case anyway to ensure that the confirmation step is triggered
+        self.assertEqual(response_json["step"], "confirm_external_to_internal")
+
+        self.assertEqual(response_json["external"]["url"], url)
+        self.assertIsNone(response_json["internal"]["url"])
+        self.assertEqual(response_json["internal"]["id"], self.internal_page.pk)
+
+
+@override_settings(ROOT_URLCONF="wagtail.test.non_root_urls")
+class TestChooserExternalLinkWithNonRootServePath(TestChooserExternalLink):
+    prefix = "site/"
+
+    def test_convert_external_to_internal_link(self):
+        # Legacy behaviour: when using a non-root serve path, entering a full
+        # URL without the serve path will trigger the conversion.
+        # Normally this should be converted without any confirmation, but since
+        # the actual URL will include the serve path (thus different from the
+        # input URL), the user should be asked to confirm.
+        response = self.post(
+            {
+                "external-link-chooser-url": "http://localhost/about/",
+                "external-link-chooser-link_text": "about",
+            }
+        )
+        self.assertEqual(response.status_code, 200)
+        response_json = json.loads(response.content.decode())
+        self.assertEqual(response_json["step"], "confirm_external_to_internal")
+        self.assertEqual(response_json["external"]["url"], "http://localhost/about/")
+        self.assertEqual(response_json["internal"]["url"], f"/{self.prefix}about/")
+        self.assertEqual(response_json["internal"]["id"], self.internal_page.pk)
+
+    def test_convert_external_to_internal_link_with_serve_path(self):
+        # https://github.com/wagtail/wagtail/issues/11996
+        # New behaviour: when using a non-root serve path, entering a full
+        # URL with the serve path will trigger the conversion. Previously, this
+        # would have been considered an external link since the logic does not
+        # take the serve path into account, but now it should be correctly
+        # converted to an internal link (without needing confirmation as the
+        # input URL will be an exact match to the page's full URL).
+
+        # Warm up the cache
+        response = self.post(
+            {
+                "external-link-chooser-url": f"http://localhost/{self.prefix}about/",
+                "external-link-chooser-link_text": "about",
+            }
+        )
+        with self.assertNumQueries(11):
+            response = self.post(
+                {
+                    "external-link-chooser-url": f"http://localhost/{self.prefix}about/",
+                    "external-link-chooser-link_text": "about",
+                }
+            )
+        self.assertEqual(response.status_code, 200)
+        response_json = json.loads(response.content.decode())
+        self.assertEqual(response_json["step"], "external_link_chosen")
+        self.assertEqual(response_json["result"]["url"], f"/{self.prefix}about/")
+        self.assertEqual(response_json["result"]["id"], self.internal_page.pk)
+
+    def test_convert_external_link_with_query_parameters_to_internal_link(self):
+        # Legacy behaviour: when using a non-root serve path, entering a full
+        # URL without the serve path will trigger the conversion. The user
+        # should be asked to confirm the conversion as the input URL will be
+        # different from the page's full URL (as the serve path is added and
+        # the query parameters are removed).
+        response = self.post(
+            {
+                "external-link-chooser-url": "http://localhost/about?test=1",
+                "external-link-chooser-link_text": "about",
+            }
+        )
+        self.assertEqual(response.status_code, 200)
+        response_json = json.loads(response.content.decode())
+
+        # Query parameters will get stripped, so the user should get asked to confirm the conversion
+        self.assertEqual(response_json["step"], "confirm_external_to_internal")
+
+        self.assertEqual(
+            response_json["external"]["url"], "http://localhost/about?test=1"
+        )
+        self.assertEqual(response_json["internal"]["url"], f"/{self.prefix}about/")
+        self.assertEqual(response_json["internal"]["id"], self.internal_page.pk)
+
+    def test_convert_external_link_with_query_parameters_to_internal_link_with_serve_path(
+        self
+    ):
+        # https://github.com/wagtail/wagtail/issues/11996
+        # New behaviour: when using a non-root serve path, entering a full
+        # URL with the serve path will trigger the conversion. Previously, this
+        # would have been considered an external link since the logic does not
+        # take the serve path into account, but now it should be correctly
+        # converted to an internal link. It still needs a confirmation as the
+        # input URL includes query parameters that will be stripped when matching
+        # it with the page's full URL.
+        response = self.post(
+            {
+                "external-link-chooser-url": f"http://localhost/{self.prefix}about?test=1",
+                "external-link-chooser-link_text": "about",
+            }
+        )
+        self.assertEqual(response.status_code, 200)
+        response_json = json.loads(response.content.decode())
+
+        # Query parameters will get stripped, so the user should get asked to confirm the conversion
+        self.assertEqual(response_json["step"], "confirm_external_to_internal")
+
+        self.assertEqual(
+            response_json["external"]["url"],
+            f"http://localhost/{self.prefix}about?test=1",
+        )
+        self.assertEqual(response_json["internal"]["url"], f"/{self.prefix}about/")
+        self.assertEqual(response_json["internal"]["id"], self.internal_page.pk)
+
+    def test_convert_relative_external_link_to_internal_link(self):
+        # Legacy behaviour: when using a non-root serve path, entering a relative
+        # URL without the serve path will trigger the conversion.
+        # Normally this should be converted without any confirmation, but since
+        # the actual URL will include the serve path (thus different from the
+        # input URL), the user should be asked to confirm.
+        response = self.post(
+            {
+                "external-link-chooser-url": "/about/",
+                "external-link-chooser-link_text": "about",
+            }
+        )
+        self.assertEqual(response.status_code, 200)
+        response_json = json.loads(response.content.decode())
+        self.assertEqual(response_json["step"], "confirm_external_to_internal")
+        self.assertEqual(response_json["external"]["url"], "/about/")
+        self.assertEqual(response_json["internal"]["url"], f"/{self.prefix}about/")
+        self.assertEqual(response_json["internal"]["id"], self.internal_page.pk)
+
+    def test_convert_relative_external_link_to_internal_link_with_serve_path(self):
+        # https://github.com/wagtail/wagtail/issues/11996
+        # New behaviour: when using a non-root serve path, entering a relative
+        # URL with the serve path will trigger the conversion. Previously, this
+        # would have been considered an external link since the logic does not
+        # take the serve path into account, but now it should be correctly
+        # converted to an internal link (without needing confirmation as the
+        # input URL will be an exact match to the page's relative URL).
+        response = self.post(
+            {
+                "external-link-chooser-url": f"/{self.prefix}about/",
+                "external-link-chooser-link_text": "about",
+            }
+        )
+        self.assertEqual(response.status_code, 200)
+        response_json = json.loads(response.content.decode())
+        self.assertEqual(response_json["step"], "external_link_chosen")
+        self.assertEqual(response_json["result"]["url"], f"/{self.prefix}about/")
+        self.assertEqual(response_json["result"]["id"], self.internal_page.pk)
+
+    @override_settings(WAGTAILADMIN_EXTERNAL_LINK_CONVERSION="")
+    def test_no_conversion_external_to_internal_link_when_disabled_with_serve_path(
+        self
+    ):
+        url = f"http://localhost/{self.prefix}about/"
+        title = "about"
+        response = self.post(
+            {"external-link-chooser-url": url, "external-link-chooser-link_text": title}
+        )
+        self.assertEqual(response.status_code, 200)
+        response_json = json.loads(response.content.decode())
+        self.assertEqual(response_json["step"], "external_link_chosen")
+
+        self.assertEqual(response_json["result"]["url"], url)
+        self.assertEqual(response_json["result"]["title"], title)
+        self.assertNotIn("id", response_json["result"])
+
+    @override_settings(WAGTAILADMIN_EXTERNAL_LINK_CONVERSION="exact")
+    def test_no_confirm_external_to_internal_link_when_exact_with_serve_path(self):
+        url = f"http://localhost/{self.prefix}about?test=1"
+        title = "about"
+        response = self.post(
+            {"external-link-chooser-url": url, "external-link-chooser-link_text": title}
+        )
+        self.assertEqual(response.status_code, 200)
+        response_json = json.loads(response.content.decode())
+        # Query parameters will get stripped, so this link should be left as an external url with the 'exact' setting
+        self.assertEqual(response_json["step"], "external_link_chosen")
+
+        self.assertEqual(response_json["result"]["url"], url)
+        self.assertEqual(response_json["result"]["title"], title)
+        self.assertNotIn("id", response_json["result"])
+
+    @override_settings(WAGTAILADMIN_EXTERNAL_LINK_CONVERSION="confirm")
+    def test_convert_external_link_to_internal_link_with_confirm_setting(self):
+        url = f"http://localhost/{self.prefix}about/"
+        response = self.post(
+            {
+                "external-link-chooser-url": url,
+                "external-link-chooser-link_text": "about",
+            }
+        )
+        self.assertEqual(response.status_code, 200)
+        response_json = json.loads(response.content.decode())
+
+        # The url is identical, but the conversion setting is set to 'confirm'
+        # so the user should get asked to confirm the conversion
+        self.assertEqual(response_json["step"], "confirm_external_to_internal")
+
+        self.assertEqual(response_json["external"]["url"], url)
+        self.assertEqual(response_json["internal"]["url"], f"/{self.prefix}about/")
+        self.assertEqual(response_json["internal"]["id"], self.internal_page.pk)
+
+
+@override_settings(
+    WAGTAIL_I18N_ENABLED=True,
+    ROOT_URLCONF="wagtail.test.urls_multilang",
+)
+class TestChooserExternalLinkWithI18n(TestChooserExternalLinkWithNonRootServePath):
+    prefix = "en/"
+
+
+@override_settings(
+    WAGTAIL_I18N_ENABLED=True,
+    ROOT_URLCONF="wagtail.test.urls_multilang_non_root",
+)
+class TestChooserExternalLinkWithI18nNonRoot(
+    TestChooserExternalLinkWithNonRootServePath
+):
+    prefix = "en/site/"
 
 
 class TestChooserAnchorLink(WagtailTestUtils, TestCase):
@@ -868,6 +1210,79 @@ class TestChooserEmailLink(WagtailTestUtils, TestCase):
             result["title"], "contact"
         )  # When link text is given, it is used
         self.assertIs(result["prefer_this_title_as_link_text"], True)
+
+    def test_create_link_with_subject_and_body(self):
+        response = self.post(
+            {
+                "email-link-chooser-email_address": "example@example.com",
+                "email-link-chooser-link_text": "contact",
+                "email-link-chooser-subject": "Awesome Subject",
+                "email-link-chooser-body": "An example body",
+            }
+        )
+        self.assertEqual(response.status_code, 200)
+        result = json.loads(response.content.decode())["result"]
+        url = result["url"]
+        self.assertEqual(
+            url,
+            "mailto:example@example.com?subject=Awesome%20Subject&body=An%20example%20body",
+        )
+        self.assertEqual(
+            result["title"], "contact"
+        )  # When link text is given, it is used
+        self.assertIs(result["prefer_this_title_as_link_text"], True)
+
+        mail_parts = urlsplit(url)
+        query = parse_qs(mail_parts.query)
+        self.assertEqual(mail_parts.path, "example@example.com")
+        self.assertEqual(query["subject"][0], "Awesome Subject")
+        self.assertEqual(query["body"][0], "An example body")
+
+    def test_create_link_with_subject_only(self):
+        response = self.post(
+            {
+                "email-link-chooser-email_address": "example@example.com",
+                "email-link-chooser-link_text": "contact",
+                "email-link-chooser-subject": "Awesome Subject",
+            }
+        )
+        self.assertEqual(response.status_code, 200)
+        result = json.loads(response.content.decode())["result"]
+        url = result["url"]
+        self.assertEqual(url, "mailto:example@example.com?subject=Awesome%20Subject")
+        self.assertEqual(
+            result["title"], "contact"
+        )  # When link text is given, it is used
+        self.assertIs(result["prefer_this_title_as_link_text"], True)
+
+        mail_parts = urlsplit(url)
+        query = parse_qs(mail_parts.query)
+        self.assertEqual(mail_parts.path, "example@example.com")
+        self.assertEqual(query["subject"][0], "Awesome Subject")
+        self.assertTrue("body" not in query)
+
+    def test_create_link_with_body_only(self):
+        response = self.post(
+            {
+                "email-link-chooser-email_address": "example@example.com",
+                "email-link-chooser-link_text": "contact",
+                "email-link-chooser-body": "An example body",
+            }
+        )
+        self.assertEqual(response.status_code, 200)
+        result = json.loads(response.content.decode())["result"]
+        url = result["url"]
+        self.assertEqual(url, "mailto:example@example.com?body=An%20example%20body")
+        self.assertEqual(
+            result["title"], "contact"
+        )  # When link text is given, it is used
+        self.assertIs(result["prefer_this_title_as_link_text"], True)
+
+        mail_parts = urlsplit(url)
+        query = parse_qs(mail_parts.query)
+        self.assertEqual(mail_parts.path, "example@example.com")
+        self.assertEqual(query["body"][0], "An example body")
+        self.assertTrue("subject" not in query)
 
     def test_create_link_without_text(self):
         response = self.post(
@@ -992,41 +1407,51 @@ class TestChooserPhoneLink(WagtailTestUtils, TestCase):
         # link text has changed, so tell the caller to use it
         self.assertIs(result["prefer_this_title_as_link_text"], True)
 
+    def test_phone_number_has_spaces(self):
+        response = self.post(
+            {
+                "phone-link-chooser-phone_number": "+1 234 567 890",
+                "phone-link-chooser-link_text": "call",
+            }
+        )
+        result = json.loads(response.content.decode())["result"]
+        self.assertEqual(result["url"], "tel:+1234567890")
+        self.assertEqual(result["title"], "call")
+        self.assertIs(result["prefer_this_title_as_link_text"], True)
+
 
 class TestCanChoosePage(WagtailTestUtils, TestCase):
     fixtures = ["test.json"]
 
     def setUp(self):
         self.user = self.login()
-        self.permission_proxy = UserPagePermissionsProxy(self.user)
         self.desired_classes = (Page,)
 
     def test_can_choose_page(self):
         homepage = Page.objects.get(url_path="/home/")
-        result = can_choose_page(homepage, self.permission_proxy, self.desired_classes)
+        result = can_choose_page(homepage, self.user, self.desired_classes)
         self.assertTrue(result)
 
     def test_with_user_no_permission(self):
         homepage = Page.objects.get(url_path="/home/")
         # event editor does not have permissions on homepage
         event_editor = get_user_model().objects.get(email="eventeditor@example.com")
-        permission_proxy = UserPagePermissionsProxy(event_editor)
         result = can_choose_page(
-            homepage, permission_proxy, self.desired_classes, user_perm="copy_to"
+            homepage, event_editor, self.desired_classes, user_perm="copy_to"
         )
         self.assertFalse(result)
 
     def test_with_can_choose_root(self):
         root = Page.objects.get(url_path="/")
         result = can_choose_page(
-            root, self.permission_proxy, self.desired_classes, can_choose_root=True
+            root, self.user, self.desired_classes, can_choose_root=True
         )
         self.assertTrue(result)
 
     def test_with_can_not_choose_root(self):
         root = Page.objects.get(url_path="/")
         result = can_choose_page(
-            root, self.permission_proxy, self.desired_classes, can_choose_root=False
+            root, self.user, self.desired_classes, can_choose_root=False
         )
         self.assertFalse(result)
 
@@ -1034,7 +1459,7 @@ class TestCanChoosePage(WagtailTestUtils, TestCase):
         homepage = Page.objects.get(url_path="/home/")
         result = can_choose_page(
             homepage,
-            self.permission_proxy,
+            self.user,
             self.desired_classes,
             user_perm="move_to",
             target_pages=[homepage],
@@ -1046,7 +1471,7 @@ class TestCanChoosePage(WagtailTestUtils, TestCase):
         root = Page.objects.get(url_path="/")
         result = can_choose_page(
             root,
-            self.permission_proxy,
+            self.user,
             self.desired_classes,
             user_perm="move_to",
             target_pages=[homepage],
@@ -1060,7 +1485,7 @@ class TestCanChoosePage(WagtailTestUtils, TestCase):
         homepage = Page.objects.get(url_path="/home/")
         result = can_choose_page(
             homepage,
-            self.permission_proxy,
+            self.user,
             self.desired_classes,
             user_perm="move_to",
             target_pages=[board_meetings],
@@ -1072,7 +1497,7 @@ class TestCanChoosePage(WagtailTestUtils, TestCase):
         secret_plans = Page.objects.get(url_path="/home/secret-plans/")
         result = can_choose_page(
             homepage,
-            self.permission_proxy,
+            self.user,
             self.desired_classes,
             user_perm="bulk_move_to",
             target_pages=[homepage, secret_plans],
@@ -1085,7 +1510,7 @@ class TestCanChoosePage(WagtailTestUtils, TestCase):
         root = Page.objects.get(url_path="/")
         result = can_choose_page(
             root,
-            self.permission_proxy,
+            self.user,
             self.desired_classes,
             user_perm="bulk_move_to",
             target_pages=[homepage, secret_plans],
@@ -1102,7 +1527,7 @@ class TestCanChoosePage(WagtailTestUtils, TestCase):
         homepage = Page.objects.get(url_path="/home/")
         result = can_choose_page(
             homepage,
-            self.permission_proxy,
+            self.user,
             self.desired_classes,
             user_perm="bulk_move_to",
             target_pages=[board_meetings, steal_underpants],
@@ -1114,8 +1539,7 @@ class TestCanChoosePage(WagtailTestUtils, TestCase):
 class TestPageChooserLocaleSelector(WagtailTestUtils, TestCase):
     fixtures = ["test.json"]
 
-    LOCALE_SELECTOR_HTML = '<a href="javascript:void(0)" aria-label="English" class="c-dropdown__button u-btn-current w-no-underline">'
-    LOCALE_INDICATOR_HTML = '<use href="#icon-site"></use></svg>\n    English'
+    LOCALE_SELECTOR_HTML = r"data-locale-selector[^<]+<button[^<]+<svg[^<]+<use[^<]+<\/use[^<]+<\/svg[^<]+English"
 
     def setUp(self):
         self.root_page = Page.objects.get(id=2)
@@ -1132,9 +1556,11 @@ class TestPageChooserLocaleSelector(WagtailTestUtils, TestCase):
         self.child_page_fr.save()
 
         switch_to_french_url = self.get_choose_page_url(
-            self.fr_locale, parent_page_id=self.child_page_fr.pk
+            parent_page_id=self.child_page_fr.pk
         )
-        self.LOCALE_SELECTOR_HTML_FR = f'<a href="{switch_to_french_url}" aria-label="French" class="u-link is-live w-no-underline">'
+        self.LOCALE_SELECTOR_HTML_FR = (
+            f'<a href="{switch_to_french_url}" data-locale-selector-link>'
+        )
 
         self.login()
 
@@ -1143,36 +1569,28 @@ class TestPageChooserLocaleSelector(WagtailTestUtils, TestCase):
             reverse("wagtailadmin_choose_page_child", args=[parent_page_id])
         )
 
-    def get_choose_page_url(self, locale=None, parent_page_id=None, html=True):
+    def get_choose_page_url(self, parent_page_id=None, params=""):
         if parent_page_id is not None:
             url = reverse("wagtailadmin_choose_page_child", args=[parent_page_id])
         else:
             url = reverse("wagtailadmin_choose_page")
-
-        suffix = ""
-        if parent_page_id is None:
-            # the locale param should only be appended at the root level
-            if locale is None:
-                locale = self.fr_locale
-            separator = "&amp;" if html else "&"
-            suffix = f"{separator}locale={locale.language_code}"
-        return f"{url}?page_type=wagtailcore.page{suffix}"
+        return f"{url}?{params}"
 
     def test_locale_selector_present_in_root_view(self):
         response = self.client.get(reverse("wagtailadmin_choose_page"))
         html = response.json().get("html")
 
-        self.assertIn(self.LOCALE_SELECTOR_HTML, html)
+        self.assertRegex(html, self.LOCALE_SELECTOR_HTML)
 
-        switch_to_french_url = self.get_choose_page_url(locale=self.fr_locale)
-        fr_selector = f'<a href="{switch_to_french_url}" aria-label="French" class="u-link is-live w-no-underline">'
+        switch_to_french_url = self.get_choose_page_url(params="locale=fr")
+        fr_selector = f'<a href="{switch_to_french_url}" data-locale-selector-link>'
         self.assertIn(fr_selector, html)
 
     def test_locale_selector(self):
         response = self.get(self.child_page.pk)
 
         html = response.json().get("html")
-        self.assertIn(self.LOCALE_SELECTOR_HTML, html)
+        self.assertRegex(html, self.LOCALE_SELECTOR_HTML)
         self.assertIn(self.LOCALE_SELECTOR_HTML_FR, html)
 
     def test_locale_selector_without_translation(self):
@@ -1180,28 +1598,23 @@ class TestPageChooserLocaleSelector(WagtailTestUtils, TestCase):
 
         response = self.get(self.child_page.pk)
         html = response.json().get("html")
-        self.assertNotIn(self.LOCALE_SELECTOR_HTML, html)
-        self.assertNotIn(self.LOCALE_SELECTOR_HTML_FR, html)
+        self.assertNotIn("data-locale-selector", html)
 
     def test_locale_selector_with_active_locale(self):
-        switch_to_french_url = self.get_choose_page_url(
-            locale=self.fr_locale, html=False
-        )
+        switch_to_french_url = self.get_choose_page_url(params="locale=fr")
         response = self.client.get(switch_to_french_url)
         html = response.json().get("html")
 
-        self.assertNotIn(self.LOCALE_SELECTOR_HTML, html)
+        self.assertNotIn(self.LOCALE_SELECTOR_HTML_FR, html)
         self.assertNotIn(f'data-title="{self.root_page.title}"', html)
         self.assertIn(self.root_page_fr.title, html)
-        self.assertIn(
-            '<a href="javascript:void(0)" aria-label="French" class="c-dropdown__button u-btn-current w-no-underline">',
+        self.assertRegex(
             html,
+            r"data-locale-selector[^<]+<button[^<]+<svg[^<]+<use[^<]+<\/use[^<]+<\/svg[^<]+French",
         )
-        switch_to_english_url = self.get_choose_page_url(
-            locale=Locale.objects.get(language_code="en")
-        )
+        switch_to_english_url = self.get_choose_page_url(params="locale=en")
         self.assertIn(
-            f'<a href="{switch_to_english_url}" aria-label="English" class="u-link is-live w-no-underline">',
+            f'<a href="{switch_to_english_url}" data-locale-selector-link>',
             html,
         )
 
@@ -1209,5 +1622,28 @@ class TestPageChooserLocaleSelector(WagtailTestUtils, TestCase):
     def test_locale_selector_not_present_when_i18n_disabled(self):
         response = self.get(self.child_page.pk)
         html = response.json().get("html")
-        self.assertNotIn(self.LOCALE_SELECTOR_HTML, html)
-        self.assertNotIn(self.LOCALE_SELECTOR_HTML_FR, html)
+        self.assertNotIn("data-locale-selector", html)
+
+    def test_query_params_preserved(self):
+        choose_url = reverse(
+            "wagtailadmin_choose_page_child", args=[self.child_page.pk]
+        )
+        params = "can_choose_root=false&user_perms=copy_to&match_subclass=true"
+        response = self.client.get(f"{choose_url}?{params}&p=1")
+        html = response.json().get("html")
+        self.assertIn("data-locale-selector", html)
+
+        switch_to_french_url = self.get_choose_page_url(
+            parent_page_id=self.child_page_fr.pk, params=params
+        )
+        self.assertIn(escape(switch_to_french_url), html)
+
+    def test_query_params_preserved_in_root_view(self):
+        choose_url = reverse("wagtailadmin_choose_page")
+        params = "can_choose_root=false&user_perms=copy_to&match_subclass=true"
+        response = self.client.get(f"{choose_url}?{params}&p=1")
+        html = response.json().get("html")
+        self.assertIn("data-locale-selector", html)
+
+        switch_to_french_url = self.get_choose_page_url(params=params + "&locale=fr")
+        self.assertIn(escape(switch_to_french_url), html)

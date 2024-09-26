@@ -18,7 +18,10 @@
 :root,
 :host,
 [dir='ltr'] {
-  // Flips the direction of `transform` declarations, based on whether the UI is LTR or RTL.
+  // Flips the direction based on whether the UI is LTR or RTL. Used for:
+  // - `transform` / `background-position` declarations for layout
+  // - icons mirroring.
+  // - Any other styles built with physical properties or values to mirror for RTL languages.
   --w-direction-factor: 1;
 }
 
@@ -41,7 +44,9 @@ body {
   &:after {
     content: '';
     position: fixed;
-    transition: visibility 0s linear 0s, opacity 0.2s ease-out;
+    transition:
+      visibility 0s linear 0s,
+      opacity 0.2s ease-out;
     background: theme('colors.white-50');
     width: 100%;
     height: 100%;

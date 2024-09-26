@@ -3,14 +3,15 @@
 # This file is distributed under the same license as the PACKAGE package.
 #
 # Translators:
+# Andrei Satsevich, 2023
 # Tatsiana Tsygan <art.tatsiana@gmail.com>, 2018
 msgid ""
 msgstr ""
 "Project-Id-Version: Wagtail\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-20 13:09+0000\n"
+"POT-Creation-Date: 2024-08-07 10:06+0100\n"
 "PO-Revision-Date: 2016-05-11 20:23+0000\n"
-"Last-Translator: Tatsiana Tsygan <art.tatsiana@gmail.com>, 2018\n"
+"Last-Translator: Andrei Satsevich, 2023\n"
 "Language-Team: Belarusian (http://app.transifex.com/torchbox/wagtail/"
 "language/be/)\n"
 "MIME-Version: 1.0\n"
@@ -27,11 +28,11 @@ msgstr "Блакаванне табліцы Wagtail"
 msgid "Row header"
 msgstr "Загаловак радка"
 
-msgid "Display the first row as a header."
-msgstr "Адлюстроўваць першы радок як загаловак"
-
 msgid "Column header"
 msgstr "Загаловак слупка"
 
-msgid "Display the first column as a header."
-msgstr "Адлюстроўваць першы слупок у якасці загалоўка."
+msgid "Table caption"
+msgstr "Апісанне табліцы"
+
+msgid "Table"
+msgstr "Табліца"

@@ -7,6 +7,12 @@ depth: 1
 ---
 ```
 
+(writing_style_guide)=
+
+## Writing style guide
+
+To ensure consistency in tone and language, follow the [Google developer documentation style guide](https://developers.google.com/style) when writing the Wagtail documentation.
+
 ## Formatting recommendations
 
 Wagtail’s documentation uses a mixture of [Markdown](https://myst-parser.readthedocs.io/en/stable/syntax/syntax.html) and [reStructuredText](https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html). We encourage writing documentation in Markdown first, and only reaching for more advanced reStructuredText formatting if there is a compelling reason.
@@ -19,6 +25,19 @@ It all starts here.
 Keep your sentences short, varied in length.
 
 Separate text with an empty line to create a new paragraph.
+
+### Latin phrases and abbreviations
+
+Try to avoid Latin phrases (such as `ergo` or `de facto`) and abbreviations (such as `i.e.` or `e.g.`), and use common English phrases instead. Alternatively, find a simpler way to communicate the concept or idea to the reader. The exception is `etc.` which can be used when space is limited.
+
+Examples:
+
+| Don't use this | Use this instead     |
+| -------------- | -------------------- |
+| e.g.           | for example, such as |
+| i.e.           | that is              |
+| viz.           | namely               |
+| ergo           | therefore            |
 
 ### Heading levels
 
@@ -196,7 +215,31 @@ The reference can be linked to, with an optional label, using the Markdown link 
 
 </details>
 
-You can read more about other methods of linking to, and creating references in the MyST parser docs section on [Targets and cross-referencing](https://myst-parser.readthedocs.io/en/stable/syntax/syntax.html#targets-and-cross-referencing).
+You can read more about other methods of linking to, and creating references in the MyST parser docs section on [Targets and cross-referencing](https://myst-parser.readthedocs.io/en/stable/syntax/cross-referencing.html).
+
+#### Intersphinx links (external docs)
+
+Due to the large amount of documentation links to Django's Sphinx documentation, we have added the integration with this via intersphinx references.
+
+```md
+You can select widgets from [Django's form widgets](inv:django#ref/forms/widgets)
+```
+
+```rst
+    This parameter allows you to specify a :doc:`Django form widget <django:ref/forms/widgets>` to use instead of the default widget for this field type.
+```
+
+There is no support for id (hash) refs on pages at this time, so these will need to be written out as full URLs, remember to use the `stable` URL and not a specific version. In some cases you may be able to reference the name of the hash directly though.
+
+```md
+<!-- #django-template-context-processors-i18n does not work, so a full URL will be needed -->
+
+[django.template.context_processors.i18n](https://docs.djangoproject.com/en/stable/ref/templates/api/#django-template-context-processors-i18n)
+
+<!--  #meta-and-multi-table-inheritance does work as a direct name reference -->
+
+[multi-table inheritance](inv:django#meta-and-multi-table-inheritance)
+```
 
 ### Note and warning call-outs
 
@@ -379,11 +422,11 @@ Avoid documentation source comments in committed documentation.
 
 ### Figure
 
-reStructuredText figures (`.. figure::`) only offer very marginal improvements over vanilla images. If your figure has a caption, add it as an italicised paragraph underneath the image.
+reStructuredText figures (`.. figure::`) only offer very marginal improvements over vanilla images. If your figure has a caption, add it as an italicized paragraph underneath the image.
 
 ### Other reStructuredText syntax and Sphinx directives
 
-We generally want to favour Markdown over reStructuredText, to make it as simple as possible for newcomers to make documentation contributions to Wagtail. Always prefer Markdown, unless the document’s formatting highly depends on reStructuredText syntax.
+We generally want to favor Markdown over reStructuredText, to make it as simple as possible for newcomers to make documentation contributions to Wagtail. Always prefer Markdown, unless the document’s formatting highly depends on reStructuredText syntax.
 
 If you want to use a specific Sphinx directive, consult with core contributors to see whether its usage is justified, and document its expected usage on this page.
 

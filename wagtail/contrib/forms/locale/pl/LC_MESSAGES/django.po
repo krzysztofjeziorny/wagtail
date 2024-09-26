@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Wagtail\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-04-20 11:47+0100\n"
+"POT-Creation-Date: 2024-08-07 10:06+0100\n"
 "PO-Revision-Date: 2014-09-11 15:42+0000\n"
 "Last-Translator: Miłosz Miśkiewicz, 2017-2020,2023\n"
 "Language-Team: Polish (http://app.transifex.com/torchbox/wagtail/language/"
@@ -173,20 +173,12 @@ msgstr[3] "Czy na pewno chcesz usunąć te zgłoszenia formularza?"
 msgid "Delete"
 msgstr "Usuń"
 
-msgid "Forms"
-msgstr "Formularze"
-
-msgid "Pages"
-msgstr "Strony"
-
-msgid "Title"
-msgstr "Tytuł"
-
-msgid "Origin"
-msgstr "Źródło"
-
 msgid "Delete selected submissions"
 msgstr "Usuń wybrane zgłoszenia"
+
+#, python-format
+msgid "There have been no submissions of the '%(title)s' form."
+msgstr "Brak zgłoszeń formularza '%(title)s'"
 
 msgid "Total submissions"
 msgstr "Wszystkich zgłoszeń"
@@ -194,28 +186,21 @@ msgstr "Wszystkich zgłoszeń"
 msgid "Latest submission"
 msgstr "Ostatnie zgłoszenie"
 
-msgid "No form pages have been created."
-msgstr "Nie utworzono żadnej strony formularza"
-
 #, python-format
 msgid "Submissions of %(form_title)s"
 msgstr "Zgłoszenia formularza %(form_title)s"
 
-msgid "Download XLSX"
-msgstr "Pobierz XLSX"
+msgid "Forms"
+msgstr "Formularze"
 
-msgid "Download CSV"
-msgstr "Pobierz CSV"
+msgid "Title"
+msgstr "Tytuł"
 
-#, python-format
-msgid "There have been no submissions of the '%(title)s' form."
-msgstr "Brak zgłoszeń formularza '%(title)s'"
+msgid "Origin"
+msgstr "Źródło"
 
-msgid "Filter"
-msgstr "Filtr"
-
-msgid "Apply filters"
-msgstr "Zastosuj filtry"
+msgid "Pages"
+msgstr "Strony"
 
 #, python-format
 msgid "One submission has been deleted."

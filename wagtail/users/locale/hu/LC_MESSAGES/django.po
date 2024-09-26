@@ -4,15 +4,15 @@
 #
 # Translators:
 # B N <biczoxd@gmail.com>, 2018
-# Istvan Farkas <istvan.farkas@gmail.com>, 2018-2022
+# Istvan Farkas <istvan.farkas@gmail.com>, 2018-2023
 # B N <biczoxd@gmail.com>, 2018
 msgid ""
 msgstr ""
 "Project-Id-Version: Wagtail\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-04-20 11:47+0100\n"
+"POT-Creation-Date: 2024-08-07 10:06+0100\n"
 "PO-Revision-Date: 2014-02-19 11:54+0000\n"
-"Last-Translator: B N <biczoxd@gmail.com>, 2018\n"
+"Last-Translator: Istvan Farkas <istvan.farkas@gmail.com>, 2018-2023\n"
 "Language-Team: Hungarian (http://app.transifex.com/torchbox/wagtail/language/"
 "hu/)\n"
 "MIME-Version: 1.0\n"
@@ -117,6 +117,21 @@ msgstr "Válassza ki a jelenlegi időzónát"
 msgid "profile picture"
 msgstr "profilkép"
 
+msgid "System default"
+msgstr "Rendszer alapértelmezés"
+
+msgid "Light"
+msgstr "Világos"
+
+msgid "Dark"
+msgstr "Sötét"
+
+msgid "admin theme"
+msgstr "admin téma"
+
+msgid "Default"
+msgstr "Alapértelmezett"
+
 msgid "user profile"
 msgstr "felhasználói profil"
 
@@ -190,9 +205,6 @@ msgstr "Igen, megváltoztatom"
 msgid "No, don't change state"
 msgstr "Nem, mégsem"
 
-msgid "Delete group"
-msgstr "Csoport törlése"
-
 #, python-format
 msgid ""
 "The group '%(group_name)s' has <strong>%(group_user_count)s</strong> member."
@@ -217,14 +229,11 @@ msgstr "Biztosan törli a csoportot?"
 msgid "Add group"
 msgstr "Csoport hozzáadása"
 
-msgid "Editing"
-msgstr "Szerkesztés"
-
-msgid "View users in this group"
-msgstr "Csoport tagjainak megtekintése"
-
 msgid "Save"
 msgstr "Mentés"
+
+msgid "Delete group"
+msgstr "Csoport törlése"
 
 msgid "Object permissions"
 msgstr "Rekord jogosultságok"
@@ -242,7 +251,7 @@ msgid "Publish"
 msgstr "Közzététel"
 
 msgid "Lock"
-msgstr "Lezár"
+msgstr "Zárol"
 
 msgid "Unlock"
 msgstr "Feloldás"
@@ -276,14 +285,8 @@ msgstr ""
 "Nincs csoport hozzáadva. Miért nem <a "
 "href=\"%(wagtailusers_create_group_url)s\">ad hozzá egyet</a>?"
 
-msgid "Delete user"
-msgstr "Felhasználó törlése"
-
 msgid "Are you sure you want to delete this user?"
 msgstr "Biztosan törli ezt a felhasználót?"
-
-msgid "Add user"
-msgstr "Felhasználó hozzáadása"
 
 msgid "Account"
 msgstr "Fiók"
@@ -291,52 +294,14 @@ msgstr "Fiók"
 msgid "Roles"
 msgstr "Szerepkörök"
 
-msgid "Users"
-msgstr "Felhasználók"
-
-msgid "Add a user"
+msgid "Add user"
 msgstr "Felhasználó hozzáadása"
+
+msgid "Delete user"
+msgstr "Felhasználó törlése"
 
 msgid "Select all users in listing"
 msgstr "Összes felhasználó kiválasztása a listában"
-
-msgid "Username"
-msgstr "Felhasználónév"
-
-msgid "Status"
-msgstr "Állapot"
-
-msgid "Last Login"
-msgstr "Utolsó belépés"
-
-msgid "Admin"
-msgstr "Admin"
-
-msgid "Active"
-msgstr "Aktív"
-
-msgid "Inactive"
-msgstr "Kikapcsolt"
-
-#, python-format
-msgid "There is %(counter)s match"
-msgid_plural "There are %(counter)s matches"
-msgstr[0] "%(counter)s találat van"
-msgstr[1] "%(counter)s találat van"
-
-#, python-format
-msgid "Sorry, no users match \"<em>%(query_string)s</em>\""
-msgstr ""
-"Sajnáljuk, de egyetlen felhasználó sem felel meg a következő feltételeknek: "
-"\"<em>%(query_string)s</em>\""
-
-#, python-format
-msgid ""
-"The %(group_name)s group has no users configured. Why not <a "
-"href=\"%(wagtailusers_add_url)s\">add some</a>?"
-msgstr ""
-"A(z) %(group_name)s csoporba nem tartozik felhasználó. Miért nem <a "
-"href=\"%(wagtailusers_add_url)s\">ad hozzá egyet</a>?"
 
 #, python-format
 msgid ""
@@ -367,6 +332,15 @@ msgid "%(num_parent_objects)d user has been deleted"
 msgid_plural "%(num_parent_objects)d users have been deleted"
 msgstr[0] "%(num_parent_objects)d felhasználó törölve"
 msgstr[1] "%(num_parent_objects)d felhasználó törölve"
+
+msgid "Active"
+msgstr "Aktív"
+
+msgid "Inactive"
+msgstr "Kikapcsolt"
+
+msgid "Mark as active"
+msgstr "Aktívnak jelölés"
 
 msgid "Change the active state for selected users"
 msgstr "Kiválasztott felhasználók státuszának megváltoztatása"
@@ -403,9 +377,38 @@ msgstr "Csoport frissítve: '%(object)s'"
 msgid "The group could not be saved due to errors."
 msgstr "Hiba történt a csoport mentése közben."
 
+msgid "View users in this group"
+msgstr "Csoport tagjainak megtekintése"
+
 #, python-format
 msgid "Group '%(object)s' deleted."
 msgstr "Csoport törölve: '%(object)s'"
+
+msgid "Add a user"
+msgstr "Felhasználó hozzáadása"
+
+msgid "Users"
+msgstr "Felhasználók"
+
+msgid "Username"
+msgstr "Felhasználónév"
+
+msgid "Admin"
+msgstr "Admin"
+
+msgid "Access level"
+msgstr "Elérés szintje"
+
+msgid "Status"
+msgstr "Állapot"
+
+#, python-format
+msgid "More options for '%(title)s'"
+msgstr "'%(title)s' további lehetőségei"
+
+#, python-format
+msgid "User '%(object)s' created."
+msgstr "Felhasználó létrehozva: '%(object)s'."
 
 #, python-format
 msgid "User '%(object)s' updated."
@@ -415,18 +418,5 @@ msgid "The user could not be saved due to errors."
 msgstr "Hiba történt a felhasználó mentése közben."
 
 #, python-format
-msgid "Editing %(object)s"
-msgstr "%(object)s szerkesztése"
-
-#, python-format
 msgid "User '%(object)s' deleted."
 msgstr "Felhasználó törölve: '%(object)s'"
-
-msgid "Edit"
-msgstr "Szerkeszt"
-
-msgid "Edit this user"
-msgstr "Felhasználó szerkesztése"
-
-msgid "Delete this user"
-msgstr "Felhasználó törlése"

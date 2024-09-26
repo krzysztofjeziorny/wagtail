@@ -6,7 +6,6 @@ from wagtail.test.utils import WagtailTestUtils
 
 
 class TestGenericIndexView(WagtailTestUtils, TestCase):
-
     fixtures = ["test.json"]
 
     def get(self, params={}):
@@ -19,10 +18,26 @@ class TestGenericIndexView(WagtailTestUtils, TestCase):
         self.assertEqual(response_object_count, 3)
         self.assertContains(response, "first modelwithstringtypeprimarykey model")
         self.assertContains(response, "second modelwithstringtypeprimarykey model")
+        soup = self.get_soup(response.content)
+        h1 = soup.select_one("h1")
+        self.assertIsNotNone(h1)
+        self.assertEqual(h1.text.strip(), "Model with string type primary keys")
+
+
+class TestGenericIndexViewWithoutModel(WagtailTestUtils, TestCase):
+    fixtures = ["test.json"]
+
+    def get(self, params={}):
+        return self.client.get(reverse("testapp_generic_index_without_model"), params)
+
+    def test_non_integer_primary_key(self):
+        response = self.get()
+        self.assertEqual(response.status_code, 200)
+        response_object_count = response.context_data["object_list"].count()
+        self.assertEqual(response_object_count, 3)
 
 
 class TestGenericEditView(WagtailTestUtils, TestCase):
-
     fixtures = ["test.json"]
 
     def get(self, object_pk, params={}):
@@ -59,7 +74,6 @@ class TestGenericEditView(WagtailTestUtils, TestCase):
 
 
 class TestGenericDeleteView(WagtailTestUtils, TestCase):
-
     fixtures = ["test.json"]
 
     def get(self, object_pk, params={}):

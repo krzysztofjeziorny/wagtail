@@ -3,6 +3,8 @@
 # This file is distributed under the same license as the PACKAGE package.
 #
 # Translators:
+# Andrei Satsevich, 2023
+# Andrei Satsevich, 2024
 # Eugene <eugene.mechanism@gmail.com>, 2014-2015
 # Mikalai Radchuk <radchuk.m@gmail.com>, 2016
 # Nikita Tonkoshkur <humapen@gmail.com>, 2018
@@ -17,9 +19,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Wagtail\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-04-20 11:47+0100\n"
+"POT-Creation-Date: 2024-08-07 10:06+0100\n"
 "PO-Revision-Date: 2014-02-19 19:01+0000\n"
-"Last-Translator: Влад <integration.into.society@gmail.com>, 2022\n"
+"Last-Translator: Andrei Satsevich, 2024\n"
 "Language-Team: Russian (http://app.transifex.com/torchbox/wagtail/language/"
 "ru/)\n"
 "MIME-Version: 1.0\n"
@@ -137,12 +139,6 @@ msgstr ""
 "href=\"%(wagtailsnippets_create_snippet_url)s\" target=\"_blank\" "
 "rel=\"noopener noreferrer\">создать сейчас</a>?,"
 
-msgid "Last updated"
-msgstr "Последнее обновление"
-
-msgid "History"
-msgstr "История"
-
 msgid "Publishing…"
 msgstr "Публикуется..."
 
@@ -161,95 +157,17 @@ msgstr "Изменить текущую версию"
 msgid "Save draft"
 msgstr "Сохранить черновик"
 
-#, python-format
-msgid "New  %(snippet_type_name)s"
-msgstr "Новый  %(snippet_type_name)s"
-
-msgid "New"
-msgstr "Новый"
-
 msgid "Actions"
 msgstr "Действия"
-
-msgid "Toggle breadcrumbs"
-msgstr "Переключить хлебные крошки"
-
-msgid "Breadcrumb"
-msgstr "Навигационная цепочка"
-
-msgid "Snippets"
-msgstr "Фрагменты"
-
-#, python-format
-msgid "Editing %(snippet_type)s %(title)s"
-msgstr "Редактирование %(snippet_type)s %(title)s"
-
-msgid "Usage"
-msgstr "Использование"
-
-#, python-format
-msgid "Snippet history for %(subtitle)s"
-msgstr "История фрагмента для %(subtitle)s"
-
-msgid "Edit this snippet"
-msgstr "Редактировать этот фрагмент"
-
-msgid "No log entries found."
-msgstr "Записи в журнале не найдены."
-
-#, python-format
-msgid "Snippets %(snippet_type_name_plural)s"
-msgstr "Фрагменты %(snippet_type_name_plural)s"
-
-#, python-format
-msgid "Add %(snippet_type_name)s"
-msgstr "Добавить %(snippet_type_name)s"
 
 msgid "Select all snippets in listing"
 msgstr "Выбрать все фрагменты из списка"
 
-#, python-format
-msgid "There is %(counter)s match"
-msgid_plural "There are %(counter)s matches"
-msgstr[0] "Есть %(counter)s совпадение"
-msgstr[1] "Есть %(counter)s совпадений"
-msgstr[2] "Есть %(counter)s совпадений"
-msgstr[3] "Есть %(counter)s совпадений"
-
-#, python-format
-msgid ""
-"No %(snippet_type_name_plural)s have been created. Why not <a "
-"href=\"%(wagtailsnippets_create_url)s\">add one</a>?"
-msgstr ""
-"%(snippet_type_name_plural)s еще не были созданы. Почему бы не <a "
-"href=\"%(wagtailsnippets_create_url)s\">добавить один</a>?"
-
-msgid "Live version"
-msgstr "Опубликованная версия"
-
-msgid "Current draft"
-msgstr "Черновик"
-
-msgid "Preview"
-msgstr "Предварительный просмотр"
-
-msgid "Edit"
-msgstr "Правка"
-
-msgid "Review this version"
-msgstr "Проверить эту версию"
-
-msgid "Compare with previous version"
-msgstr "Сравнить с предыдущей версией"
-
-msgid "Compare with current version"
-msgstr "Сравнить с текущей версией"
-
-msgid "Cancel scheduled publish"
-msgstr "Отменить запланированную публикацию"
-
 msgid "Choose"
 msgstr "Выбрать"
+
+msgid "Snippets"
+msgstr "Фрагменты"
 
 msgid "Name"
 msgstr "Имя"
@@ -257,23 +175,9 @@ msgstr "Имя"
 msgid "Instances"
 msgstr "Экземпляры"
 
-msgid "The snippet could not be created due to errors."
-msgstr "Фрагмент не может быть создан из-за ошибок."
-
-msgid "The snippet could not be saved due to errors."
-msgstr "Фрагмент не может быть сохранен из-за ошибок."
-
-msgid "Action"
-msgstr "Действие"
-
-msgid "User"
-msgstr "Пользователь"
-
-msgid "Date"
-msgstr "Дата"
-
-msgid "Snippet history"
-msgstr "История фрагмента"
+#, python-format
+msgid "More options for '%(title)s'"
+msgstr "Дополнительные опции для '%(title)s'"
 
 #, python-format
 msgid "Edit this %(model_name)s"
@@ -283,13 +187,8 @@ msgstr "Редактировать %(model_name)s"
 msgid "%(model_name)s history"
 msgstr "%(model_name)s история"
 
-#, python-format
-msgid "Edit '%(title)s'"
-msgstr "Редактировать '%(title)s'"
-
-#, python-format
-msgid "Delete '%(title)s'"
-msgstr "Удалить '%(title)s'"
+msgid "Home"
+msgstr "Главная"
 
 #, python-format
 msgid "Choose %(object)s"

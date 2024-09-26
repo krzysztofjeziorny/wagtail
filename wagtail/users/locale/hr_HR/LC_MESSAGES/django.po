@@ -4,16 +4,16 @@
 #
 # Translators:
 # Dino Aljević <dino8890@protonmail.com>, 2020
-# Dino Aljević <dino8890@protonmail.com>, 2020-2023
+# Dino Aljević <dino8890@protonmail.com>, 2020-2024
 # Luka Matijević <lumatijev@gmail.com>, 2015
 # Matt Westcott <matthew@torchbox.com>, 2021
 msgid ""
 msgstr ""
 "Project-Id-Version: Wagtail\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-04-20 11:47+0100\n"
+"POT-Creation-Date: 2024-08-07 10:06+0100\n"
 "PO-Revision-Date: 2014-02-19 11:54+0000\n"
-"Last-Translator: Dino Aljević <dino8890@protonmail.com>, 2020-2023\n"
+"Last-Translator: Dino Aljević <dino8890@protonmail.com>, 2020-2024\n"
 "Language-Team: Croatian (Croatia) (http://app.transifex.com/torchbox/wagtail/"
 "language/hr_HR/)\n"
 "MIME-Version: 1.0\n"
@@ -116,6 +116,21 @@ msgstr "Odaberite vašu vremensku zonu"
 msgid "profile picture"
 msgstr "slika profila"
 
+msgid "System default"
+msgstr "Sistemska"
+
+msgid "Light"
+msgstr "Svijetla"
+
+msgid "Dark"
+msgstr "Tamna"
+
+msgid "admin theme"
+msgstr "tema sučelja"
+
+msgid "Default"
+msgstr "Zadano"
+
 msgid "user profile"
 msgstr "korisnički profil"
 
@@ -195,9 +210,6 @@ msgstr "Da, promijeni stanje"
 msgid "No, don't change state"
 msgstr "Ne, nemoj promijeniti stanje"
 
-msgid "Delete group"
-msgstr "Obriši grupu"
-
 #, python-format
 msgid ""
 "The group '%(group_name)s' has <strong>%(group_user_count)s</strong> member."
@@ -223,14 +235,11 @@ msgstr "Jeste li sigurni da želite izbrisati grupu?"
 msgid "Add group"
 msgstr "Dodaj grupu"
 
-msgid "Editing"
-msgstr "Uređivanje"
-
-msgid "View users in this group"
-msgstr "Pregledaj korisnike u ovoj grupi."
-
 msgid "Save"
 msgstr "Pohrani"
+
+msgid "Delete group"
+msgstr "Obriši grupu"
 
 msgid "Object permissions"
 msgstr "Dozvole objekta"
@@ -280,14 +289,8 @@ msgstr ""
 "Nema postavljenih grupa. Zašto ne <a "
 "href=\"%(wagtailusers_create_group_url)s\">dodate neke</a>?"
 
-msgid "Delete user"
-msgstr "Izbriši korisnika"
-
 msgid "Are you sure you want to delete this user?"
 msgstr "Jeste li sigurni da želite izbrisati korisnika?"
-
-msgid "Add user"
-msgstr "Dodaj korisnika"
 
 msgid "Account"
 msgstr "Korisnički račun"
@@ -295,53 +298,14 @@ msgstr "Korisnički račun"
 msgid "Roles"
 msgstr "Uloge"
 
-msgid "Users"
-msgstr "Korisnici"
-
-msgid "Add a user"
+msgid "Add user"
 msgstr "Dodaj korisnika"
+
+msgid "Delete user"
+msgstr "Izbriši korisnika"
 
 msgid "Select all users in listing"
 msgstr "Odaberite sve korisnike iz popisa"
-
-msgid "Username"
-msgstr "Korisničko ime"
-
-msgid "Status"
-msgstr "Status"
-
-msgid "Last Login"
-msgstr "Zadnja prijava"
-
-msgid "Admin"
-msgstr "Administrator"
-
-msgid "Active"
-msgstr "Aktivan"
-
-msgid "Inactive"
-msgstr "Neaktivan"
-
-#, python-format
-msgid "There is %(counter)s match"
-msgid_plural "There are %(counter)s matches"
-msgstr[0] "Pronađen je %(counter)s rezultat"
-msgstr[1] "Pronađeno je %(counter)s rezultata"
-msgstr[2] "Pronađeno je %(counter)s rezultata"
-
-#, python-format
-msgid "Sorry, no users match \"<em>%(query_string)s</em>\""
-msgstr ""
-"Nažalost nisu pronađeni korisnici koji odgovaraju \"<em>%(query_string)s</"
-"em>\""
-
-#, python-format
-msgid ""
-"The %(group_name)s group has no users configured. Why not <a "
-"href=\"%(wagtailusers_add_url)s\">add some</a>?"
-msgstr ""
-"Grupa %(group_name)s nema postavljenih korisnika. Zašto ne <a "
-"href=\"%(wagtailusers_add_url)s\">dodate neke</a>?"
 
 #, python-format
 msgid ""
@@ -374,6 +338,15 @@ msgid_plural "%(num_parent_objects)d users have been deleted"
 msgstr[0] "%(num_parent_objects)d korisnik je izbrisan"
 msgstr[1] "%(num_parent_objects)d korisnika je izbrisano"
 msgstr[2] "%(num_parent_objects)d korisnika je izbrisano"
+
+msgid "Active"
+msgstr "Aktivan"
+
+msgid "Inactive"
+msgstr "Neaktivan"
+
+msgid "Mark as active"
+msgstr "Označi kao aktivnog"
 
 msgid "Change the active state for selected users"
 msgstr "Promijeni aktivno stanje odabranim korisnicima"
@@ -412,9 +385,34 @@ msgstr "Grupa '%(object)s' je ažurirana."
 msgid "The group could not be saved due to errors."
 msgstr "Nije moguće sačuvati grupu zbog grešaka."
 
+msgid "View users in this group"
+msgstr "Pregledaj korisnike u ovoj grupi."
+
 #, python-format
 msgid "Group '%(object)s' deleted."
 msgstr "Grupa '%(object)s' je izbrisana."
+
+msgid "Add a user"
+msgstr "Dodaj korisnika"
+
+msgid "Users"
+msgstr "Korisnici"
+
+msgid "Username"
+msgstr "Korisničko ime"
+
+msgid "Admin"
+msgstr "Administrator"
+
+msgid "Access level"
+msgstr "Razina pristupa"
+
+msgid "Status"
+msgstr "Status"
+
+#, python-format
+msgid "More options for '%(title)s'"
+msgstr "Više opcija za '%(title)s'"
 
 #, python-format
 msgid "User '%(object)s' created."
@@ -428,18 +426,5 @@ msgid "The user could not be saved due to errors."
 msgstr "Nije moguće sačuvati korisnika zbog grešaka."
 
 #, python-format
-msgid "Editing %(object)s"
-msgstr "Uređivanje %(object)s"
-
-#, python-format
 msgid "User '%(object)s' deleted."
 msgstr "Korisnik '%(object)s' je izbrisan."
-
-msgid "Edit"
-msgstr "Uredi"
-
-msgid "Edit this user"
-msgstr "Uredi ovog korisnika"
-
-msgid "Delete this user"
-msgstr "Izbriši ovog korisnika"

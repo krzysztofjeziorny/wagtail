@@ -10,12 +10,16 @@ export class Chooser {
     this.initHTMLElements(id);
     this.state = this.getStateFromHTML();
 
-    for (const btn of this.chooserElement.querySelectorAll('.action-choose')) {
+    for (const btn of this.chooserElement.querySelectorAll(
+      '[data-chooser-action-choose]',
+    )) {
       btn.addEventListener('click', () => {
         this.openChooserModal();
       });
     }
-    for (const btn of this.chooserElement.querySelectorAll('.action-clear')) {
+    for (const btn of this.chooserElement.querySelectorAll(
+      '[data-chooser-action-clear]',
+    )) {
       btn.addEventListener('click', () => {
         this.clear();
       });
@@ -31,7 +35,9 @@ export class Chooser {
       '[data-chooser-title]',
     );
     this.input = document.getElementById(id);
-    this.editLink = this.chooserElement.querySelector('.edit-link');
+    this.editLink = this.chooserElement.querySelector(
+      '[data-chooser-edit-link]',
+    );
   }
 
   getStateFromHTML() {
@@ -100,9 +106,9 @@ export class Chooser {
       const editUrl = newState[this.editUrlStateKey];
       if (editUrl) {
         this.editLink.setAttribute('href', editUrl);
-        this.editLink.classList.remove('w-hidden');
+        this.editLink.hidden = false;
       } else {
-        this.editLink.classList.add('w-hidden');
+        this.editLink.hidden = true;
       }
     }
   }
@@ -117,14 +123,38 @@ export class Chooser {
   }
 
   focus() {
-    if (this.state) {
-      this.chooserElement.querySelector('.chosen .action-choose').focus();
-    } else {
-      this.chooserElement.querySelector('.unchosen .action-choose').focus();
-    }
+    this.chooserElement.querySelector('button').focus();
   }
 
   getModalOptions() {
+    const filters = {};
+    if (this.opts.linkedFields) {
+      for (const [param, lookup] of Object.entries(this.opts.linkedFields)) {
+        let val;
+        if (typeof lookup === 'string') {
+          val = document.querySelector(lookup).value;
+        } else if (lookup.id) {
+          val = document.getElementById(lookup.id).value;
+        } else if (lookup.selector) {
+          val = document.querySelector(lookup.selector).value;
+        } else if (lookup.match && this.chooserElement.id) {
+          const match = this.chooserElement.id.match(new RegExp(lookup.match));
+          if (match) {
+            let id = match[0];
+            if (lookup.append) {
+              id += lookup.append;
+            }
+            val = document.getElementById(id).value;
+          }
+        }
+        if (val) {
+          filters[param] = val;
+        }
+      }
+    }
+    if (Object.keys(filters).length) {
+      return { linkedFieldFilters: filters };
+    }
     return null;
   }
 

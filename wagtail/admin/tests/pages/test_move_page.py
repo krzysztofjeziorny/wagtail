@@ -124,7 +124,7 @@ class TestPageMove(WagtailTestUtils, TestCase):
         self.assertEqual(len(messages), 1)
         self.assertEqual(messages[0].level, message_constants.ERROR)
         # Slug should be in error message.
-        self.assertIn("{}".format(self.test_page_b.slug), messages[0].message)
+        self.assertIn(self.test_page_b.slug, messages[0].message)
 
     def test_move_triggers_signals(self):
         # Connect a mock signal handler to pre_page_move and post_page_move signals
@@ -147,30 +147,32 @@ class TestPageMove(WagtailTestUtils, TestCase):
             pre_page_move.disconnect(pre_moved_handler)
             post_page_move.disconnect(post_moved_handler)
 
+        # parent_page_before returns the non-specific page type, and that's OK
+        nonspecific_section_a = Page.objects.get(pk=self.section_a.pk)
+
         # Check that the pre_page_move signal was fired
         self.assertEqual(pre_moved_handler.call_count, 1)
-        self.assertTrue(
-            pre_moved_handler.called_with(
-                sender=self.test_page_a.specific_class,
-                instance=self.test_page_a,
-                parent_page_before=self.section_a,
-                parent_page_after=self.section_b,
-                url_path_before="/home/section-a/hello-world/",
-                url_path_after="/home/section-b/hello-world/",
-            )
+        pre_moved_handler.assert_called_with(
+            signal=mock.ANY,
+            sender=self.test_page_a.specific_class,
+            instance=self.test_page_a,
+            parent_page_before=nonspecific_section_a,
+            parent_page_after=self.section_b,
+            url_path_before="/home/section-a/hello-world/",
+            url_path_after="/home/section-b/hello-world/",
         )
 
         # Check that the post_page_move signal was fired
         self.assertEqual(post_moved_handler.call_count, 1)
-        self.assertTrue(
-            post_moved_handler.called_with(
-                sender=self.test_page_a.specific_class,
-                instance=self.test_page_a,
-                parent_page_before=self.section_a,
-                parent_page_after=self.section_b,
-                url_path_before="/home/section-a/hello-world/",
-                url_path_after="/home/section-b/hello-world/",
-            )
+        post_moved_handler.assert_called_with(
+            signal=mock.ANY,
+            sender=self.test_page_a.specific_class,
+            # during the move operation, we reloaded the page as a non-specific instance
+            instance=Page.objects.get(pk=self.test_page_a.pk),
+            parent_page_before=nonspecific_section_a,
+            parent_page_after=self.section_b,
+            url_path_before="/home/section-a/hello-world/",
+            url_path_after="/home/section-b/hello-world/",
         )
 
     def test_before_move_page_hook(self):
@@ -241,7 +243,7 @@ class TestPageMove(WagtailTestUtils, TestCase):
 
     def test_page_move_after_parent_page_types_changes_to_different_parent_model(self):
         # Test for issue #10348
-        # While BusinesSubIndex cannot be created under a SimplePage, we can
+        # While BusinessSubIndex cannot be created under a SimplePage, we can
         # still create it under a SimplePage invoking django-treebeard's add_child
         # which works great for our purposes.
         self.assertFalse(BusinessSubIndex.can_exist_under(self.section_a))

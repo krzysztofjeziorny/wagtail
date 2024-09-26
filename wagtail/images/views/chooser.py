@@ -72,9 +72,14 @@ class ImageCreationFormMixin(CreationFormMixin):
 class BaseImageChooseView(BaseChooseView):
     template_name = "wagtailimages/chooser/chooser.html"
     results_template_name = "wagtailimages/chooser/results.html"
-    per_page = getattr(settings, "WAGTAILIMAGES_CHOOSER_PAGE_SIZE", 12)
     ordering = "-created_at"
     construct_queryset_hook_name = "construct_image_chooser_queryset"
+
+    @property
+    def per_page(self):
+        # Make per_page into a property so that we can read back WAGTAILIMAGES_CHOOSER_PAGE_SIZE
+        # at runtime.
+        return getattr(settings, "WAGTAILIMAGES_CHOOSER_PAGE_SIZE", 20)
 
     def get_object_list(self):
         return (
@@ -132,11 +137,6 @@ class ImageChooseViewMixin(ChooseViewMixin):
         context = super().get_context_data(**kwargs)
         context["popular_tags"] = popular_tags_for_model(self.model)
         return context
-
-    def get_response_json_data(self):
-        json_data = super().get_response_json_data()
-        json_data["tag_autocomplete_url"] = reverse("wagtailadmin_tag_autocomplete")
-        return json_data
 
 
 class ImageChooseView(
@@ -282,7 +282,7 @@ class ImageSelectFormatView(SelectFormatResponseMixin, ImageChosenResponseMixin,
             {
                 "format": format.name,
                 "alt": alt_text,
-                "class": format.classnames,
+                "class": format.classname,
                 "html": format.image_to_editor_html(image, alt_text),
             }
         )

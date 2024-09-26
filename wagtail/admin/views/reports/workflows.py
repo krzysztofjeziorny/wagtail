@@ -6,6 +6,9 @@ from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import CharField, Q
 from django.db.models.functions import Cast
+from django.urls import reverse
+from django.utils.functional import cached_property
+from django.utils.translation import gettext
 from django.utils.translation import gettext_lazy as _
 
 from wagtail.admin.filters import (
@@ -14,15 +17,16 @@ from wagtail.admin.filters import (
     WagtailFilterSet,
 )
 from wagtail.admin.utils import get_latest_str
+from wagtail.admin.widgets.button import HeaderButton
 from wagtail.coreutils import get_content_type_label
 from wagtail.models import (
     Task,
     TaskState,
-    UserPagePermissionsProxy,
     Workflow,
     WorkflowState,
     get_default_page_content_type,
 )
+from wagtail.permissions import page_permission_policy
 from wagtail.snippets.models import get_editable_models
 
 from .base import ReportView
@@ -36,7 +40,9 @@ def get_requested_by_queryset(request):
 
 
 def get_editable_page_ids_query(request):
-    pages = UserPagePermissionsProxy(request.user).editable_pages()
+    pages = page_permission_policy.instances_user_has_permission_for(
+        request.user, "change"
+    )
     # Need to cast the page ids to string because Postgres doesn't support
     # implicit type casts when querying on GenericRelations
     # https://code.djangoproject.com/ticket/16055
@@ -132,10 +138,14 @@ class WorkflowTasksReportFilterSet(WagtailFilterSet):
 
 
 class WorkflowView(ReportView):
-    template_name = "wagtailadmin/reports/workflow.html"
-    title = _("Workflows")
+    results_template_name = "wagtailadmin/reports/workflow_results.html"
+    page_title = _("Workflows")
     header_icon = "tasks"
     filterset_class = WorkflowReportFilterSet
+    index_url_name = "wagtailadmin_reports:workflow"
+    index_results_url_name = "wagtailadmin_reports:workflow_results"
+    permission_policy = page_permission_policy
+    any_permission_required = ["add", "change", "publish"]
 
     export_headings = {
         "content_object.pk": _("Page/Snippet ID"),
@@ -167,6 +177,16 @@ class WorkflowView(ReportView):
             self.FORMAT_XLSX: get_content_type_label,
         }
 
+    @cached_property
+    def header_buttons(self):
+        return [
+            HeaderButton(
+                gettext("By task"),
+                reverse("wagtailadmin_reports:workflow_tasks"),
+                icon_name="thumbtack",
+            )
+        ]
+
     def get_title(self, content_object):
         return get_latest_str(content_object)
 
@@ -185,16 +205,26 @@ class WorkflowView(ReportView):
             content_type_id__in=get_editable_content_type_ids(self.request)
         )
 
-        return WorkflowState.objects.filter(editable_pages | editable_objects).order_by(
-            "-created_at"
+        return (
+            WorkflowState.objects.filter(editable_pages | editable_objects)
+            .select_related("workflow", "requested_by")
+            .prefetch_related("content_object", "content_object__latest_revision")
+            .order_by("-created_at")
         )
+
+    def decorate_paginated_queryset(self, object_list):
+        return [obj for obj in object_list if obj.content_object]
 
 
 class WorkflowTasksView(ReportView):
-    template_name = "wagtailadmin/reports/workflow_tasks.html"
-    title = _("Workflow tasks")
+    results_template_name = "wagtailadmin/reports/workflow_tasks_results.html"
+    page_title = _("Workflow tasks")
     header_icon = "thumbtack"
     filterset_class = WorkflowTasksReportFilterSet
+    index_url_name = "wagtailadmin_reports:workflow_tasks"
+    index_results_url_name = "wagtailadmin_reports:workflow_tasks_results"
+    permission_policy = page_permission_policy
+    any_permission_required = ["add", "change", "publish"]
 
     export_headings = {
         "workflow_state.content_object.pk": _("Page/Snippet ID"),
@@ -228,6 +258,16 @@ class WorkflowTasksView(ReportView):
             self.FORMAT_XLSX: get_content_type_label,
         }
 
+    @cached_property
+    def header_buttons(self):
+        return [
+            HeaderButton(
+                gettext("By workflow"),
+                reverse("wagtailadmin_reports:workflow"),
+                icon_name="tasks",
+            )
+        ]
+
     def get_title(self, content_object):
         return get_latest_str(content_object)
 
@@ -246,6 +286,15 @@ class WorkflowTasksView(ReportView):
                 self.request
             )
         )
-        return TaskState.objects.filter(editable_pages | editable_objects).order_by(
-            "-started_at"
+        return (
+            TaskState.objects.filter(editable_pages | editable_objects)
+            .select_related("workflow_state", "task")
+            .prefetch_related(
+                "workflow_state__content_object",
+                "workflow_state__content_object__latest_revision",
+            )
+            .order_by("-started_at")
         )
+
+    def decorate_paginated_queryset(self, object_list):
+        return [obj for obj in object_list if obj.workflow_state.content_object]

@@ -5,6 +5,7 @@
 # Translators:
 # Amir Mahmoodi, 2022
 # Amir Mahmoodi, 2022
+# Bardia, 2024
 # Matt Westcott <matthew@torchbox.com>, 2022
 # Mohammad Hossein Mojtahedi <Mhm5000@gmail.com>, 2017
 # pyzenberg <pyzenberg@gmail.com>, 2017
@@ -13,9 +14,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Wagtail\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-04-20 11:47+0100\n"
+"POT-Creation-Date: 2024-08-07 10:06+0100\n"
 "PO-Revision-Date: 2014-02-20 21:05+0000\n"
-"Last-Translator: pyzenberg <pyzenberg@gmail.com>, 2017\n"
+"Last-Translator: Bardia, 2024\n"
 "Language-Team: Persian (http://app.transifex.com/torchbox/wagtail/language/"
 "fa/)\n"
 "MIME-Version: 1.0\n"
@@ -23,6 +24,9 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Language: fa\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+msgid "Wagtail images"
+msgstr "تصاویر وگتیل"
 
 #, python-format
 msgid ""
@@ -144,6 +148,12 @@ msgid_plural "You don't have permission to add tags to these images"
 msgstr[0] "شما مجوز اضافه کردن برچسب به این تصویر را ندارید"
 msgstr[1] "شما مجوز اضافه کردن برچسب به این تصاویر را ندارید"
 
+msgid "Yes, add"
+msgstr "بله اضافه کن"
+
+msgid "No, don't add"
+msgstr "خیر، اضافه نکن"
+
 msgid "Add images to collection"
 msgstr "اضافه کردن تصاویر به مجموعه"
 
@@ -151,6 +161,9 @@ msgid "You don't have permission to add this image to a collection"
 msgid_plural "You don't have permission to add these images to a collection"
 msgstr[0] "شما مجوز اضافه کردن این تصویر به مجموعه را ندارید"
 msgstr[1] "شما مجوز اضافه کردن این تصاویر به مجموعه را ندارید"
+
+msgid "Delete images"
+msgstr "تصاویر را حذف کن"
 
 msgid "Are you sure you want to delete this image?"
 msgid_plural "Are you sure you want to delete these images?"
@@ -179,6 +192,9 @@ msgstr "برچسب های پرتکرار"
 
 msgid "New"
 msgstr "جدید"
+
+msgid "Use new image"
+msgstr "استفاده از تصویر جدید"
 
 msgid "Latest images"
 msgstr "آخرین تصاویر"
@@ -243,18 +259,6 @@ msgstr "اندازه فایل"
 msgid "File not found"
 msgstr "فایل پیدا نشد"
 
-msgid "Images"
-msgstr "عکس‌ها"
-
-#, python-format
-msgid "There is %(counter)s match"
-msgid_plural "There are %(counter)s matches"
-msgstr[0] "%(counter)s مورد همخوانی دارد"
-msgstr[1] "%(counter)s مورد همخوانی دارد"
-
-msgid "pixels"
-msgstr "پیکسل ها"
-
 #, python-format
 msgid "Sorry, no images match \"<em>%(query_string)s</em>\""
 msgstr "متاسفانه هیچ تصویری با «<em>%(query_string)s</em>» پیدا نشد"
@@ -275,21 +279,11 @@ msgstr ""
 "هنوز تصویر آپلود نکرده اید. می‌توانید یکی را الان <a "
 "href=\"%(wagtailimages_add_image_url)s\">آپلود</a> کنید"
 
-msgid "Generating URL"
-msgstr "ایجاد نشانی"
-
-msgid "URL"
-msgstr "URL"
-
 msgid "Preview"
 msgstr "پیش‌نمایش"
 
-msgid ""
-"Note that images generated larger than the screen will appear smaller when "
-"previewed here, so they fit the screen."
-msgstr ""
-"توجه داشته باشید تصاویر بزرگتر از اندازه صفحه در هنگام پیش نمایش کوچکتر به "
-"نظر می‌رسند. بنابر این عرض آن ها با عرض صفحه تنظیم می‌شود."
+msgid "URL"
+msgstr "URL"
 
 msgid "Add multiple images"
 msgstr "افزودن چند تصویر"
@@ -329,6 +323,9 @@ msgstr "مجوزهای تصویر"
 msgid "Add an image permission"
 msgstr "افزودن مجوز تصویر"
 
+msgid "Tag"
+msgstr "برچسب"
+
 #, python-format
 msgid "New tags have been added to %(num_parent_objects)d image"
 msgid_plural "New tags have been added to %(num_parent_objects)d images"
@@ -359,8 +356,8 @@ msgstr "تصویر دیگری انتخاب کنید"
 msgid "Edit this image"
 msgstr "ویرایش این تصویر"
 
-msgid "Search images"
-msgstr "جستجوی تصاویر"
+msgid "Images"
+msgstr "عکس‌ها"
 
 #, python-format
 msgid "Image '%(image_title)s' updated."

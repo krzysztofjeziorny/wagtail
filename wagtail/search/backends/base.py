@@ -1,3 +1,4 @@
+import datetime
 from warnings import warn
 
 from django.db.models.functions.datetime import Extract as ExtractDate
@@ -8,7 +9,6 @@ from django.db.models.sql.where import SubqueryConstraint, WhereNode
 
 from wagtail.search.index import class_is_indexed, get_indexed_models
 from wagtail.search.query import MATCH_ALL, PlainText
-from wagtail.utils.deprecation import RemovedInWagtail60Warning
 
 
 class FilterError(Exception):
@@ -18,7 +18,7 @@ class FilterError(Exception):
 class FieldError(Exception):
     def __init__(self, *args, field_name=None, **kwargs):
         self.field_name = field_name
-        super(FieldError, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
 
 class SearchFieldError(FieldError):
@@ -43,7 +43,6 @@ class BaseSearchQueryCompiler:
         fields=None,
         operator=None,
         order_by_relevance=True,
-        partial_match=None,  # RemovedInWagtail60Warning
     ):
         self.queryset = queryset
         if query is None:
@@ -57,18 +56,6 @@ class BaseSearchQueryCompiler:
         self.query = query
         self.fields = fields
         self.order_by_relevance = order_by_relevance
-        if partial_match:
-            warn(
-                "The partial_match=True argument on `search` is no longer supported. "
-                "Use the `autocomplete` method instead",
-                category=RemovedInWagtail60Warning,
-            )
-        elif partial_match is not None:
-            warn(
-                "The partial_match=False argument on `search` is no longer required "
-                "and should be removed",
-                category=RemovedInWagtail60Warning,
-            )
 
     def _get_filterable_field(self, field_attname):
         # Get field
@@ -124,18 +111,64 @@ class BaseSearchQueryCompiler:
         # Check if this is a leaf node
         if isinstance(where_node, Lookup):
             if isinstance(where_node.lhs, ExtractDate):
-                if isinstance(where_node.lhs, ExtractYear):
-                    field_attname = where_node.lhs.lhs.target.attname
-                else:
+                if not isinstance(where_node.lhs, ExtractYear):
                     raise FilterError(
                         'Cannot apply filter on search results: "'
                         + where_node.lhs.lookup_name
                         + '" queries are not supported.'
                     )
+                else:
+                    field_attname = where_node.lhs.lhs.target.attname
+                    lookup = where_node.lookup_name
+                    if lookup == "gte":
+                        # filter on year(date) >= value
+                        # i.e. date >= Jan 1st of that year
+                        value = datetime.date(int(where_node.rhs), 1, 1)
+                    elif lookup == "gt":
+                        # filter on year(date) > value
+                        # i.e. date >= Jan 1st of the next year
+                        value = datetime.date(int(where_node.rhs) + 1, 1, 1)
+                        lookup = "gte"
+                    elif lookup == "lte":
+                        # filter on year(date) <= value
+                        # i.e. date < Jan 1st of the next year
+                        value = datetime.date(int(where_node.rhs) + 1, 1, 1)
+                        lookup = "lt"
+                    elif lookup == "lt":
+                        # filter on year(date) < value
+                        # i.e. date < Jan 1st of that year
+                        value = datetime.date(int(where_node.rhs), 1, 1)
+                    elif lookup == "exact":
+                        # filter on year(date) == value
+                        # i.e. date >= Jan 1st of that year and date < Jan 1st of the next year
+                        filter1 = self._process_filter(
+                            field_attname,
+                            "gte",
+                            datetime.date(int(where_node.rhs), 1, 1),
+                            check_only=check_only,
+                        )
+                        filter2 = self._process_filter(
+                            field_attname,
+                            "lt",
+                            datetime.date(int(where_node.rhs) + 1, 1, 1),
+                            check_only=check_only,
+                        )
+                        if check_only:
+                            return
+                        else:
+                            return self._connect_filters(
+                                [filter1, filter2], "AND", False
+                            )
+                    else:
+                        raise FilterError(
+                            'Cannot apply filter on search results: "'
+                            + where_node.lhs.lookup_name
+                            + '" queries are not supported.'
+                        )
             else:
                 field_attname = where_node.lhs.target.attname
-            lookup = where_node.lookup_name
-            value = where_node.rhs
+                lookup = where_node.lookup_name
+                value = where_node.rhs
 
             # Ignore pointer fields that show up in specific page type queries
             if field_attname.endswith("_ptr_id"):
@@ -439,7 +472,6 @@ class BaseSearchBackend:
         fields=None,
         operator=None,
         order_by_relevance=True,
-        partial_match=None,  # RemovedInWagtail60Warning
     ):
         return self._search(
             self.query_compiler_class,
@@ -448,7 +480,6 @@ class BaseSearchBackend:
             fields=fields,
             operator=operator,
             order_by_relevance=order_by_relevance,
-            partial_match=partial_match,  # RemovedInWagtail60Warning
         )
 
     def autocomplete(
@@ -472,3 +503,27 @@ class BaseSearchBackend:
             operator=operator,
             order_by_relevance=order_by_relevance,
         )
+
+
+def get_model_root(model):
+    """
+    This function finds the root model for any given model. The root model is
+    the highest concrete model that it descends from. If the model doesn't
+    descend from another concrete model then the model is it's own root model so
+    it is returned.
+
+    Examples:
+    >>> get_model_root(wagtailcore.Page)
+    wagtailcore.Page
+
+    >>> get_model_root(myapp.HomePage)
+    wagtailcore.Page
+
+    >>> get_model_root(wagtailimages.Image)
+    wagtailimages.Image
+    """
+    if model._meta.parents:
+        parent_model = list(model._meta.parents.items())[0][0]
+        return get_model_root(parent_model)
+
+    return model

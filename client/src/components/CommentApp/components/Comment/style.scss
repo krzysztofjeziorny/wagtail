@@ -3,7 +3,9 @@
 
   width: 300px;
   display: block;
-  transition: top 0.5s ease 0s, inset-inline-end 0.5s ease 0s,
+  transition:
+    top 0.5s ease 0s,
+    inset-inline-end 0.5s ease 0s,
     height 0.5s ease 0s;
   pointer-events: auto;
   padding-bottom: 0;
@@ -21,6 +23,8 @@
     margin-bottom: 0;
     padding-top: 10px;
     padding-bottom: 10px;
+    word-break: break-all;
+    white-space: pre-wrap;
 
     &--mode-deleting {
       color: theme('colors.text-context');
@@ -78,7 +82,7 @@
     margin-top: 10px;
 
     button {
-      float: right;
+      float: inline-end;
     }
 
     &::after {
@@ -100,7 +104,7 @@
 
     button {
       height: 26px;
-      float: right;
+      float: inline-end;
       margin-inline-start: 5px;
       color: theme('colors.white.DEFAULT');
       background-color: theme('colors.critical.200');

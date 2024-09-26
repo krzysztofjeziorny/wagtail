@@ -1,14 +1,23 @@
-from django.contrib.auth.models import Group, Permission
+from django.contrib.auth.models import AbstractBaseUser, Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core import paginator
 from django.test import TestCase, override_settings
 from django.urls import reverse
+from django.utils.http import urlencode
 
 from wagtail import hooks
-from wagtail.models import GroupPagePermission, Locale, Page
-from wagtail.test.testapp.models import SimplePage, SingleEventPage, StandardIndex
+from wagtail.admin.staticfiles import versioned_static
+from wagtail.admin.widgets import Button
+from wagtail.models import GroupPagePermission, Locale, Page, Site, Workflow
+from wagtail.test.testapp.models import (
+    CustomPermissionPage,
+    SimplePage,
+    SingleEventPage,
+    StandardIndex,
+)
 from wagtail.test.utils import WagtailTestUtils
 from wagtail.test.utils.timestamps import local_datetime
+from wagtail.utils.deprecation import RemovedInWagtail70Warning
 
 
 class TestPageExplorer(WagtailTestUtils, TestCase):
@@ -43,12 +52,21 @@ class TestPageExplorer(WagtailTestUtils, TestCase):
         # Login
         self.user = self.login()
 
+    def assertContainsActiveFilter(self, response, text, param):
+        soup = self.get_soup(response.content)
+        active_filter = soup.select_one(".w-active-filters .w-pill__content")
+        clear_button = soup.select_one(".w-active-filters .w-pill__remove")
+        self.assertIsNotNone(active_filter)
+        self.assertEqual(active_filter.get_text(separator=" ", strip=True), text)
+        self.assertIsNotNone(clear_button)
+        self.assertNotIn(param, clear_button.attrs.get("data-w-swap-src-value"))
+        self.assertEqual(clear_button.attrs.get("data-w-swap-reflect-value"), "true")
+
     def test_explore(self):
-        response = self.client.get(
-            reverse("wagtailadmin_explore", args=(self.root_page.id,))
-        )
+        explore_url = reverse("wagtailadmin_explore", args=(self.root_page.id,))
+        response = self.client.get(explore_url)
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "wagtailadmin/pages/index.html")
+        self.assertTemplateUsed(response, "wagtailadmin/pages/explorable_index.html")
         self.assertEqual(self.root_page, response.context["parent_page"])
 
         # child pages should be most recent first
@@ -57,28 +75,81 @@ class TestPageExplorer(WagtailTestUtils, TestCase):
         self.assertEqual(
             page_ids, [self.new_page.id, self.old_page.id, self.child_page.id]
         )
+        expected_new_page_copy_url = (
+            reverse("wagtailadmin_pages:copy", args=(self.new_page.id,))
+            + "?"
+            + urlencode({"next": explore_url})
+        )
+        self.assertContains(response, f'href="{expected_new_page_copy_url}"')
+
+        self.assertContains(response, "1-3 of 3")
+
+        # Should contain a link to the history view
+        # one in the header dropdown button, one beside the side panel toggles,
+        # one in the status side panel
+        # (root_page is a site root, not the Root page, so it should be shown)
+        self.assertContains(
+            response,
+            reverse("wagtailadmin_pages:history", args=(self.root_page.id,)),
+            count=3,
+        )
+
+        bulk_actions_js = versioned_static("wagtailadmin/js/bulk-actions.js")
+        self.assertContains(
+            response,
+            f'<script defer src="{bulk_actions_js}"></script>',
+            html=True,
+        )
+
+    def test_explore_results(self):
+        explore_results_url = reverse(
+            "wagtailadmin_explore_results", args=(self.root_page.id,)
+        )
+        response = self.client.get(explore_results_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "wagtailadmin/pages/index_results.html")
+        self.assertEqual(self.root_page, response.context["parent_page"])
+
+        page_ids = [page.id for page in response.context["pages"]]
+        self.assertEqual(
+            page_ids, [self.new_page.id, self.old_page.id, self.child_page.id]
+        )
+        # the 'next' parameter should return to the explore view, NOT
+        # the partial explore_results view
+        explore_url = reverse("wagtailadmin_explore", args=(self.root_page.id,))
+        expected_new_page_copy_url = (
+            reverse("wagtailadmin_pages:copy", args=(self.new_page.id,))
+            + "?"
+            + urlencode({"next": explore_url})
+        )
+        self.assertContains(response, f'href="{expected_new_page_copy_url}"')
+
+        self.assertContains(response, "1-3 of 3")
 
     def test_explore_root(self):
         response = self.client.get(reverse("wagtailadmin_explore_root"))
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "wagtailadmin/pages/index.html")
+        self.assertTemplateUsed(response, "wagtailadmin/pages/explorable_index.html")
         self.assertEqual(Page.objects.get(id=1), response.context["parent_page"])
-        self.assertTrue(
-            response.context["pages"]
-            .paginator.object_list.filter(id=self.root_page.id)
-            .exists()
+        self.assertIn(self.root_page, response.context["pages"])
+        # Should not contain a link to the history view
+        self.assertNotContains(
+            response,
+            reverse("wagtailadmin_pages:history", args=(1,)),
         )
 
     def test_explore_root_shows_icon(self):
         response = self.client.get(reverse("wagtailadmin_explore_root"))
         self.assertEqual(response.status_code, 200)
+        soup = self.get_soup(response.content)
 
         # Administrator (or user with add_site permission) should see the
         # sites link with its icon
-        self.assertContains(
-            response,
-            '<a href="/admin/sites/" title="Sites menu"><svg',
-        )
+        url = reverse("wagtailsites:index")
+        link = soup.select_one(f'td a[href="{url}"]')
+        self.assertIsNotNone(link)
+        icon = link.select_one("svg use[href='#icon-site']")
+        self.assertIsNotNone(icon)
 
     def test_ordering(self):
         response = self.client.get(
@@ -86,7 +157,7 @@ class TestPageExplorer(WagtailTestUtils, TestCase):
             {"ordering": "title"},
         )
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "wagtailadmin/pages/index.html")
+        self.assertTemplateUsed(response, "wagtailadmin/pages/explorable_index.html")
         self.assertEqual(response.context["ordering"], "title")
 
         # child pages should be ordered by title
@@ -95,13 +166,83 @@ class TestPageExplorer(WagtailTestUtils, TestCase):
             page_ids, [self.child_page.id, self.new_page.id, self.old_page.id]
         )
 
+    def test_ordering_search_results_by_created_at(self):
+        response = self.client.get(
+            reverse("wagtailadmin_explore", args=(self.root_page.id,)),
+            {"q": "page", "ordering": "latest_revision_created_at"},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "wagtailadmin/pages/index.html")
+
+        # child pages should be ordered by updated_at, oldest first
+        page_ids = [page.id for page in response.context["pages"]]
+        self.assertEqual(page_ids, [self.old_page.id, self.new_page.id])
+
+    def test_ordering_search_results_by_content_type(self):
+        # Ordering search results by content_type is not currently supported,
+        # but should not cause an error
+        response = self.client.get(
+            reverse("wagtailadmin_explore", args=(self.root_page.id,)),
+            {"q": "page", "ordering": "content_type"},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "wagtailadmin/pages/index.html")
+
+    def test_change_default_child_page_ordering_attribute(self):
+        # save old get_default_order to reset at end of test
+        # overriding class methods does not reset at end of test case
+        default_order = self.root_page.__class__.admin_default_ordering
+        self.root_page.__class__.admin_default_ordering = "title"
+        response = self.client.get(
+            reverse("wagtailadmin_explore", args=(self.root_page.id,))
+        )
+
+        # child pages should be ordered by title
+        page_ids = [page.id for page in response.context["pages"]]
+        self.assertEqual(
+            page_ids, [self.child_page.id, self.new_page.id, self.old_page.id]
+        )
+        self.assertEqual("title", self.root_page.get_admin_default_ordering())
+        self.assertEqual(response.context["ordering"], "title")
+
+        # reset default order at the end of the test
+        self.root_page.__class__.admin_default_ordering = default_order
+
+    def test_change_default_child_page_ordering_method(self):
+        # save old get_default_order to reset at end of test
+        # overriding class methods does not reset at end of test case
+        default_order_function = self.root_page.__class__.get_admin_default_ordering
+
+        def get_default_order(obj):
+            return "-title"
+
+        # override get_default_order_method
+        self.root_page.__class__.get_admin_default_ordering = get_default_order
+
+        response = self.client.get(
+            reverse("wagtailadmin_explore", args=(self.root_page.id,))
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "wagtailadmin/pages/explorable_index.html")
+
+        # child pages should be ordered by title
+        page_ids = [page.id for page in response.context["pages"]]
+        self.assertEqual("-title", self.root_page.get_admin_default_ordering())
+        self.assertEqual(
+            page_ids, [self.old_page.id, self.new_page.id, self.child_page.id]
+        )
+        self.assertEqual(response.context["ordering"], "-title")
+
+        # reset default order function at the end of the test
+        self.root_page.__class__.get_admin_default_ordering = default_order_function
+
     def test_reverse_ordering(self):
         response = self.client.get(
             reverse("wagtailadmin_explore", args=(self.root_page.id,)),
             {"ordering": "-title"},
         )
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "wagtailadmin/pages/index.html")
+        self.assertTemplateUsed(response, "wagtailadmin/pages/explorable_index.html")
         self.assertEqual(response.context["ordering"], "-title")
 
         # child pages should be ordered by title
@@ -116,7 +257,7 @@ class TestPageExplorer(WagtailTestUtils, TestCase):
             {"ordering": "latest_revision_created_at"},
         )
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "wagtailadmin/pages/index.html")
+        self.assertTemplateUsed(response, "wagtailadmin/pages/explorable_index.html")
         self.assertEqual(response.context["ordering"], "latest_revision_created_at")
 
         # child pages should be oldest revision first
@@ -132,7 +273,7 @@ class TestPageExplorer(WagtailTestUtils, TestCase):
             {"ordering": "invalid_order"},
         )
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "wagtailadmin/pages/index.html")
+        self.assertTemplateUsed(response, "wagtailadmin/pages/explorable_index.html")
         self.assertEqual(response.context["ordering"], "-latest_revision_created_at")
 
     def test_reordering(self):
@@ -141,7 +282,7 @@ class TestPageExplorer(WagtailTestUtils, TestCase):
             {"ordering": "ord"},
         )
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "wagtailadmin/pages/index.html")
+        self.assertTemplateUsed(response, "wagtailadmin/pages/explorable_index.html")
         self.assertEqual(response.context["ordering"], "ord")
 
         # child pages should be ordered by native tree order (i.e. by creation time)
@@ -162,7 +303,7 @@ class TestPageExplorer(WagtailTestUtils, TestCase):
             {"polite_pages_only": "yes_please"},
         )
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "wagtailadmin/pages/index.html")
+        self.assertTemplateUsed(response, "wagtailadmin/pages/explorable_index.html")
         page_ids = [page.id for page in response.context["pages"]]
         self.assertEqual(page_ids, [self.child_page.id])
 
@@ -183,15 +324,49 @@ class TestPageExplorer(WagtailTestUtils, TestCase):
             page_ids, [self.old_page.id, self.new_page.id, self.child_page.id]
         )
 
-    def test_construct_page_listing_buttons_hook(self):
-        # testapp implements a construct_page_listing_buttons hook
-        # that add's an dummy button with the label 'Dummy Button' which points
-        # to '/dummy-button'
-        response = self.client.get(
-            reverse("wagtailadmin_explore", args=(self.root_page.id,)),
-        )
+    def test_construct_page_listing_buttons_hook_with_old_signature(self):
+        def add_dummy_button(buttons, page, page_perms, context=None):
+            item = Button(
+                label="Dummy Button",
+                url="/dummy-button",
+                priority=10,
+            )
+            buttons.append(item)
+
+        with hooks.register_temporarily(
+            "construct_page_listing_buttons", add_dummy_button
+        ):
+            with self.assertWarnsMessage(
+                RemovedInWagtail70Warning,
+                "`construct_page_listing_buttons` hook functions should accept a `user` argument instead of `page_perms`",
+            ):
+                response = self.client.get(
+                    reverse("wagtailadmin_explore", args=(self.root_page.id,))
+                )
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "wagtailadmin/pages/index.html")
+        self.assertTemplateUsed(response, "wagtailadmin/pages/explorable_index.html")
+        self.assertContains(response, "Dummy Button")
+        self.assertContains(response, "/dummy-button")
+
+    def test_construct_page_listing_buttons_hook_with_new_signature(self):
+        def add_dummy_button(buttons, page, user, context=None):
+            if not isinstance(user, AbstractBaseUser):
+                raise TypeError("expected a user instance")
+            item = Button(
+                label="Dummy Button",
+                url="/dummy-button",
+                priority=10,
+            )
+            buttons.append(item)
+
+        with hooks.register_temporarily(
+            "construct_page_listing_buttons", add_dummy_button
+        ):
+            response = self.client.get(
+                reverse("wagtailadmin_explore", args=(self.root_page.id,))
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "wagtailadmin/pages/explorable_index.html")
         self.assertContains(response, "Dummy Button")
         self.assertContains(response, "/dummy-button")
 
@@ -214,10 +389,11 @@ class TestPageExplorer(WagtailTestUtils, TestCase):
 
         # Check response
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "wagtailadmin/pages/index.html")
+        self.assertTemplateUsed(response, "wagtailadmin/pages/explorable_index.html")
 
         # Check that we got the correct page
-        self.assertEqual(response.context["pages"].number, 2)
+        self.assertEqual(response.context["page_obj"].number, 2)
+        self.assertContains(response, "51-100 of 153")
 
     def test_pagination_invalid(self):
         self.make_pages()
@@ -232,7 +408,7 @@ class TestPageExplorer(WagtailTestUtils, TestCase):
         self.assertTemplateUsed(response, "wagtailadmin/pages/index.html")
 
         # Check that we got page one
-        self.assertEqual(response.context["pages"].number, 1)
+        self.assertEqual(response.context["page_obj"].number, 1)
 
     def test_pagination_out_of_range(self):
         self.make_pages()
@@ -247,9 +423,28 @@ class TestPageExplorer(WagtailTestUtils, TestCase):
 
         # Check that we got the last page
         self.assertEqual(
-            response.context["pages"].number,
-            response.context["pages"].paginator.num_pages,
+            response.context["page_obj"].number,
+            response.context["paginator"].num_pages,
         )
+
+    def test_no_pagination_with_custom_ordering(self):
+        self.make_pages()
+
+        response = self.client.get(
+            reverse("wagtailadmin_explore", args=(self.root_page.id,)),
+            {"ordering": "ord"},
+        )
+
+        # Check response
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "wagtailadmin/pages/index.html")
+
+        # Check that we don't have a paginator page object
+        self.assertIsNone(response.context["page_obj"])
+
+        # Check that all pages are shown
+        self.assertContains(response, "1-153 of 153")
+        self.assertEqual(len(response.context["pages"]), 153)
 
     @override_settings(USE_L10N=True, USE_THOUSAND_SEPARATOR=True)
     def test_no_thousand_separators_in_bulk_action_checkbox(self):
@@ -356,19 +551,291 @@ class TestPageExplorer(WagtailTestUtils, TestCase):
             content_type=missing_page_content_type
         )
 
-        # try to browse the the listing that contains the missing model
+        # try to browse the listing that contains the missing model
         response = self.client.get(
             reverse("wagtailadmin_explore", args=(self.root_page.id,))
         )
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "wagtailadmin/pages/index.html")
+        self.assertTemplateUsed(response, "wagtailadmin/pages/explorable_index.html")
 
         # try to browse into the page itself
         response = self.client.get(
             reverse("wagtailadmin_explore", args=(self.old_page.id,))
         )
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "wagtailadmin/pages/index.html")
+        self.assertTemplateUsed(response, "wagtailadmin/pages/explorable_index.html")
+
+    def test_search(self):
+        response = self.client.get(
+            reverse("wagtailadmin_explore", args=(self.root_page.id,)),
+            {"q": "old"},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "wagtailadmin/pages/explorable_index.html")
+
+        page_ids = [page.id for page in response.context["pages"]]
+        self.assertEqual(page_ids, [self.old_page.id])
+        self.assertContains(response, "Search the whole site")
+
+    def test_search_results(self):
+        response = self.client.get(
+            reverse("wagtailadmin_explore_results", args=(self.root_page.id,)),
+            {"q": "old"},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "wagtailadmin/pages/index_results.html")
+
+        page_ids = [page.id for page in response.context["pages"]]
+        self.assertEqual(page_ids, [self.old_page.id])
+        self.assertContains(response, "1-1 of 1")
+
+    def test_search_searches_descendants(self):
+        response = self.client.get(reverse("wagtailadmin_explore_root"), {"q": "old"})
+        self.assertEqual(response.status_code, 200)
+        page_ids = [page.id for page in response.context["pages"]]
+        self.assertEqual(page_ids, [self.old_page.id])
+        # Results that are not immediate children of the current page should show their parent
+        self.assertContains(
+            response,
+            '<a href="/admin/pages/2/"><svg class="icon icon-arrow-right default" aria-hidden="true"><use href="#icon-arrow-right"></use></svg>Welcome to your new Wagtail site!</a>',
+            html=True,
+        )
+
+        # search results should not include pages outside parent_page's descendants
+        response = self.client.get(
+            reverse("wagtailadmin_explore", args=(self.new_page.id,)),
+            {"q": "old"},
+        )
+        self.assertEqual(response.status_code, 200)
+        page_ids = [page.id for page in response.context["pages"]]
+        self.assertEqual(page_ids, [])
+
+    def test_search_whole_tree(self):
+        response = self.client.get(
+            reverse("wagtailadmin_explore", args=(self.new_page.id,)),
+            {"q": "old", "search_all": "1"},
+        )
+        self.assertEqual(response.status_code, 200)
+        page_ids = [page.id for page in response.context["pages"]]
+        self.assertEqual(page_ids, [self.old_page.id])
+        self.assertContains(
+            response,
+            "Search in '<span class=\"w-title-ellipsis\">New page (simple page)</span>'",
+        )
+
+    def test_filter_by_page_type(self):
+        new_page_child = SimplePage(
+            title="New page child", slug="new-page-child", content="new page child"
+        )
+        self.new_page.add_child(instance=new_page_child)
+        page_type_pk = ContentType.objects.get_for_model(SimplePage).pk
+        response = self.client.get(
+            reverse("wagtailadmin_explore", args=(self.root_page.id,)),
+            {"content_type": page_type_pk},
+        )
+        self.assertEqual(response.status_code, 200)
+        page_ids = {page.id for page in response.context["pages"]}
+        self.assertEqual(
+            page_ids, {self.child_page.id, self.new_page.id, new_page_child.id}
+        )
+        self.assertContainsActiveFilter(
+            response,
+            "Page type: Simple page",
+            f"content_type={page_type_pk}",
+        )
+
+        # "Page" should not be listed as a content type
+        soup = self.get_soup(response.content)
+        page_type_labels = {
+            list(label.children)[-1].strip()
+            for label in soup.select("#id_content_type label")
+        }
+        self.assertIn("Simple page", page_type_labels)
+        self.assertNotIn("Page", page_type_labels)
+
+    def test_filter_by_date_updated(self):
+        new_page_child = SimplePage(
+            title="New page child",
+            slug="new-page-child",
+            content="new page child",
+            latest_revision_created_at=local_datetime(2016, 1, 1),
+        )
+        self.new_page.add_child(instance=new_page_child)
+
+        response = self.client.get(
+            reverse("wagtailadmin_explore", args=(self.root_page.id,)),
+            {"latest_revision_created_at_from": "2015-01-01"},
+        )
+        self.assertEqual(response.status_code, 200)
+        page_ids = {page.id for page in response.context["pages"]}
+        self.assertEqual(page_ids, {self.new_page.id, new_page_child.id})
+        self.assertContainsActiveFilter(
+            response,
+            "Date updated: Jan. 1, 2015 -",
+            "latest_revision_created_at_from=2015-01-01",
+        )
+
+    def test_filter_by_owner(self):
+        barry = self.create_user(
+            "barry", password="password", first_name="Barry", last_name="Manilow"
+        )
+        self.create_user(
+            "larry", password="password", first_name="Larry", last_name="King"
+        )
+
+        new_page_child = SimplePage(
+            title="New page child",
+            slug="new-page-child",
+            content="new page child",
+            owner=barry,
+        )
+        self.new_page.add_child(instance=new_page_child)
+
+        response = self.client.get(
+            reverse("wagtailadmin_explore", args=(self.root_page.id,)),
+        )
+        self.assertEqual(response.status_code, 200)
+        # Only users who own any pages should be listed in the filter
+        self.assertContains(response, "Barry Manilow")
+        self.assertNotContains(response, "Larry King")
+
+        response = self.client.get(
+            reverse("wagtailadmin_explore", args=(self.root_page.id,)),
+            {"owner": barry.pk},
+        )
+        self.assertEqual(response.status_code, 200)
+        page_ids = {page.id for page in response.context["pages"]}
+        self.assertEqual(page_ids, {new_page_child.id})
+        self.assertContainsActiveFilter(
+            response,
+            "Owner: Barry Manilow",
+            f"owner={barry.pk}",
+        )
+
+    def test_filter_by_edited_by_user(self):
+        barry = self.create_superuser(
+            "barry", password="password", first_name="Barry", last_name="Manilow"
+        )
+        self.create_user(
+            "larry", password="password", first_name="Larry", last_name="King"
+        )
+
+        self.login(username="barry", password="password")
+
+        post_data = {
+            "title": "Hello world!",
+            "content": "hello from Barry",
+            "slug": "hello-world",
+        }
+        response = self.client.post(
+            reverse("wagtailadmin_pages:edit", args=(self.child_page.id,)), post_data
+        )
+        self.assertEqual(response.status_code, 302)
+
+        response = self.client.get(
+            reverse("wagtailadmin_explore", args=(self.root_page.id,)),
+            {"edited_by": barry.pk},
+        )
+        self.assertEqual(response.status_code, 200)
+        # Only users who have edited any pages should be listed in the filter
+        self.assertContains(response, "Barry Manilow")
+        self.assertNotContains(response, "Larry King")
+
+        page_ids = {page.id for page in response.context["pages"]}
+        self.assertEqual(page_ids, {self.child_page.id})
+        self.assertContainsActiveFilter(
+            response,
+            "Edited by: Barry Manilow",
+            f"edited_by={barry.pk}",
+        )
+
+    def test_filter_by_site(self):
+        new_site = Site.objects.create(
+            hostname="new.example.com", root_page=self.new_page
+        )
+        new_page_child = SimplePage(
+            title="New page child",
+            slug="new-page-child",
+            content="new page child",
+        )
+        self.new_page.add_child(instance=new_page_child)
+
+        response = self.client.get(
+            reverse("wagtailadmin_explore", args=(self.root_page.id,)),
+            {"site": new_site.pk},
+        )
+        self.assertEqual(response.status_code, 200)
+        page_ids = {page.id for page in response.context["pages"]}
+        self.assertEqual(page_ids, {self.new_page.id, new_page_child.id})
+        self.assertContainsActiveFilter(
+            response,
+            "Site: new.example.com",
+            f"site={new_site.pk}",
+        )
+
+    def test_filter_by_has_child_pages(self):
+        new_page_child = SimplePage(
+            title="New page child",
+            slug="new-page-child",
+            content="new page child",
+        )
+        self.new_page.add_child(instance=new_page_child)
+
+        response = self.client.get(
+            reverse("wagtailadmin_explore", args=(self.root_page.id,)),
+            {"has_child_pages": "true"},
+        )
+        self.assertEqual(response.status_code, 200)
+        page_ids = {page.id for page in response.context["pages"]}
+        self.assertEqual(page_ids, {self.new_page.id})
+        self.assertContainsActiveFilter(
+            response,
+            "Has child pages: Yes",
+            "has_child_pages=true",
+        )
+
+        response = self.client.get(
+            reverse("wagtailadmin_explore", args=(self.root_page.id,)),
+            {"has_child_pages": "false"},
+        )
+        self.assertEqual(response.status_code, 200)
+        page_ids = {page.id for page in response.context["pages"]}
+        self.assertEqual(
+            page_ids, {self.child_page.id, self.old_page.id, new_page_child.id}
+        )
+        self.assertContainsActiveFilter(
+            response,
+            "Has child pages: No",
+            "has_child_pages=false",
+        )
+
+    def test_invalid_filter(self):
+        response = self.client.get(
+            reverse("wagtailadmin_explore", args=(self.root_page.id,)),
+            {"has_child_pages": "unknown"},
+        )
+        self.assertEqual(response.status_code, 200)
+        soup = self.get_soup(response.content)
+        active_filters = soup.select_one(".w-active-filters")
+        self.assertIsNone(active_filters)
+        error_message = soup.select_one(".w-field__errors .error-message")
+        self.assertIsNotNone(error_message)
+        self.assertEqual(
+            error_message.string.strip(),
+            "Select a valid choice. unknown is not one of the available choices.",
+        )
+
+    def test_explore_custom_permissions(self):
+        page = CustomPermissionPage(title="Page with custom perms", slug="custom-perms")
+        self.root_page.add_child(instance=page)
+        response = self.client.get(reverse("wagtailadmin_explore", args=(page.id,)))
+        self.assertEqual(response.status_code, 200)
+        # Respecting PagePermissionTester.can_view_revisions(),
+        # should not contain a link to the history view
+        self.assertNotContains(
+            response,
+            reverse("wagtailadmin_pages:history", args=(page.id,)),
+        )
 
 
 class TestBreadcrumb(WagtailTestUtils, TestCase):
@@ -382,8 +849,8 @@ class TestBreadcrumb(WagtailTestUtils, TestCase):
         response = self.client.get(reverse("wagtailadmin_explore", args=(page.id,)))
         self.assertEqual(response.status_code, 200)
 
-        # The data-breadcrumb-next should be present
-        self.assertContains(response, "data-breadcrumb-next")
+        # The breadcrumbs controller identifier should be present
+        self.assertContains(response, 'data-controller="w-breadcrumbs"')
 
     def test_breadcrumb_uses_specific_titles(self):
         self.user = self.login()
@@ -400,8 +867,8 @@ class TestBreadcrumb(WagtailTestUtils, TestCase):
 
         expected = (
             """
-            <li class="w-h-full w-flex w-items-center w-overflow-hidden w-transition w-duration-300 w-whitespace-nowrap w-flex-shrink-0 w-font-bold w-max-w-0" data-breadcrumb-item hidden>
-                <a class="w-flex w-items-center w-h-full w-text-text-label w-pr-0.5 w-text-14 w-no-underline w-outline-offset-inside hover:w-underline hover:w-text-text-label w-h-full" href="%s">
+            <li class="w-h-full w-flex w-items-center w-overflow-hidden w-transition w-duration-300 w-whitespace-nowrap w-flex-shrink-0 w-max-w-0" data-w-breadcrumbs-target="content" hidden>
+                <a class="w-flex w-items-center w-text-text-label w-pr-0.5 w-text-14 w-no-underline w-outline-offset-inside w-border-b w-border-b-2 w-border-transparent w-box-content hover:w-border-current hover:w-text-text-label" href="%s">
                     Secret plans (simple page)
                 </a>
                 <svg class="icon icon-arrow-right w-w-4 w-h-4 w-ml-3" aria-hidden="true">
@@ -473,6 +940,25 @@ class TestPageExplorerSignposting(WagtailTestUtils, TestCase):
             response, """<a href="/admin/sites/">Configure a site now.</a>"""
         )
 
+    def test_searching_at_root(self):
+        self.login(username="superuser", password="password")
+
+        # Message about root level should not show when searching or filtering
+        response = self.client.get(reverse("wagtailadmin_explore_root"), {"q": "hello"})
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(
+            response,
+            "The root level is where you can add new sites to your Wagtail installation.",
+        )
+        response = self.client.get(
+            reverse("wagtailadmin_explore_root"), {"has_child_pages": "true"}
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(
+            response,
+            "The root level is where you can add new sites to your Wagtail installation.",
+        )
+
     def test_admin_at_non_site_page(self):
         self.login(username="superuser", password="password")
         response = self.client.get(
@@ -490,6 +976,29 @@ class TestPageExplorerSignposting(WagtailTestUtils, TestCase):
         )
         self.assertContains(
             response, """<a href="/admin/sites/">Configure a site now.</a>"""
+        )
+
+    def test_searching_at_non_site_page(self):
+        self.login(username="superuser", password="password")
+
+        # Message about unroutable pages should not show when searching or filtering
+        response = self.client.get(
+            reverse("wagtailadmin_explore", args=(self.no_site_page.id,)),
+            {"q": "hello"},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(
+            response,
+            "There is no site set up for this location.",
+        )
+        response = self.client.get(
+            reverse("wagtailadmin_explore", args=(self.no_site_page.id,)),
+            {"has_child_pages": "true"},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(
+            response,
+            "There is no site set up for this location.",
         )
 
     def test_admin_at_site_page(self):
@@ -652,8 +1161,8 @@ class TestExplorablePageVisibility(WagtailTestUtils, TestCase):
         response = self.client.get(reverse("wagtailadmin_explore", args=[6]))
         self.assertEqual(response.status_code, 200)
         expected = """
-            <li class="w-h-full w-flex w-items-center w-overflow-hidden w-transition w-duration-300 w-whitespace-nowrap w-flex-shrink-0 w-font-bold w-max-w-0" data-breadcrumb-item hidden>
-                <a class="w-flex w-items-center w-h-full w-text-text-label w-pr-0.5 w-text-14 w-no-underline w-outline-offset-inside hover:w-underline hover:w-text-text-label w-h-full" href="/admin/pages/">
+            <li class="w-h-full w-flex w-items-center w-overflow-hidden w-transition w-duration-300 w-whitespace-nowrap w-flex-shrink-0 w-max-w-0" data-w-breadcrumbs-target="content" hidden>
+                <a class="w-flex w-items-center w-text-text-label w-pr-0.5 w-text-14 w-no-underline w-outline-offset-inside w-border-b w-border-b-2 w-border-transparent w-box-content hover:w-border-current hover:w-text-text-label" href="/admin/pages/">
                     Root
                 </a>
                 <svg class="icon icon-arrow-right w-w-4 w-h-4 w-ml-3" aria-hidden="true">
@@ -664,8 +1173,8 @@ class TestExplorablePageVisibility(WagtailTestUtils, TestCase):
         """
         self.assertContains(response, expected, html=True)
         expected = """
-            <li class="w-h-full w-flex w-items-center w-overflow-hidden w-transition w-duration-300 w-whitespace-nowrap w-flex-shrink-0 w-font-bold w-max-w-0" data-breadcrumb-item hidden>
-                <a class="w-flex w-items-center w-h-full w-text-text-label w-pr-0.5 w-text-14 w-no-underline w-outline-offset-inside hover:w-underline hover:w-text-text-label w-h-full" href="/admin/pages/4/">
+            <li class="w-h-full w-flex w-items-center w-overflow-hidden w-transition w-duration-300 w-whitespace-nowrap w-flex-shrink-0 w-max-w-0" data-w-breadcrumbs-target="content" hidden>
+                <a class="w-flex w-items-center w-text-text-label w-pr-0.5 w-text-14 w-no-underline w-outline-offset-inside w-border-b w-border-b-2 w-border-transparent w-box-content hover:w-border-current hover:w-text-text-label" href="/admin/pages/4/">
                     Welcome to example.com!
                 </a>
                 <svg class="icon icon-arrow-right w-w-4 w-h-4 w-ml-3" aria-hidden="true">
@@ -675,8 +1184,8 @@ class TestExplorablePageVisibility(WagtailTestUtils, TestCase):
         """
         self.assertContains(response, expected, html=True)
         expected = """
-            <li class="w-h-full w-flex w-items-center w-overflow-hidden w-transition w-duration-300 w-whitespace-nowrap w-flex-shrink-0 w-font-bold w-max-w-0" data-breadcrumb-item hidden>
-                <a class="w-flex w-items-center w-h-full w-text-text-label w-pr-0.5 w-text-14 w-no-underline w-outline-offset-inside hover:w-underline hover:w-text-text-label w-h-full" href="/admin/pages/5/">
+            <li class="w-h-full w-flex w-items-center w-overflow-hidden w-transition w-duration-300 w-whitespace-nowrap w-flex-shrink-0 w-max-w-0" data-w-breadcrumbs-target="content" hidden>
+                <a class="w-flex w-items-center w-text-text-label w-pr-0.5 w-text-14 w-no-underline w-outline-offset-inside w-border-b w-border-b-2 w-border-transparent w-box-content hover:w-border-current hover:w-text-text-label" href="/admin/pages/5/">
                     Content
                 </a>
                 <svg class="icon icon-arrow-right w-w-4 w-h-4 w-ml-3" aria-hidden="true">
@@ -693,9 +1202,9 @@ class TestExplorablePageVisibility(WagtailTestUtils, TestCase):
         # While at "Page 1", Josh should see the breadcrumbs leading only as far back as the example.com homepage,
         # since it's his Closest Common Ancestor.
         expected = """
-            <li class="w-h-full w-flex w-items-center w-overflow-hidden w-transition w-duration-300 w-whitespace-nowrap w-flex-shrink-0 w-font-bold w-max-w-0" data-breadcrumb-item hidden>
-                <a class="w-flex w-items-center w-h-full w-text-text-label w-pr-0.5 w-text-14 w-no-underline w-outline-offset-inside hover:w-underline hover:w-text-text-label w-h-full" href="/admin/pages/4/">
-                    Root
+            <li class="w-h-full w-flex w-items-center w-overflow-hidden w-transition w-duration-300 w-whitespace-nowrap w-flex-shrink-0 w-max-w-0" data-w-breadcrumbs-target="content" hidden>
+                <a class="w-flex w-items-center w-text-text-label w-pr-0.5 w-text-14 w-no-underline w-outline-offset-inside w-border-b w-border-b-2 w-border-transparent w-box-content hover:w-border-current hover:w-text-text-label" href="/admin/pages/4/">
+                    Welcome to example.com!
                 </a>
                 <svg class="icon icon-arrow-right w-w-4 w-h-4 w-ml-3" aria-hidden="true">
                     <use href="#icon-arrow-right"></use>
@@ -704,8 +1213,8 @@ class TestExplorablePageVisibility(WagtailTestUtils, TestCase):
         """
         self.assertContains(response, expected, html=True)
         expected = """
-            <li class="w-h-full w-flex w-items-center w-overflow-hidden w-transition w-duration-300 w-whitespace-nowrap w-flex-shrink-0 w-font-bold w-max-w-0" data-breadcrumb-item hidden>
-                <a class="w-flex w-items-center w-h-full w-text-text-label w-pr-0.5 w-text-14 w-no-underline w-outline-offset-inside hover:w-underline hover:w-text-text-label w-h-full" href="/admin/pages/5/">
+            <li class="w-h-full w-flex w-items-center w-overflow-hidden w-transition w-duration-300 w-whitespace-nowrap w-flex-shrink-0 w-max-w-0" data-w-breadcrumbs-target="content" hidden>
+                <a class="w-flex w-items-center w-text-text-label w-pr-0.5 w-text-14 w-no-underline w-outline-offset-inside w-border-b w-border-b-2 w-border-transparent w-box-content hover:w-border-current hover:w-text-text-label" href="/admin/pages/5/">
                     Content
                 </a>
                 <svg class="icon icon-arrow-right w-w-4 w-h-4 w-ml-3" aria-hidden="true">
@@ -714,8 +1223,22 @@ class TestExplorablePageVisibility(WagtailTestUtils, TestCase):
             </li>
         """
         self.assertContains(response, expected, html=True)
-        # The page title shouldn't appear because it's the "home" breadcrumb.
-        self.assertNotContains(response, "Welcome to example.com!")
+
+    def test_nonadmin_sees_non_hidden_root(self):
+        self.login(username="josh", password="password")
+        response = self.client.get(reverse("wagtailadmin_explore", args=[4]))
+        self.assertEqual(response.status_code, 200)
+        # When Josh is viewing his visible root page, he should the page title as a non-hidden, single-item breadcrumb.
+        expected = """
+            <li
+                class="w-h-full w-flex w-items-center w-overflow-hidden w-transition w-duration-300 w-whitespace-nowrap w-flex-shrink-0 w-font-bold" data-w-breadcrumbs-target="content">
+                <a class="w-flex w-items-center w-text-text-label w-pr-0.5 w-text-14 w-no-underline w-outline-offset-inside w-border-b w-border-b-2 w-border-transparent w-box-content hover:w-border-current hover:w-text-text-label"
+                   href="/admin/pages/4/">
+                    Welcome to example.com!
+                </a>
+            </li>
+        """
+        self.assertContains(response, expected, html=True)
 
     def test_admin_home_page_changes_with_permissions(self):
         self.login(username="bob", password="password")
@@ -784,3 +1307,43 @@ class TestLocaleSelector(WagtailTestUtils, TestCase):
             allow_extra_attrs=True,
             count=0,
         )
+
+
+class TestInWorkflowStatus(WagtailTestUtils, TestCase):
+    fixtures = ["test.json"]
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.event_index = Page.objects.get(url_path="/home/events/")
+        cls.christmas = Page.objects.get(url_path="/home/events/christmas/").specific
+        cls.saint_patrick = Page.objects.get(
+            url_path="/home/events/saint-patrick/"
+        ).specific
+        cls.christmas.save_revision()
+        cls.saint_patrick.save_revision()
+        cls.url = reverse("wagtailadmin_explore", args=[cls.event_index.pk])
+
+    def setUp(self):
+        self.user = self.login()
+
+    def test_in_workflow_status(self):
+        workflow = Workflow.objects.first()
+        workflow.start(self.christmas, self.user)
+        workflow.start(self.saint_patrick, self.user)
+
+        # Warm up cache
+        self.client.get(self.url)
+
+        with self.assertNumQueries(44):
+            response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+        soup = self.get_soup(response.content)
+
+        for page in [self.christmas, self.saint_patrick]:
+            status = soup.select_one(f'a.w-status[href="{page.url}"]')
+            self.assertIsNotNone(status)
+            self.assertEqual(
+                status.text.strip(), "Current page status: live + in moderation"
+            )
+            self.assertEqual(page.status_string, "live + in moderation")

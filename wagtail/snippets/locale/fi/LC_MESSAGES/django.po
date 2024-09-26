@@ -7,15 +7,16 @@
 # Aarni Koskela, 2016
 # Eetu Häivälä, 2016
 # Eetu Häivälä, 2016
-# Jiri Grönroos <jiri.gronroos@iki.fi>, 2021-2022
+# Jiri Grönroos <jiri.gronroos@iki.fi>, 2021-2024
+# Timo Tuominen, 2023
 # Valter Maasalo <vmaasalo@gmail.com>, 2020
 msgid ""
 msgstr ""
 "Project-Id-Version: Wagtail\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-04-20 11:47+0100\n"
+"POT-Creation-Date: 2024-08-07 10:06+0100\n"
 "PO-Revision-Date: 2014-02-19 19:01+0000\n"
-"Last-Translator: Valter Maasalo <vmaasalo@gmail.com>, 2020\n"
+"Last-Translator: Jiri Grönroos <jiri.gronroos@iki.fi>, 2021-2024\n"
 "Language-Team: Finnish (http://app.transifex.com/torchbox/wagtail/language/"
 "fi/)\n"
 "MIME-Version: 1.0\n"
@@ -68,7 +69,13 @@ msgstr "Poista valitut pätkät"
 
 #, python-format
 msgid "%(model_name)s '%(object)s' deleted."
-msgstr "%(model_name)s-pätkä '%(object)s' poistettu."
+msgstr "%(model_name)s '%(object)s' poistettu."
+
+#, python-format
+msgid "%(count)d %(model_name)s deleted."
+msgid_plural "%(count)d %(model_name)s deleted."
+msgstr[0] "%(count)d %(model_name)s poistettu."
+msgstr[1] "%(count)d %(model_name)s poistettu."
 
 #, python-format
 msgid "Delete %(snippet_type_name)s"
@@ -91,17 +98,24 @@ msgstr "Haluatko varmasti poistaa tämän %(snippet_type_name)s -kohteen?"
 msgid "Are you sure you want to delete %(count)s %(snippet_type_name)s?"
 msgstr "Haluatko varmasti poistaa %(count)s %(snippet_type_name)s-pätkää?"
 
+#, python-format
+msgid "You don't have permission to delete this %(snippet_type_name)s"
+msgstr "Sinulla ei ole oikeutta poistaa tätä %(snippet_type_name)s"
+
+#, python-format
+msgid "You don't have permission to delete these %(snippet_plural_name)s"
+msgstr "Sinulla ei ole oikeutta poistaa näitä %(snippet_plural_name)s"
+
 msgid "Yes, delete"
 msgstr "Kyllä, poista"
 
 msgid "No, don't delete"
 msgstr "Ei, älä poista"
 
-msgid "Last updated"
-msgstr "Viimeksi päivitetty"
-
-msgid "History"
-msgstr "Historia"
+#, python-format
+msgid "Sorry, no snippets match \"<em>%(search_query)s</em>\""
+msgstr ""
+"Valitettavasti yksikään pätkä ei vastaa hakua \"<em>%(search_query)s</em>\""
 
 msgid "Publishing…"
 msgstr "Julkaistaan…"
@@ -121,123 +135,30 @@ msgstr "Korvaa nykyinen versio"
 msgid "Save draft"
 msgstr "Tallenna luonnos"
 
-#, python-format
-msgid "New  %(snippet_type_name)s"
-msgstr "Uusi %(snippet_type_name)s"
-
-msgid "New"
-msgstr "Uusi"
-
 msgid "Actions"
 msgstr "Toimet"
 
-#, python-format
-msgid "Editing %(snippet_type_name)s - %(object)s"
-msgstr "Muokataan %(snippet_type_name)s - %(object)s"
-
-msgid "Toggle breadcrumbs"
-msgstr "Murupolut päälle/pois"
-
-msgid "Breadcrumb"
-msgstr "Linkkipolku"
-
-msgid "Snippets"
-msgstr "Pätkät"
-
-#, python-format
-msgid "New: %(model_name)s"
-msgstr "Uusi: %(model_name)s"
-
-#, python-format
-msgid "Editing %(snippet_type)s %(title)s"
-msgstr "Muokataan %(snippet_type)s %(title)s"
-
-msgid "Usage"
-msgstr "Käyttö"
-
-msgid "Edit this snippet"
-msgstr "Muokkaa tätä pätkää"
-
-msgid "No log entries found."
-msgstr "Lokimerkintöjä ei löytynyt."
-
-#, python-format
-msgid "Snippets %(snippet_type_name_plural)s"
-msgstr "Pätkät %(snippet_type_name_plural)s"
-
-#, python-format
-msgid "Add %(snippet_type_name)s"
-msgstr "Lisää %(snippet_type_name)s"
-
-#, python-format
-msgid "There is %(counter)s match"
-msgid_plural "There are %(counter)s matches"
-msgstr[0] "Löytyi %(counter)s osuma"
-msgstr[1] "Löytyi %(counter)s osumaa"
-
-#, python-format
-msgid ""
-"No %(snippet_type_name_plural)s have been created. Why not <a "
-"href=\"%(wagtailsnippets_create_url)s\">add one</a>?"
-msgstr ""
-"Yhtään %(snippet_type_name_plural)s ei ole luotu. Mikset vaikka <a "
-"href=\"%(wagtailsnippets_create_url)s\">lisäisi yhtä nyt</a>?"
-
-msgid "Live version"
-msgstr "Esillä oleva versio"
-
-msgid "Current draft"
-msgstr "Nykyinen luonnos"
-
-msgid "Preview"
-msgstr "Esikatsele"
-
-msgid "Edit"
-msgstr "Muokkaa"
-
-msgid "Review this version"
-msgstr "Tarkasta tämä versio"
-
-msgid "Compare with previous version"
-msgstr "Vertaa edelliseen versioon"
-
-msgid "Compare with current version"
-msgstr "Vertaa nykyiseen versioon"
-
-msgid "Cancel scheduled publish"
-msgstr "Peruuta ajastettu julkaisu"
+msgid "Select all snippets in listing"
+msgstr "Valitse kaikki listauksen pätkät"
 
 msgid "Choose"
 msgstr "Valitse"
 
+msgid "Snippets"
+msgstr "Pätkät"
+
 msgid "Name"
 msgstr "Nimi"
 
-msgid "The snippet could not be created due to errors."
-msgstr "Pätkää ei voitu luoda virheiden vuoksi."
-
-msgid "The snippet could not be saved due to errors."
-msgstr "Pätkää ei voitu tallentaa virheiden vuoksi."
-
-msgid "Action"
-msgstr "Toiminto"
-
-msgid "User"
-msgstr "Käyttäjä"
-
-msgid "Date"
-msgstr "Pvm"
-
-msgid "Snippet history"
-msgstr "Pätkän historia"
+msgid "Instances"
+msgstr "Instanssit"
 
 #, python-format
-msgid "Edit '%(title)s'"
-msgstr "Muokkaa sivua '%(title)s'"
+msgid "Edit this %(model_name)s"
+msgstr "Muokkaa tätä %(model_name)s"
 
-#, python-format
-msgid "Delete '%(title)s'"
-msgstr "Poista '%(title)s'"
+msgid "Home"
+msgstr "Koti"
 
 #, python-format
 msgid "Choose %(object)s"

@@ -58,7 +58,7 @@ class Command(BaseCommand):
                     if queryset.model is Page:
                         for obj in queryset:
                             self.stdout.write(
-                                "{0}\t{1}\t{2}\t{3}".format(
+                                "{}\t{}\t{}\t{}".format(
                                     obj.expire_at.strftime("%Y-%m-%d %H:%M"),
                                     obj.specific_class.__name__,
                                     obj.slug,
@@ -68,7 +68,7 @@ class Command(BaseCommand):
                     else:
                         for obj in queryset:
                             self.stdout.write(
-                                "{0}\t{1}\t{2}\t\t{3}".format(
+                                "{}\t{}\t{}\t\t{}".format(
                                     obj.expire_at.strftime("%Y-%m-%d %H:%M"),
                                     queryset.model.__name__,
                                     "",
@@ -87,39 +87,7 @@ class Command(BaseCommand):
                         set_expired=True, log_action="wagtail.unpublish.scheduled"
                     )
 
-        # 2. get all object revisions for moderation that have been expired
-        expired_revs = [
-            r
-            for r in Revision.objects.filter(submitted_for_moderation=True)
-            if revision_date_expired(r)
-        ]
-        if dryrun:
-            self.stdout.write("\n---------------------------------")
-            if expired_revs:
-                self.stdout.write(
-                    "Expired revisions to be dropped from moderation queue:"
-                )
-                self.stdout.write("Expiry datetime\t\tSlug\t\tName")
-                self.stdout.write("---------------\t\t----\t\t----")
-                for er in expired_revs:
-                    rev_data = er.content
-                    self.stdout.write(
-                        "{0}\t{1}\t{2}".format(
-                            dateparse.parse_datetime(
-                                rev_data.get("expire_at")
-                            ).strftime("%Y-%m-%d %H:%M"),
-                            rev_data.get("slug"),
-                            rev_data.get("title"),
-                        )
-                    )
-            else:
-                self.stdout.write("No expired revision to be dropped from moderation.")
-        else:
-            for er in expired_revs:
-                er.submitted_for_moderation = False
-                er.save()
-
-        # 3. get all revisions that need to be published
+        # 2. get all revisions that need to be published
         revs_for_publishing = Revision.objects.filter(
             approved_go_live_at__lt=timezone.now()
         ).order_by("approved_go_live_at")
@@ -133,7 +101,7 @@ class Command(BaseCommand):
                     model = rp.content_type.model_class()
                     rev_data = rp.content
                     self.stdout.write(
-                        "{0}\t{1}\t{2}\t\t{3}".format(
+                        "{}\t{}\t{}\t\t{}".format(
                             rp.approved_go_live_at.strftime("%Y-%m-%d %H:%M"),
                             model.__name__,
                             rev_data.get("slug", ""),

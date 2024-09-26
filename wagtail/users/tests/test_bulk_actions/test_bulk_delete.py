@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Permission
 from django.http import HttpRequest, HttpResponse
 from django.test import TestCase
 from django.urls import reverse
@@ -51,6 +52,18 @@ class TestUserDeleteView(WagtailTestUtils, TestCase):
             response, "wagtailusers/bulk_actions/confirm_bulk_delete.html"
         )
 
+    def test_user_permissions_required(self):
+        # Log in with a user that doesn't have permission to delete users
+        user = self.create_user(username="editor", password="password")
+        admin_permission = Permission.objects.get(
+            content_type__app_label="wagtailadmin", codename="access_admin"
+        )
+        user.user_permissions.add(admin_permission)
+        self.login(username="editor", password="password")
+
+        response = self.client.get(self.url)
+        self.assertRedirects(response, "/admin/")
+
     def test_bulk_delete(self):
         response = self.client.post(self.url)
 
@@ -69,7 +82,7 @@ class TestUserDeleteView(WagtailTestUtils, TestCase):
         self.assertInHTML("<p>You don't have permission to delete this user</p>", html)
 
         needle = "<ul>"
-        needle += "<li>{user_email}</li>".format(user_email=self.current_user.email)
+        needle += f"<li>{self.current_user.email}</li>"
         needle += "</ul>"
         self.assertInHTML(needle, html)
 

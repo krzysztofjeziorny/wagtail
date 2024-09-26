@@ -9,11 +9,7 @@
 {% block content %}
     {% if object.pk %}
         <div class="w-space-y-3">
-            {% if page %}
-                {% trans 'Page status: ' as screen_reader_title_prefix %}
-            {% else %}
-                {% trans 'Status: ' as screen_reader_title_prefix %}
-            {% endif %}
+            {% trans 'Status: ' as screen_reader_title_prefix %}
 
             {% with workflow_state=object.current_workflow_state draft_revision=object.get_latest_revision live_revision=object.live_revision %}
 
@@ -22,8 +18,8 @@
                     {% trans 'Live' as title %}
                     {% if live_revision %}
                         {% timesince_last_update live_revision.created_at user_display_name=live_revision.user|user_display_name use_shorthand=True as help_text %}
-                    {% elif live_last_updated_info %}
-                        {% timesince_last_update live_last_updated_info.timestamp user_display_name=live_last_updated_info.user_display_name use_shorthand=True as help_text %}
+                    {% elif last_updated_info %}
+                        {% timesince_last_update last_updated_info.timestamp user_display_name=last_updated_info.user_display_name use_shorthand=True as help_text %}
                     {% endif %}
 
                     {% with icon_name='doc-full-inverse' %}
@@ -36,21 +32,18 @@
                         {% endif %}
                     {% endwith %}
                     {% if has_live_publishing_schedule %}
-                        {% if page %}
-                            {% page_permissions object as page_perms %}
-                        {% endif %}
-                        <div class="w-p-4 w-bg-info-50 w-rounded w-flex w-space-x-3">
+                        <div class="w-p-4 w-bg-info-50 w-rounded w-flex w-space-x-3 w-border w-border-transparent">
                             {% icon name='calendar-check' classname='w-w-4 w-h-4 w-text-info-100' %}
                             <div class="w-flex w-flex-1 w-items-start w-justify-between">
-                                <div class="w-flex w-flex-col w-flex-1 w-pr-5 w-space-y-1 w-help-text">
+                                <div class="w-flex w-flex-col w-flex-1 w-pr-5 w-space-y-1 w-help-text w-text-grey-400">
                                     <div>
-                                        <span class="w-text-text-label">{% trans 'Expiry:' %}</span>
+                                        <span class="w-text-grey-600">{% trans 'Expiry:' %}</span>
                                         {{ live_expire_at }}
                                     </div>
                                 </div>
                                 {% if show_schedule_publishing_toggle and not has_draft_publishing_schedule and not lock_context.locked %}
                                     {% trans 'Edit schedule' as edit_schedule_text %}
-                                    {% dialog_toggle classname='w-bg-transparent w-text-14 w-p-0 w-text-text-link-default hover:w-text-text-link-hover w-inline-flex w-justify-center w-transition' dialog_id="schedule-publishing-dialog" text=edit_schedule_text %}
+                                    {% dialog_toggle classname='w-bg-transparent w-text-14 w-p-0 w-text-secondary-600 hover:w-text-secondary-400 w-inline-flex w-justify-center w-transition' dialog_id="schedule-publishing-dialog" text=edit_schedule_text %}
                                 {% endif %}
                             </div>
                         </div>
@@ -118,9 +111,6 @@
 
 {% block bottom %}
     {# Workflow Status #}
-    {% if page %}
-        {% page_permissions object as page_perms %}
-    {% endif %}
     {% with workflow_state=object.current_workflow_state draft_revision=object.get_latest_revision %}
         {% if workflow_state %}
             <div class="w-flex w-space-x-4">
@@ -132,34 +122,40 @@
         {% endif %}
 
         {# Scheduled publishing #}
-        {% if has_draft_publishing_schedule %}
-            <div class="w-p-4 w-bg-info-50 w-rounded w-flex w-space-x-3">
-                {% if scheduled_go_live_at or scheduled_expire_at %}
+        {% if has_draft_publishing_schedule or schedule_has_errors %}
+            <div class="w-p-4 w-rounded w-flex w-space-x-3 w-border w-border-transparent {% if schedule_has_errors %}w-bg-critical-50{% else %}w-bg-info-50{% endif %}">
+                {% if schedule_has_errors %}
+                    {% icon name='warning' classname='w-w-4 w-h-4 w-text-critical-100' %}
+                {% elif scheduled_go_live_at or scheduled_expire_at %}
                     {% icon name='calendar-check' classname='w-w-4 w-h-4 w-text-info-100' %}
                 {% else %}
                     {% icon name='calendar' classname='w-w-4 w-h-4 w-text-info-100' %}
                 {% endif %}
                 <div class="w-flex w-flex-1 w-items-start w-justify-between">
-                    <div class="w-flex w-flex-col w-flex-1 w-pr-5 w-space-y-1 w-help-text">
-                        {% if scheduled_go_live_at %}
-                            <div><span class="w-text-text-label">{% trans 'Go-live:' %}</span> {{ scheduled_go_live_at }}</div>
-                        {% endif %}
-                        {% if scheduled_expire_at %}
-                            <div><span class="w-text-text-label">{% trans 'Expiry:' %}</span> {{ scheduled_expire_at }}</div>
-                        {% endif %}
-                        {% if draft_go_live_at or draft_expire_at %}
-                            <div class="w-label-3">{% trans 'Once published:' %}</div>
-                            {% if draft_go_live_at %}
-                                <div><span class="w-text-text-label">{% trans 'Go-live:' %}</span> {{ draft_go_live_at }}</div>
+                    <div class="w-flex w-flex-col w-flex-1 w-pr-5 w-space-y-1 w-help-text w-text-grey-400">
+                        {% if schedule_has_errors %}
+                            <div class="w-label-3 w-text-primary">{% trans 'Invalid schedule' %}</div>
+                        {% else %}
+                            {% if scheduled_go_live_at %}
+                                <div><span class="w-text-grey-600">{% trans 'Go-live:' %}</span> {{ scheduled_go_live_at }}</div>
                             {% endif %}
-                            {% if draft_expire_at %}
-                                <div><span class="w-text-text-label">{% trans 'Expiry:' %}</span> {{ draft_expire_at }}</div>
+                            {% if scheduled_expire_at %}
+                                <div><span class="w-text-grey-600">{% trans 'Expiry:' %}</span> {{ scheduled_expire_at }}</div>
+                            {% endif %}
+                            {% if draft_go_live_at or draft_expire_at %}
+                                <div class="w-label-3 w-text-primary">{% trans 'Once published:' %}</div>
+                                {% if draft_go_live_at %}
+                                    <div><span class="w-text-grey-600">{% trans 'Go-live:' %}</span> {{ draft_go_live_at }}</div>
+                                {% endif %}
+                                {% if draft_expire_at %}
+                                    <div><span class="w-text-grey-600">{% trans 'Expiry:' %}</span> {{ draft_expire_at }}</div>
+                                {% endif %}
                             {% endif %}
                         {% endif %}
                     </div>
                     {% if show_schedule_publishing_toggle and not lock_context.locked %}
                         {% trans 'Edit schedule' as edit_schedule_text %}
-                        {% dialog_toggle classname='w-bg-transparent w-text-14 w-p-0 w-text-text-link-default hover:w-text-text-link-hover w-inline-flex w-justify-center w-transition' dialog_id="schedule-publishing-dialog" text=edit_schedule_text %}
+                        {% dialog_toggle classname='w-bg-transparent w-text-14 w-p-0 w-text-secondary-600 hover:w-text-secondary-400 w-inline-flex w-justify-center w-transition' dialog_id="schedule-publishing-dialog" text=edit_schedule_text %}
                     {% endif %}
                 </div>
             </div>

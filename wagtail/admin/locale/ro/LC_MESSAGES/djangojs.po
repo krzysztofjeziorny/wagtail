@@ -2,23 +2,39 @@
 # Translators:
 # Bogdan Mateescu, 2022
 # Julian C <jcuotpc@gmail.com>, 2022
-# Loic Teixeira, 2022
+# Alex Morega, 2023
 # Dan Braghis, 2023
+# Loic Teixeira, 2024
 #
 msgid ""
 msgstr ""
-"Last-Translator: Dan Braghis, 2023\n"
+"Last-Translator: Loic Teixeira, 2024\n"
 "Language-Team: Romanian (https://app.transifex.com/torchbox/teams/8009/ro/)\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Language: ro\n"
 "Plural-Forms: nplurals=3; plural=(n==1?0:(((n%100>19)||((n%100==0)&&(n!=0)))?"
 "2:1));\n"
 
+msgid "(%(number)s new items in this menu)"
+msgstr "(%(number)s elemente noi în acest meniu)"
+
 msgid "(1 new item in this menu)"
 msgstr "(1 articol nou în acest meniu)"
 
 msgid "(New)"
 msgstr "(Nou)"
+
+msgid "%(num)s error"
+msgid_plural "%(num)s errors"
+msgstr[0] "%(num)s eroare"
+msgstr[1] "%(num)s erori"
+msgstr[2] "%(num)s de erori"
+
+msgid "%(num)s pixel"
+msgid_plural "%(num)s pixels"
+msgstr[0] "%(num)s pixel"
+msgstr[1] "%(num)s pixeli"
+msgstr[2] "%(num)s de pixeli"
 
 msgid "Add a comment"
 msgstr "Adaugă un comentariu"
@@ -71,9 +87,6 @@ msgstr "Editează"
 msgid "Edit '%(title)s'"
 msgstr "Editează '%(title)s'"
 
-msgid "Edit your account"
-msgstr "Editează contul utilizator"
-
 msgid "Enter your comments..."
 msgstr "Introduceți comentariile Dvs"
 
@@ -122,6 +135,9 @@ msgstr "Explorator de pagini"
 msgid "Pages"
 msgstr "Pagini"
 
+msgid "Pin toolbar"
+msgstr "Fixează bara de instrumente"
+
 msgid "Reload saved content"
 msgstr "Reîncarcă conținutul salvat"
 
@@ -165,6 +181,9 @@ msgstr "În curs de salvare..."
 msgid "Search"
 msgstr "Căută"
 
+msgid "Search options…"
+msgstr "Opțiuni de căutare…"
+
 msgid "See all"
 msgstr "Vezi toate"
 
@@ -184,6 +203,12 @@ msgid ""
 "The editor just crashed. Content has been reset to the last saved version."
 msgstr "Editorul s-a prăbușit. Conținut resetat la versiunea recent salvată."
 
+msgid "The maximum number of items is %(max_num)d"
+msgstr "Numărul maxim de articole este %(max_num)d"
+
+msgid "The minimum number of items is %(min_num)d"
+msgstr "Numărul minim de articole este %(min_num)d"
+
 msgid "This field is required."
 msgstr "Acest câmp este obligatoriu."
 
@@ -196,8 +221,11 @@ msgstr "Comutați bara laterală"
 msgid "Unfocus comment"
 msgstr "Defocalizează comentariu"
 
+msgid "Unpin toolbar"
+msgstr "Anulează fixarea barei de instrumente"
+
 msgid "View child pages of '%(title)s'"
-msgstr "Vezi paginile dependente de '%(title)s'"
+msgstr "Vezi pagini descendente la '%(title)s'"
 
 msgid "Write something or type ‘/’ to insert a block"
 msgstr "Scrie ceva, sau ‘/‘ pentru a insera un bloc"

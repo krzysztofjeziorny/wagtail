@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Wagtail\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-04-20 11:47+0100\n"
+"POT-Creation-Date: 2024-08-07 10:06+0100\n"
 "PO-Revision-Date: 2014-02-20 21:05+0000\n"
 "Last-Translator: Yeh Yen-Ke <yyken@outlook.com>, 2019\n"
 "Language-Team: Chinese Traditional (http://app.transifex.com/torchbox/"
@@ -217,15 +217,6 @@ msgstr "未找到文件"
 msgid "Usage"
 msgstr "使用情況"
 
-msgid "Images"
-msgstr "圖片"
-
-msgid "Popular Tags:"
-msgstr "熱門標籤"
-
-msgid "pixels"
-msgstr "像素"
-
 #, python-format
 msgid "Sorry, no images match \"<em>%(query_string)s</em>\""
 msgstr "對不起，沒有符合\"<em>%(query_string)s</em>\"的圖片。"
@@ -245,20 +236,11 @@ msgid ""
 msgstr ""
 "還沒上傳圖片呢。來<a href=\"%(wagtailimages_add_image_url)s\">上傳一個</a>吧?"
 
-msgid "Generating URL"
-msgstr "生成URL"
-
-msgid "URL"
-msgstr "URL"
-
 msgid "Preview"
 msgstr "預覽"
 
-msgid ""
-"Note that images generated larger than the screen will appear smaller when "
-"previewed here, so they fit the screen."
-msgstr ""
-"備註：生成的圖片大於屏幕時，在預覽時可能顯示會小一些。因為是適應屏幕的。"
+msgid "URL"
+msgstr "URL"
 
 msgid "Add multiple images"
 msgstr "新增多個圖片"
@@ -325,8 +307,8 @@ msgstr "選擇一個圖片"
 msgid "Edit this image"
 msgstr "編輯此圖片"
 
-msgid "Search images"
-msgstr "搜索圖片"
+msgid "Images"
+msgstr "圖片"
 
 #, python-format
 msgid "Image '%(image_title)s' updated."

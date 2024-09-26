@@ -5,21 +5,22 @@
 # Translators:
 # Adrien <laadrien@gmail.com>, 2014
 # Bertrand Bordage <bordage.bertrand@gmail.com>, 2015,2018
-# fpoulain <fpoulain@metrodore.fr>, 2018
-# fpoulain <fpoulain@metrodore.fr>, 2018
+# 69c761fa404d2f74d5a7a2904d9e6f47_dc2dbc9 <f37077798760362881f9d396b6e22ec7_1878>, 2018
+# 69c761fa404d2f74d5a7a2904d9e6f47_dc2dbc9 <f37077798760362881f9d396b6e22ec7_1878>, 2018
 # Léo <leo@naeka.fr>, 2016
 # Loic Teixeira, 2020,2022
 # Loic Teixeira, 2020,2022-2023
 # nahuel, 2014
 # Sebastien Andrivet <sebastien@andrivet.com>, 2016
+# Sébastien Corbin <seb.corbin@gmail.com>, 2023-2024
 # Tom Dyson <tom@torchbox.com>, 2015
 msgid ""
 msgstr ""
 "Project-Id-Version: Wagtail\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-04-20 11:47+0100\n"
+"POT-Creation-Date: 2024-08-07 10:06+0100\n"
 "PO-Revision-Date: 2015-08-26 14:04+0000\n"
-"Last-Translator: Loic Teixeira, 2020,2022-2023\n"
+"Last-Translator: Sébastien Corbin <seb.corbin@gmail.com>, 2023-2024\n"
 "Language-Team: French (http://app.transifex.com/torchbox/wagtail/language/"
 "fr/)\n"
 "MIME-Version: 1.0\n"
@@ -47,14 +48,35 @@ msgid "Please specify at least one recommendation for this search term."
 msgstr ""
 "Veuillez spécifier au moins une recommandation pour ce terme de recherche."
 
+msgid "You must enter an external link text if you enter an external link URL."
+msgstr "Vous devez saisir un texte de lien si vous saisissez une URL externe."
+
+msgid "You must recommend a page OR an external link."
+msgstr "Vous devez recommander une page OU un lien externe."
+
+msgid "Please only select a page OR enter an external link."
+msgstr "Veuillez sélectionner uniquement une page OU saisir un lien externe."
+
 msgid "Query Daily Hits"
 msgstr "Nombre de requêtes journalières"
 
 msgid "page"
 msgstr "page"
 
+msgid "Choose an internal page for this promotion"
+msgstr "Choisissez une page interne pour cette mise en avant"
+
+msgid "External link URL"
+msgstr "URL de lien externe"
+
+msgid "Alternatively, use an external link for this promotion"
+msgstr "Sinon, utilisez un lien externe pour cette mise en avant"
+
 msgid "description"
 msgstr "description"
+
+msgid "Applies to internal page or external link"
+msgstr "S'applique aux pages internes ou liens externes"
 
 msgid "search promotion"
 msgstr "rechercher une promotion"
@@ -66,15 +88,15 @@ msgid "Add search pick"
 msgstr "Ajouter un résultat amélioré"
 
 msgid ""
-"<p>Promoted search results are a means of recommending specific pages that "
-"might not organically come high up in search results. E.g recommending your "
-"primary donation page to a user searching with the less common term "
-"\"<em>giving</em>\".</p>"
+"<p>Promoted search results are a means of recommending specific pages or "
+"external links that might not organically come high up in search results. E."
+"g recommending your primary donation page to a user searching with the less "
+"common term \"<em>giving</em>\".</p>"
 msgstr ""
-"<p>Les résultats améliorés sont un moyen de recommander des pages "
-"spécifiques qui ne seraient pas arrivées naturellement en haut des résultats "
-"de recherche. Ex: associer votre page de « soutient » à une recherche "
-"utilisateur avec un terme moins explicite comme « <em>donner</em> ».</p>"
+"<p>Les résultats de recherche mis en avant sont un moyen de recommander des "
+"pages spécifiques ou des liens externes qui ne seraient pas proposés en "
+"premier autrement. Par ex. recommander votre page principale de don à "
+"utilisateur recherchant le terme peu commun « <em>donner</em> ».</p>"
 
 msgid ""
 "<p>The \"Search term(s)/phrase\" field below must contain the full and exact "
@@ -120,54 +142,14 @@ msgstr "Monter"
 msgid "Move down"
 msgstr "Descendre"
 
-msgid "Recommended page"
-msgstr "Recommander la page"
+msgid "Recommended search result"
+msgstr "Résultat de recherche mis en avant"
 
 msgid "Promoted search results"
 msgstr "Résultats de recherche améliorés"
 
-msgid "Add recommended page"
-msgstr "Ajouter une page recommandée"
-
-msgid "Search Terms"
-msgstr "Termes de recherche"
-
-msgid "Add new promoted result"
-msgstr "Ajouter un nouveau résultat amélioré"
-
-msgid "Search term(s)"
-msgstr "Terme(s) de recherche"
-
-msgid "Order by search term alphabetically"
-msgstr "Trier par terme de recherche (ordre alphabétique)"
-
-msgid "Order by search term reverse alphabetically"
-msgstr "Trier par terme de recherche (ordre alphabétique inverse)"
-
-msgid "Promoted results"
-msgstr "Résultats améliorés"
-
-msgid "Views (past week)"
-msgstr "Vues (semaine dernière)"
-
-msgid "Order by views (lowest first)"
-msgstr "Trier par vues (croissant)"
-
-msgid "Order by views (highest first)"
-msgstr "Trier par vues (décroissant)"
-
-msgid "Edit this promotion"
-msgstr "Modifier cette promotion"
-
-msgid "None"
-msgstr "Aucun"
-
-#, python-format
-msgid "There is %(counter)s match"
-msgid_plural "There are %(counter)s matches"
-msgstr[0] "Il y a %(counter)s correspondance"
-msgstr[1] "Il y a %(counter)s correspondances"
-msgstr[2] "Il y a %(counter)s correspondances"
+msgid "Add a recommended result"
+msgstr "Ajouter un résultat de recherche mis en avant"
 
 #, python-format
 msgid "Sorry, no promoted results match \"<em>%(query_string)s</em>\""
@@ -183,8 +165,44 @@ msgstr ""
 "Aucun résultat de promotion n'a été créé. Pourquoi ne pas <a "
 "href=\"%(wagtailsearchpromotions_add_url)s\">en ajouter un</a> ?"
 
-msgid "Search promoted results"
-msgstr "Rechercher des résultats améliorés"
+msgid "No promoted results have been created."
+msgstr "Aucun résultat mis en avant n'a été créé."
+
+msgid "Popular search terms"
+msgstr "Termes de recherche populaires"
+
+msgid "Search"
+msgstr "Rechercher"
+
+msgid "Terms"
+msgstr "Termes"
+
+msgid "Views (past week)"
+msgstr "Vues (semaine dernière)"
+
+msgid "No results found"
+msgstr "Aucun résultat trouvé"
+
+msgid "Choose from popular search terms"
+msgstr "Choisir parmi les recherches populaires"
+
+msgid "External link"
+msgstr "Lien externe"
+
+msgid "None"
+msgstr "Aucun"
+
+msgid "Search Terms"
+msgstr "Termes de recherche"
+
+msgid "Add new promoted result"
+msgstr "Ajouter un nouveau résultat amélioré"
+
+msgid "Search term(s)"
+msgstr "Terme(s) de recherche"
+
+msgid "Promoted results"
+msgstr "Résultats améliorés"
 
 #, python-format
 msgid "Editor's picks for '%(query)s' created."

@@ -3,6 +3,13 @@ from django.forms import widgets
 
 
 class SlugInput(widgets.TextInput):
+    """
+    Associates the input field with the Stimulus w-slug (SlugController).
+    Slugifies content based on `WAGTAIL_ALLOW_UNICODE_SLUGS` and supports
+    fields syncing their value to this field (see `TitleFieldPanel`) if
+    also used.
+    """
+
     def __init__(self, attrs=None):
         default_attrs = {
             "data-controller": "w-slug",
@@ -10,6 +17,7 @@ class SlugInput(widgets.TextInput):
             "data-w-slug-allow-unicode-value": getattr(
                 settings, "WAGTAIL_ALLOW_UNICODE_SLUGS", True
             ),
+            "data-w-slug-compare-as-param": "urlify",
         }
         if attrs:
             default_attrs.update(attrs)

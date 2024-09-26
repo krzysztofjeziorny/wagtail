@@ -6,16 +6,16 @@
 # benny_AT_it_digin.com <benny@it-digin.com>, 2015
 # benny_AT_it_digin.com <benny@it-digin.com>, 2015
 # Coen van der Kamp <cvanderkamp@gmail.com>, 2022
-# Storm Heg <storm@stormbase.digital>, 2021-2023
+# Storm Heg <storm@stormbase.digital>, 2021-2024
 # Thijs Kramer <thijskramer@gmail.com>, 2015
 # Thijs Kramer <thijskramer@gmail.com>, 2015-2016,2022
 msgid ""
 msgstr ""
 "Project-Id-Version: Wagtail\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-04-20 11:47+0100\n"
+"POT-Creation-Date: 2024-08-07 10:06+0100\n"
 "PO-Revision-Date: 2014-02-19 19:01+0000\n"
-"Last-Translator: Storm Heg <storm@stormbase.digital>, 2021-2023\n"
+"Last-Translator: Storm Heg <storm@stormbase.digital>, 2021-2024\n"
 "Language-Team: Dutch (http://app.transifex.com/torchbox/wagtail/language/"
 "nl/)\n"
 "MIME-Version: 1.0\n"
@@ -128,12 +128,6 @@ msgstr ""
 "href=\"%(wagtailsnippets_create_snippet_url)s\" target=\"_blank\" "
 "rel=\"noreferrer\">Voeg er nu een toe</a>"
 
-msgid "Last updated"
-msgstr "Laatst bijgewerkt"
-
-msgid "History"
-msgstr "Geschiedenis"
-
 msgid "Publishing…"
 msgstr "Bezig met publiceren..."
 
@@ -152,105 +146,17 @@ msgstr "Vervang huidige revisie"
 msgid "Save draft"
 msgstr "Bewaar concept"
 
-#, python-format
-msgid "New  %(snippet_type_name)s"
-msgstr "Nieuw  %(snippet_type_name)s"
-
-msgid "New"
-msgstr "Nieuw"
-
 msgid "Actions"
 msgstr "Acties"
-
-#, python-format
-msgid "Editing %(snippet_type_name)s - %(object)s"
-msgstr "Wijzigen: %(snippet_type_name)s - %(object)s "
-
-msgid "Toggle breadcrumbs"
-msgstr "Toon/verberg kruimelpad"
-
-msgid "Breadcrumb"
-msgstr "Broodkruimel"
-
-msgid "Snippets"
-msgstr "Snippets"
-
-#, python-format
-msgid "New: %(model_name)s"
-msgstr "Nieuw: %(model_name)s"
-
-#, python-format
-msgid "Editing %(snippet_type)s %(title)s"
-msgstr "Wijzigen: %(snippet_type)s %(title)s"
-
-msgid "Usage"
-msgstr "Gebruik"
-
-#, python-format
-msgid "Snippet history for %(subtitle)s"
-msgstr "Snippet geschiedenis voor %(subtitle)s"
-
-msgid "Edit this snippet"
-msgstr "Bewerk snippet"
-
-msgid "No log entries found."
-msgstr "Geen logboekvermeldingen gevonden."
-
-#, python-format
-msgid "Snippets %(snippet_type_name_plural)s"
-msgstr "Snippets %(snippet_type_name_plural)s"
-
-#, python-format
-msgid "Add %(snippet_type_name)s"
-msgstr "Voeg %(snippet_type_name)s toe"
 
 msgid "Select all snippets in listing"
 msgstr "Selecteer alle snippets in lijst"
 
-#, python-format
-msgid "There is %(counter)s match"
-msgid_plural "There are %(counter)s matches"
-msgstr[0] "Er is %(counter)s resultaat"
-msgstr[1] "Er zijn %(counter)s resultaten"
-
-#, python-format
-msgid "Sorry, no %(snippet_type_name_plural)s match your query"
-msgstr "Sorry, geen %(snippet_type_name_plural)s voldoen aan je zoekopdracht"
-
-#, python-format
-msgid ""
-"No %(snippet_type_name_plural)s have been created. Why not <a "
-"href=\"%(wagtailsnippets_create_url)s\">add one</a>?"
-msgstr ""
-"Er zijn nog geen %(snippet_type_name_plural)s aangemaakt. Waarom <a "
-"href=\"%(wagtailsnippets_create_url)s\">voeg je er niet een toe</a>?"
-
-msgid "Live version"
-msgstr "Live versie"
-
-msgid "Current draft"
-msgstr "Huidig concept"
-
-msgid "Preview"
-msgstr "Voorvertoning"
-
-msgid "Edit"
-msgstr "Wijzig"
-
-msgid "Review this version"
-msgstr "Beoordeel deze versie"
-
-msgid "Compare with previous version"
-msgstr "Vergelijk met vorige versie"
-
-msgid "Compare with current version"
-msgstr "Vergelijk met huidige versie"
-
-msgid "Cancel scheduled publish"
-msgstr "Annuleer geplande publicatie"
-
 msgid "Choose"
 msgstr "Kies"
+
+msgid "Snippets"
+msgstr "Snippets"
 
 msgid "Name"
 msgstr "Naam"
@@ -258,23 +164,9 @@ msgstr "Naam"
 msgid "Instances"
 msgstr "Instanties"
 
-msgid "The snippet could not be created due to errors."
-msgstr "De snippet kon niet worden aangemaakt door fouten."
-
-msgid "The snippet could not be saved due to errors."
-msgstr "De snippet kon niet worden opgeslagen door fouten."
-
-msgid "Action"
-msgstr "Actie"
-
-msgid "User"
-msgstr "Gebruiker"
-
-msgid "Date"
-msgstr "Datum"
-
-msgid "Snippet history"
-msgstr "Snippet geschiedenis"
+#, python-format
+msgid "More options for '%(title)s'"
+msgstr "Meer opties voor '%(title)s'"
 
 #, python-format
 msgid "Edit this %(model_name)s"
@@ -284,13 +176,8 @@ msgstr "Bewerk %(model_name)s"
 msgid "%(model_name)s history"
 msgstr "%(model_name)s geschiedenis"
 
-#, python-format
-msgid "Edit '%(title)s'"
-msgstr "Wijzig '%(title)s'"
-
-#, python-format
-msgid "Delete '%(title)s'"
-msgstr "Verwijder '%(title)s'"
+msgid "Home"
+msgstr "Home"
 
 #, python-format
 msgid "Choose %(object)s"
@@ -298,7 +185,7 @@ msgstr "Kies %(object)s"
 
 #, python-format
 msgid "Choose another %(object)s"
-msgstr "Kies een andere %(object)s"
+msgstr "Kies %(object)s"
 
 #, python-format
 msgid "Edit this %(object)s"

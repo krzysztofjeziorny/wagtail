@@ -1,6 +1,6 @@
 import unittest
 
-import pytz
+import zoneinfo
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth import views as auth_views
@@ -16,7 +16,7 @@ from wagtail.admin.localization import (
     get_available_admin_languages,
     get_available_admin_time_zones,
 )
-from wagtail.admin.views.account import account, profile_tab
+from wagtail.admin.views.account import AccountView, profile_tab
 from wagtail.images.tests.utils import get_test_image_file
 from wagtail.test.utils import WagtailTestUtils
 from wagtail.users.models import UserProfile
@@ -231,6 +231,7 @@ class TestAccountSectionUtilsMixin:
             "locale-preferred_language": "es",
             "locale-current_time_zone": "Europe/London",
             "theme-theme": "dark",
+            "theme-density": "default",
         }
         post_data.update(extra_post_data)
         return self.client.post(reverse("wagtailadmin_account"), post_data)
@@ -243,6 +244,7 @@ class TestAccountSection(WagtailTestUtils, TestCase, TestAccountSectionUtilsMixi
 
     def setUp(self):
         self.user = self.login()
+        get_available_admin_time_zones.cache_clear()
 
     def test_account_view(self):
         """
@@ -272,6 +274,9 @@ class TestAccountSection(WagtailTestUtils, TestCase, TestAccountSectionUtilsMixi
 
         # Form media should be included on the page
         self.assertContains(response, "vendor/colorpicker.js")
+
+        # Check if the default title exists
+        self.assertContains(response, "Name and Email")
 
     def test_change_name_post(self):
         response = self.post_form(
@@ -332,6 +337,11 @@ class TestAccountSection(WagtailTestUtils, TestCase, TestAccountSectionUtilsMixi
         self.assertTemplateUsed(response, "wagtailadmin/account/account.html")
         self.assertNotContains(response, "id_name_email-email")
 
+        # Check if the default title does not exist
+        self.assertNotContains(response, "Name and Email")
+        # When WAGTAIL_EMAIL_MANAGEMENT_ENABLED=False, Check if title is "Name"
+        self.assertContains(response, "Name")
+
     @override_settings(WAGTAIL_PASSWORD_MANAGEMENT_ENABLED=False)
     def test_account_view_with_password_management_disabled(self):
         # Get account page
@@ -363,6 +373,22 @@ class TestAccountSection(WagtailTestUtils, TestCase, TestAccountSectionUtilsMixi
         self.user.refresh_from_db()
         self.assertTrue(self.user.check_password("newpassword"))
 
+    def test_change_password_whitespaced(self):
+        response = self.post_form(
+            {
+                "password-old_password": "password",
+                "password-new_password1": "  whitespaced_password  ",
+                "password-new_password2": "  whitespaced_password  ",
+            }
+        )
+
+        # Check that the user was redirected to the account page
+        self.assertRedirects(response, reverse("wagtailadmin_account"))
+
+        # Check that the password was changed and whitespace was not stripped
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password("  whitespaced_password  "))
+
     def test_change_password_post_password_mismatch(self):
         response = self.post_form(
             {
@@ -390,6 +416,22 @@ class TestAccountSection(WagtailTestUtils, TestCase, TestAccountSectionUtilsMixi
             "The two password fields didn’t match.",
             password_form.errors["new_password2"],
         )
+
+        # Check that the password was not changed
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password("password"))
+
+    def test_ignore_change_password_if_only_old_password_supplied(self):
+        response = self.post_form(
+            {
+                "password-old_password": "password",
+                "password-new_password1": "",
+                "password-new_password2": "",
+            }
+        )
+
+        # Check that everything runs as usual (with a redirect), instead of a validation error
+        self.assertRedirects(response, reverse("wagtailadmin_account"))
 
         # Check that the password was not changed
         self.user.refresh_from_db()
@@ -436,7 +478,10 @@ class TestAccountSection(WagtailTestUtils, TestCase, TestAccountSectionUtilsMixi
 
         # check that the updated language preference is now indicated in HTML header
         response = self.client.get(reverse("wagtailadmin_home"))
-        self.assertContains(response, '<html lang="es" dir="ltr" class="w-theme-dark">')
+        self.assertContains(
+            response,
+            '<html lang="es" dir="ltr" class="w-theme-dark w-density-default">',
+        )
 
     def test_unset_language_preferences(self):
         profile = UserProfile.get_for_user(self.user)
@@ -523,7 +568,10 @@ class TestAccountSection(WagtailTestUtils, TestCase, TestAccountSectionUtilsMixi
 
     @unittest.skipUnless(settings.USE_TZ, "Timezone support is disabled")
     def test_available_admin_time_zones_by_default(self):
-        self.assertListEqual(get_available_admin_time_zones(), pytz.common_timezones)
+        self.assertListEqual(
+            get_available_admin_time_zones(),
+            sorted(zoneinfo.available_timezones()),
+        )
 
     @unittest.skipUnless(settings.USE_TZ, "Timezone support is disabled")
     @override_settings(WAGTAIL_USER_TIME_ZONES=["Europe/London"])
@@ -562,10 +610,25 @@ class TestAccountSection(WagtailTestUtils, TestCase, TestAccountSectionUtilsMixi
 
         self.assertEqual(profile.theme, "light")
 
+    def test_change_density_post(self):
+        response = self.post_form(
+            {
+                "theme-density": "snug",
+            }
+        )
+
+        # Check that the user was redirected to the account page
+        self.assertRedirects(response, reverse("wagtailadmin_account"))
+
+        profile = UserProfile.get_for_user(self.user)
+        profile.refresh_from_db()
+
+        self.assertEqual(profile.density, "snug")
+
     def test_sensitive_post_parameters(self):
         request = RequestFactory().post("wagtailadmin_account", data={})
         request.user = self.user
-        account(request)
+        AccountView.as_view()(request)
         self.assertTrue(hasattr(request, "sensitive_post_parameters"))
         self.assertEqual(request.sensitive_post_parameters, "__ALL__")
 

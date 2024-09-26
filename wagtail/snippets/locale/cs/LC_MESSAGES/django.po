@@ -7,14 +7,15 @@
 # IT Management <hudan@itmanagement.cz>, 2018,2020
 # IT Management <hudan@itmanagement.cz>, 2020
 # Marek Turnovec <aesculap@gmail.com>, 2016
+# Martin Rejmon, 2023
 # Mirek Zvolský <zvolsky@seznam.cz>, 2019-2020
 msgid ""
 msgstr ""
 "Project-Id-Version: Wagtail\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-04-20 11:47+0100\n"
+"POT-Creation-Date: 2024-08-07 10:06+0100\n"
 "PO-Revision-Date: 2014-02-19 19:01+0000\n"
-"Last-Translator: Marek Turnovec <aesculap@gmail.com>, 2016\n"
+"Last-Translator: Martin Rejmon, 2023\n"
 "Language-Team: Czech (http://app.transifex.com/torchbox/wagtail/language/"
 "cs/)\n"
 "MIME-Version: 1.0\n"
@@ -96,9 +97,6 @@ msgstr "Ano, smazat"
 msgid "No, don't delete"
 msgstr "Ne, nerušit."
 
-msgid "History"
-msgstr "Historie"
-
 msgid "Publishing…"
 msgstr "Publikování..."
 
@@ -114,96 +112,20 @@ msgstr "Nahradit aktuální koncept"
 msgid "Save draft"
 msgstr "Uložit návrh"
 
-#, python-format
-msgid "New  %(snippet_type_name)s"
-msgstr "Nový %(snippet_type_name)s"
-
-msgid "New"
-msgstr "Nový"
-
 msgid "Actions"
 msgstr "Akce"
-
-msgid "Breadcrumb"
-msgstr "Navigace stránek"
-
-msgid "Snippets"
-msgstr "Úryvky"
-
-msgid "Usage"
-msgstr "Použití"
-
-msgid "No log entries found."
-msgstr "Nenalezeny žádné záznamy v logu."
-
-#, python-format
-msgid "Snippets %(snippet_type_name_plural)s"
-msgstr "Úryvky %(snippet_type_name_plural)s"
-
-#, python-format
-msgid "Add %(snippet_type_name)s"
-msgstr "Přidat %(snippet_type_name)s"
-
-#, python-format
-msgid ""
-"No %(snippet_type_name_plural)s have been created. Why not <a "
-"href=\"%(wagtailsnippets_create_url)s\">add one</a>?"
-msgstr ""
-"Žádné %(snippet_type_name_plural)s zatím nebyly vytvořeny. Pojďme <a "
-"href=\"%(wagtailsnippets_create_url)s\">nějaký vytořit</a>?"
-
-msgid "Live version"
-msgstr "Publikovaná verze"
-
-msgid "Current draft"
-msgstr "Aktuální koncept"
-
-msgid "Preview"
-msgstr "Náhled"
-
-msgid "Edit"
-msgstr "Upravit"
-
-msgid "Review this version"
-msgstr "Revidovat tuto verzi"
-
-msgid "Compare with previous version"
-msgstr "Porovnat s předchozí verzí"
-
-msgid "Compare with current version"
-msgstr "Porovnat s aktuální verzí"
-
-msgid "Cancel scheduled publish"
-msgstr "Zrušit naplánované publikování"
 
 msgid "Choose"
 msgstr "Zvolit"
 
+msgid "Snippets"
+msgstr "Úryvky"
+
 msgid "Name"
 msgstr "Jméno"
 
-msgid "The snippet could not be created due to errors."
-msgstr "Úryvek nemohl být vytvořen kvůli chybám."
-
-msgid "The snippet could not be saved due to errors."
-msgstr "Úryvek nemohl být uložen kvůli chybám."
-
-msgid "Action"
-msgstr "Akce"
-
-msgid "User"
-msgstr "Uživatel"
-
-msgid "Date"
-msgstr "Datum"
-
-#, python-format
-msgid "Edit '%(title)s'"
-msgstr "Editovat '%(title)s'"
-
-#, python-format
-msgid "Delete '%(title)s'"
-msgstr "Zrušit '%(title)s'"
+msgid "Home"
+msgstr "Domů"
 
 #, python-format
 msgid "Choose %(object)s"

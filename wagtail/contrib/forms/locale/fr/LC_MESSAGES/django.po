@@ -5,7 +5,7 @@
 # Translators:
 # Adrien <laadrien@gmail.com>, 2014
 # Axel Haustant, 2016
-# Axel Haustant, 2016
+# Axel H., 2016
 # Benoît Vogel <contact@spicy-informatique.com>, 2016-2017
 # Bertrand Bordage <bordage.bertrand@gmail.com>, 2015,2017-2018
 # incognitae <pierre@onoffdesign.com>, 2016
@@ -20,7 +20,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Wagtail\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-04-20 11:47+0100\n"
+"POT-Creation-Date: 2024-08-07 10:06+0100\n"
 "PO-Revision-Date: 2014-09-11 15:42+0000\n"
 "Last-Translator: Tom Dyson <tom@torchbox.com>, 2015\n"
 "Language-Team: French (http://app.transifex.com/torchbox/wagtail/language/"
@@ -182,20 +182,12 @@ msgstr[2] "Êtes-vous sûr(e) de vouloir supprimer ces soumissions ?"
 msgid "Delete"
 msgstr "Supprimer"
 
-msgid "Forms"
-msgstr "Formulaires"
-
-msgid "Pages"
-msgstr "Pages"
-
-msgid "Title"
-msgstr "Titre"
-
-msgid "Origin"
-msgstr "Origine"
-
 msgid "Delete selected submissions"
 msgstr "Supprimer les réponses sélectionnées"
+
+#, python-format
+msgid "There have been no submissions of the '%(title)s' form."
+msgstr "Aucune soumission pour le formulaire « %(title)s »."
 
 msgid "Total submissions"
 msgstr "Nombre total de soumissions"
@@ -203,28 +195,21 @@ msgstr "Nombre total de soumissions"
 msgid "Latest submission"
 msgstr "Soumission la plus récente"
 
-msgid "No form pages have been created."
-msgstr "Aucune page contenant un formulaire n'a été créée."
-
 #, python-format
 msgid "Submissions of %(form_title)s"
 msgstr "Soumission de %(form_title)s"
 
-msgid "Download XLSX"
-msgstr "Télécharger en XLSX"
+msgid "Forms"
+msgstr "Formulaires"
 
-msgid "Download CSV"
-msgstr "Télécharger en CSV"
+msgid "Title"
+msgstr "Titre"
 
-#, python-format
-msgid "There have been no submissions of the '%(title)s' form."
-msgstr "Aucune soumission pour le formulaire « %(title)s »."
+msgid "Origin"
+msgstr "Origine"
 
-msgid "Filter"
-msgstr "Filtrer"
-
-msgid "Apply filters"
-msgstr "Appliquer les filtres"
+msgid "Pages"
+msgstr "Pages"
 
 #, python-format
 msgid "One submission has been deleted."

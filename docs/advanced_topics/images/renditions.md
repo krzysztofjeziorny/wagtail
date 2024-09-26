@@ -34,11 +34,51 @@ be accessed through the Rendition's `image` property:
 
 See also: [](image_tag)
 
+(image_renditions_multiple)=
+
+## Generating multiple renditions for an image
+
+You can generate multiple renditions of the same image from Python using the native `get_renditions()` method. It will accept any number of 'specification' strings or `Filter instances`, and will generate a set of matching renditions much more efficiently than generating each one individually. For example:
+
+```python
+image.get_renditions('width-600', 'height-400', 'fill-300x186|jpegquality-60')
+```
+
+The return value is a dictionary of renditions keyed by the specifications that were provided to the method. The return value from the above example would look something like this:
+
+```python
+{
+    "width-600": <Rendition: Rendition object (7)>,
+    "height-400": <Rendition: Rendition object (8)>,
+    "fill-300x186|jpegquality-60": <Rendition: Rendition object (9)>,
+}
+```
+
+(caching_image_renditions)=
+
+## Caching image renditions
+
+Wagtail will cache image rendition lookups, which can improve the performance of pages which include many images.
+
+By default, Wagtail will try to use the cache called "renditions". If no such cache exists, it will fall back to using the default cache.
+
 (prefetching_image_renditions)=
 
 ## Prefetching image renditions
 
 When using a queryset to render a list of images or objects with images, you can prefetch the renditions needed with a single additional query. For long lists of items, or where multiple renditions are used for each item, this can provide a significant boost to performance.
+
+(regenerate_image_renditions)=
+
+## Regenerating existing renditions
+
+You can also directly use the image management command from the console to regenerate the renditions:
+
+```sh
+./manage.py wagtail_update_image_renditions --purge
+```
+
+You can read more about this command from [](wagtail_update_image_renditions)
 
 ### Image QuerySets
 
@@ -54,7 +94,7 @@ def get_images_uploaded_by_user(user):
 The above can be modified slightly to prefetch the renditions of the images returned:
 
 ```python
-def get_images_uploaded_by_user(user)::
+def get_images_uploaded_by_user(user):
     return ImageModel.objects.filter(uploaded_by_user=user).prefetch_renditions()
 ```
 
@@ -111,19 +151,25 @@ def get_events():
 
 ## Model methods involved in rendition generation
 
-The following `AbstractImage` model methods are involved in finding and generating renditions. If using a custom image model, you can customise the behaviour of either of these methods by overriding them on your model:
+The following `AbstractImage` model methods are involved in finding and generating renditions. If using a custom image model, you can customize the behavior of either of these methods by overriding them on your model:
 
 ```{eval-rst}
 .. automodule:: wagtail.images.models
 
 .. class:: AbstractImage
-    :noindex:
+    :no-index:
 
     .. automethod:: get_rendition
 
     .. automethod:: find_existing_rendition
 
     .. automethod:: create_rendition
+
+    .. automethod:: get_renditions
+
+    .. automethod:: find_existing_renditions
+
+    .. automethod:: create_renditions
 
     .. automethod:: generate_rendition_file
 ```

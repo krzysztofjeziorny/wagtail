@@ -3,14 +3,15 @@
 # This file is distributed under the same license as the PACKAGE package.
 #
 # Translators:
+# Bardia, 2024
 # Mohammad Hossein Mojtahedi <Mhm5000@gmail.com>, 2017
 msgid ""
 msgstr ""
 "Project-Id-Version: Wagtail\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-04-20 11:47+0100\n"
+"POT-Creation-Date: 2024-08-07 10:06+0100\n"
 "PO-Revision-Date: 2014-02-19 21:18+0000\n"
-"Last-Translator: Mohammad Hossein Mojtahedi <Mhm5000@gmail.com>, 2017\n"
+"Last-Translator: Bardia, 2024\n"
 "Language-Team: Persian (http://app.transifex.com/torchbox/wagtail/language/"
 "fa/)\n"
 "MIME-Version: 1.0\n"
@@ -19,23 +20,5 @@ msgstr ""
 "Language: fa\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-msgid "Query Daily Hits"
-msgstr "تعداد جستجوی روزانه"
-
-msgid "Popular search terms"
-msgstr "عناوین منتخب جستجو‌شده"
-
-msgid "Search"
-msgstr "جستجو"
-
-msgid "Terms"
-msgstr "عنوان"
-
-msgid "Views (past week)"
-msgstr "نمایش (هفته گذشته)"
-
-msgid "No results found"
-msgstr "هیچ موردی پیدا نشد"
-
-msgid "Choose from popular search terms"
-msgstr "از عناوین منتخب جستجو شده انتخاب کنید"
+msgid "Wagtail search"
+msgstr "جستجوی وگتیل"

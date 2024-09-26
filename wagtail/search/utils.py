@@ -69,6 +69,8 @@ MUL = partial(balanced_reduce, operator.mul)
 
 MAX_QUERY_STRING_LENGTH = 255
 
+filters_regexp = re.compile(r'\b(\w+):(\w+|"[^"]+"|\'[^\']+\')')
+
 
 def normalise_query_string(query_string):
     # Truncate query string
@@ -83,20 +85,12 @@ def normalise_query_string(query_string):
 
 
 def separate_filters_from_query(query_string):
-    filters_regexp = r'(\w+):(\w+|"[^"]+"|\'[^\']+\')'
-
     filters = QueryDict(mutable=True)
-    for match_object in re.finditer(filters_regexp, query_string):
+    for match_object in filters_regexp.finditer(query_string):
         key, value = match_object.groups()
-        filters.update(
-            {
-                key: value.strip('"')
-                if value.strip('"') is not value
-                else value.strip("'")
-            }
-        )
+        filters.update({key: value.strip("\"'")})
 
-    query_string = re.sub(filters_regexp, "", query_string).strip()
+    query_string = filters_regexp.sub("", query_string).strip()
 
     return filters, query_string
 
@@ -201,8 +195,7 @@ def get_search_fields(search_fields):
         if isinstance(search_field, SearchField):
             yield search_field
         elif isinstance(search_field, RelatedFields):
-            for sub_field in get_search_fields(search_field.fields):
-                yield sub_field
+            yield from get_search_fields(search_field.fields)
 
 
 def get_postgresql_connections():

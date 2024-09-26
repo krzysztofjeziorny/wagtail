@@ -1,19 +1,26 @@
 import json
 from unittest import mock
-from urllib.parse import quote
 
 from django.contrib.auth.models import Group, Permission
+from django.contrib.contenttypes.models import ContentType
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, TransactionTestCase
 from django.test.utils import override_settings
 from django.urls import reverse
 from django.utils.html import escape
 from django.utils.http import urlencode
+from django.utils.text import capfirst
 
 from wagtail.admin.admin_url_finder import AdminURLFinder
 from wagtail.documents import get_document_model, models
 from wagtail.documents.tests.utils import get_test_document_file
-from wagtail.models import Collection, GroupCollectionPermission, Page, ReferenceIndex
+from wagtail.models import (
+    Collection,
+    GroupCollectionPermission,
+    Page,
+    ReferenceIndex,
+    UploadedFile,
+)
 from wagtail.test.testapp.models import (
     CustomDocument,
     CustomDocumentWithAuthor,
@@ -22,6 +29,7 @@ from wagtail.test.testapp.models import (
     VariousOnDeleteModel,
 )
 from wagtail.test.utils import WagtailTestUtils
+from wagtail.test.utils.template_tests import AdminTemplateTestUtils
 
 
 class TestDocumentIndexView(WagtailTestUtils, TestCase):
@@ -57,7 +65,7 @@ class TestDocumentIndexView(WagtailTestUtils, TestCase):
         self.assertTemplateUsed(response, "wagtaildocs/documents/index.html")
 
         # Check that we got the correct page
-        self.assertEqual(response.context["documents"].number, 2)
+        self.assertEqual(response.context["page_obj"].number, 2)
 
     def test_pagination_invalid(self):
         self.make_docs()
@@ -69,7 +77,7 @@ class TestDocumentIndexView(WagtailTestUtils, TestCase):
         self.assertTemplateUsed(response, "wagtaildocs/documents/index.html")
 
         # Check that we got page one
-        self.assertEqual(response.context["documents"].number, 1)
+        self.assertEqual(response.context["page_obj"].number, 1)
 
     def test_pagination_out_of_range(self):
         self.make_docs()
@@ -82,8 +90,8 @@ class TestDocumentIndexView(WagtailTestUtils, TestCase):
 
         # Check that we got the last page
         self.assertEqual(
-            response.context["documents"].number,
-            response.context["documents"].paginator.num_pages,
+            response.context["page_obj"].number,
+            response.context["paginator"].num_pages,
         )
 
     def test_ordering(self):
@@ -96,8 +104,11 @@ class TestDocumentIndexView(WagtailTestUtils, TestCase):
         self.make_docs()
 
         response = self.get()
-        self.assertNotContains(response, "<th>Collection</th>")
-        self.assertNotContains(response, "<td>Root</td>")
+        self.assertNotContains(response, "<th>Collection</th>", html=True)
+        self.assertNotContains(response, "<td>Root</td>", html=True)
+        soup = self.get_soup(response.content)
+        collection_select = soup.select_one('select[name="collection_id"]')
+        self.assertIsNone(collection_select)
 
     def test_index_with_collection(self):
         root_collection = Collection.get_first_root_node()
@@ -107,16 +118,27 @@ class TestDocumentIndexView(WagtailTestUtils, TestCase):
         self.make_docs()
 
         response = self.get()
-        self.assertContains(response, "<th>Collection</th>")
-        self.assertContains(response, "<td>Root</td>")
+        self.assertContains(response, "<th>Collection</th>", html=True)
+        self.assertContains(response, "<td>Root</td>", html=True)
+
+        response = self.get()
+        soup = self.get_soup(response.content)
+        collection_options = soup.select(
+            'select[name="collection_id"] option[value]:not(option[value=""])'
+        )
+
         self.assertEqual(
-            [collection.name for collection in response.context["collections"]],
+            [
+                collection.get_text(strip=True).lstrip("↳ ")
+                for collection in collection_options
+            ],
             ["Root", "Evil plans", "Good plans"],
         )
 
     def test_index_with_collection_filtered(self):
         root_collection = Collection.get_first_root_node()
         travel_plans = root_collection.add_child(name="Travel plans")
+        models.Document.objects.create(title="Itinerary", collection=travel_plans)
 
         self.make_docs()
 
@@ -125,6 +147,25 @@ class TestDocumentIndexView(WagtailTestUtils, TestCase):
         url = reverse("wagtaildocs:add_multiple")
         self.assertContains(
             response, f'<a href="{url}?collection_id={travel_plans.pk}"'
+        )
+
+        # List should be filtered
+        self.assertEqual(len(response.context["page_obj"]), 1)
+        self.assertContains(response, "Itinerary")
+        self.assertNotContains(response, "Test 42")
+
+        # Should render the "Select all" with the correct collection ID
+        # twice, one for the column header and one in the footer.
+        self.assertContains(
+            response,
+            f"""
+            <input data-bulk-action-parent-id="{travel_plans.pk}"
+                   data-bulk-action-select-all-checkbox
+                   type="checkbox"
+                   aria-label="Select all"
+            />""",
+            html=True,
+            count=2,
         )
 
     def test_collection_nesting(self):
@@ -148,13 +189,13 @@ class TestDocumentIndexView(WagtailTestUtils, TestCase):
         self.assertEqual(response.status_code, 200)
 
         edit_url = reverse("wagtaildocs:edit", args=(doc.id,))
-        next_url = quote(response._request.get_full_path())
-        self.assertContains(response, "%s?next=%s" % (edit_url, next_url))
+        params = urlencode({"next": response._request.get_full_path()})
+        self.assertContains(response, f"{edit_url}?{params}")
 
     def test_search_form_rendered(self):
         response = self.get()
         html = response.content.decode()
-        search_url = reverse("wagtaildocs:index")
+        search_url = reverse("wagtaildocs:index_results")
 
         # Search form in the header should be rendered.
         self.assertTagInHTML(
@@ -162,6 +203,101 @@ class TestDocumentIndexView(WagtailTestUtils, TestCase):
             html,
             count=1,
             allow_extra_attrs=True,
+        )
+
+    def test_tags(self):
+        document_two_tags = models.Document.objects.create(
+            title="Test document with two tags"
+        )
+        document_two_tags.tags.add("one", "two")
+
+        response = self.get()
+        self.assertEqual(response.status_code, 200)
+
+        soup = self.get_soup(response.content)
+        current_tags = soup.select("input[name=tag][checked]")
+        self.assertFalse(current_tags)
+
+        tags = soup.select("#id_tag label")
+        self.assertCountEqual(
+            [tags.get_text(strip=True) for tags in tags],
+            ["one", "two"],
+        )
+
+    def test_tag_filtering(self):
+        models.Document.objects.create(title="Test document with no tags")
+
+        document_one_tag = models.Document.objects.create(
+            title="Test document with one tag"
+        )
+        document_one_tag.tags.add("one")
+
+        document_two_tags = models.Document.objects.create(
+            title="Test document with two tags"
+        )
+        document_two_tags.tags.add("one", "two")
+
+        document_unrelated_tag = models.Document.objects.create(
+            title="Test document with a different tag"
+        )
+        document_unrelated_tag.tags.add("unrelated")
+
+        # no filtering
+        response = self.get()
+        # four documents created above
+        self.assertEqual(response.context["page_obj"].paginator.count, 4)
+
+        # filter all documents with tag 'one'
+        response = self.get({"tag": "one"})
+        self.assertEqual(response.context["page_obj"].paginator.count, 2)
+
+        # filter all documents with tag 'two'
+        response = self.get({"tag": "two"})
+        self.assertEqual(response.context["page_obj"].paginator.count, 1)
+
+        # filter all documents with tag 'one' or 'unrelated'
+        response = self.get({"tag": ["one", "unrelated"]})
+        self.assertEqual(response.context["page_obj"].paginator.count, 3)
+
+        soup = self.get_soup(response.content)
+
+        # Should check the 'one' and 'unrelated' tags checkboxes
+        tags = soup.select("#id_tag label")
+        self.assertCountEqual(
+            [
+                tag.get_text(strip=True)
+                for tag in tags
+                if tag.select_one("input[checked]") is not None
+            ],
+            ["one", "unrelated"],
+        )
+
+        # Should render the active filter pills separately for each tag
+        active_filters = soup.select('[data-w-active-filter-id="id_tag"]')
+        self.assertCountEqual(
+            [filter.get_text(separator=" ", strip=True) for filter in active_filters],
+            ["Tag: one", "Tag: unrelated"],
+        )
+
+    def test_tag_filtering_preserves_other_params(self):
+        for i in range(1, 130):
+            document = models.Document.objects.create(title="Test document %i" % i)
+            if i % 2 != 0:
+                document.tags.add("even")
+                document.save()
+
+        response = self.get({"tag": "even", "p": 2})
+        self.assertEqual(response.status_code, 200)
+
+        response_body = response.content.decode("utf8")
+
+        # prev link should exist and include tag
+        self.assertTrue(
+            "?p=1&amp;tag=even" in response_body or "?tag=even&amp;p=1" in response_body
+        )
+        # next link should exist and include tag
+        self.assertTrue(
+            "?p=3&amp;tag=even" in response_body or "?tag=even&amp;p=3" in response_body
         )
 
 
@@ -217,28 +353,59 @@ class TestDocumentIndexViewSearch(WagtailTestUtils, TransactionTestCase):
         self.assertTemplateUsed(response, "wagtaildocs/documents/index.html")
         self.assertContains(response, "There are 50 matches")
 
+    def test_tag_filtering_with_search_term(self):
+        models.Document.objects.create(title="Test document with no tags")
 
-class TestDocumentListingResultsView(WagtailTestUtils, TransactionTestCase):
+        document_one_tag = models.Document.objects.create(
+            title="Test document with one tag"
+        )
+        document_one_tag.tags.add("one")
+
+        document_two_tags = models.Document.objects.create(
+            title="Test document with two tags"
+        )
+        document_two_tags.tags.add("one", "two")
+
+        # The tag shouldn't be ignored, so the result should be the documents
+        # that have the "one" tag and "test" in the title.
+        response = self.get({"tag": "one", "q": "test"})
+        self.assertEqual(response.context["page_obj"].paginator.count, 2)
+
+
+class TestDocumentIndexResultsView(WagtailTestUtils, TransactionTestCase):
     def setUp(self):
         Collection.add_root(name="Root")
         self.login()
 
     def get(self, params={}):
-        return self.client.get(reverse("wagtaildocs:listing_results"), params)
+        return self.client.get(reverse("wagtaildocs:index_results"), params)
 
     def test_search(self):
         doc = models.Document.objects.create(title="A boring report")
 
         response = self.get({"q": "boring"})
+        params = urlencode({"next": "/admin/documents/?q=boring"})
         self.assertEqual(response.status_code, 200)
         # 'next' param on edit page link should point back to the documents index, not the results view
-        self.assertContains(
-            response,
-            "/admin/documents/edit/%d/?next=/admin/documents/%%3Fq%%3Dboring" % doc.id,
-        )
+        self.assertContains(response, f"/admin/documents/edit/{doc.pk}/?{params}")
+        self.assertNotContains(response, "<th>Collection</th>", html=True)
+        self.assertNotContains(response, "<td>Root</td>", html=True)
+
+    def test_search_with_collection(self):
+        root_collection = Collection.get_first_root_node()
+        root_collection.add_child(name="Evil plans")
+        doc = models.Document.objects.create(title="A boring report")
+
+        response = self.get({"q": "boring"})
+        params = urlencode({"next": "/admin/documents/?q=boring"})
+        self.assertEqual(response.status_code, 200)
+        # 'next' param on edit page link should point back to the documents index, not the results view
+        self.assertContains(response, f"/admin/documents/edit/{doc.pk}/?{params}")
+        self.assertContains(response, "<th>Collection</th>", html=True)
+        self.assertContains(response, "<td>Root</td>", html=True)
 
 
-class TestDocumentAddView(WagtailTestUtils, TestCase):
+class TestDocumentAddView(AdminTemplateTestUtils, WagtailTestUtils, TestCase):
     def setUp(self):
         self.login()
 
@@ -259,6 +426,14 @@ class TestDocumentAddView(WagtailTestUtils, TestCase):
 
         # draftail should NOT be a standard JS include on this page
         self.assertNotContains(response, "wagtailadmin/js/draftail.js")
+
+        self.assertBreadcrumbsItemsRendered(
+            [
+                {"url": reverse("wagtaildocs:index"), "label": "Documents"},
+                {"url": "", "label": "New: Document"},
+            ],
+            response.content,
+        )
 
     def test_get_with_collections(self):
         root_collection = Collection.get_first_root_node()
@@ -452,7 +627,7 @@ class TestDocumentAddViewWithLimitedCollectionPermissions(WagtailTestUtils, Test
         )
 
 
-class TestDocumentEditView(WagtailTestUtils, TestCase):
+class TestDocumentEditView(AdminTemplateTestUtils, WagtailTestUtils, TestCase):
     def setUp(self):
         self.user = self.login()
 
@@ -510,6 +685,14 @@ class TestDocumentEditView(WagtailTestUtils, TestCase):
         # (see TestDocumentEditViewWithCustomDocumentModel - this confirms that form media
         # definitions are being respected)
         self.assertNotContains(response, "wagtailadmin/js/draftail.js")
+
+        self.assertBreadcrumbsItemsRendered(
+            [
+                {"url": reverse("wagtaildocs:index"), "label": "Documents"},
+                {"url": "", "label": "Test document"},
+            ],
+            response.content,
+        )
 
         url_finder = AdminURLFinder(self.user)
         expected_url = "/admin/documents/edit/%d/" % self.document.id
@@ -859,7 +1042,7 @@ class TestDocumentDeleteView(WagtailTestUtils, TestCase):
         self.assertContains(response, "This document is referenced 0 times")
 
 
-class TestMultipleDocumentUploader(WagtailTestUtils, TestCase):
+class TestMultipleDocumentUploader(AdminTemplateTestUtils, WagtailTestUtils, TestCase):
     """
     This tests the multiple document upload views located in wagtaildocs/views/multiple.py
     """
@@ -897,6 +1080,17 @@ class TestMultipleDocumentUploader(WagtailTestUtils, TestCase):
         # Check response
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "wagtaildocs/multiple/add.html")
+
+        self.assertBreadcrumbsItemsRendered(
+            [
+                {
+                    "url": reverse("wagtaildocs:index"),
+                    "label": capfirst(self.doc._meta.verbose_name_plural),
+                },
+                {"url": "", "label": "Add documents"},
+            ],
+            response.content,
+        )
 
         # no collection chooser when only one collection exists
         self.assertNotContains(response, "id_adddocument_collection")
@@ -1167,7 +1361,9 @@ class TestMultipleDocumentUploader(WagtailTestUtils, TestCase):
         )
 
         # Check that a form error was raised
-        self.assertFormError(response, "form", "title", "This field is required.")
+        self.assertFormError(
+            response.context["form"], "title", "This field is required."
+        )
 
         # Check JSON
         response_json = json.loads(response.content.decode())
@@ -1254,15 +1450,16 @@ class TestMultipleCustomDocumentUploaderWithRequiredField(TestMultipleDocumentUp
     def setUp(self):
         super().setUp()
 
-        # Create an UploadedDocument for running tests on
-        self.uploaded_document = models.UploadedDocument.objects.create(
+        # Create an UploadedFile for running tests on
+        self.uploaded_document = UploadedFile.objects.create(
+            for_content_type=ContentType.objects.get_for_model(get_document_model()),
             file=get_test_document_file(),
             uploaded_by_user=self.user,
         )
 
     def test_add_post(self):
         """
-        This tests that a POST request to the add view saves the document as an UploadedDocument
+        This tests that a POST request to the add view saves the document as an UploadedFile
         and returns an edit form
         """
         response = self.client.post(
@@ -1303,11 +1500,11 @@ class TestMultipleCustomDocumentUploaderWithRequiredField(TestMultipleDocumentUp
 
         # Check JSON
         response_json = json.loads(response.content.decode())
-        self.assertIn("uploaded_document_id", response_json)
+        self.assertIn("uploaded_file_id", response_json)
         self.assertIn("form", response_json)
         self.assertIn("success", response_json)
         self.assertEqual(
-            response_json["uploaded_document_id"],
+            response_json["uploaded_file_id"],
             response.context["uploaded_document"].id,
         )
         self.assertTrue(response_json["success"])
@@ -1340,10 +1537,10 @@ class TestMultipleCustomDocumentUploaderWithRequiredField(TestMultipleDocumentUp
 
         # Check JSON
         response_json = json.loads(response.content.decode())
-        self.assertIn("uploaded_document_id", response_json)
+        self.assertIn("uploaded_file_id", response_json)
         self.assertIn("form", response_json)
         self.assertEqual(
-            response_json["uploaded_document_id"],
+            response_json["uploaded_file_id"],
             response.context["uploaded_document"].id,
         )
         self.assertTrue(response_json["success"])
@@ -1396,11 +1593,11 @@ class TestMultipleCustomDocumentUploaderWithRequiredField(TestMultipleDocumentUp
 
         # Check JSON
         response_json = json.loads(response.content.decode())
-        self.assertIn("uploaded_document_id", response_json)
+        self.assertIn("uploaded_file_id", response_json)
         self.assertIn("form", response_json)
         self.assertIn("success", response_json)
         self.assertEqual(
-            response_json["uploaded_document_id"],
+            response_json["uploaded_file_id"],
             response.context["uploaded_document"].id,
         )
         self.assertTrue(response_json["success"])
@@ -1415,10 +1612,10 @@ class TestMultipleCustomDocumentUploaderWithRequiredField(TestMultipleDocumentUp
     def test_create_from_upload_invalid_post(self):
         """
         Posting an invalid form to the create_from_uploaded_document view throws a validation error
-        and leaves the UploadedDocument intact
+        and leaves the UploadedFile intact
         """
         doc_count_before = CustomDocumentWithAuthor.objects.count()
-        uploaded_doc_count_before = models.UploadedDocument.objects.count()
+        uploaded_doc_count_before = UploadedFile.objects.count()
 
         # Send request
         response = self.client.post(
@@ -1436,9 +1633,9 @@ class TestMultipleCustomDocumentUploaderWithRequiredField(TestMultipleDocumentUp
         )
 
         doc_count_after = CustomDocumentWithAuthor.objects.count()
-        uploaded_doc_count_after = models.UploadedDocument.objects.count()
+        uploaded_doc_count_after = UploadedFile.objects.count()
 
-        # no changes to document / UploadedDocument count
+        # no changes to document / UploadedFile count
         self.assertEqual(doc_count_after, doc_count_before)
         self.assertEqual(uploaded_doc_count_after, uploaded_doc_count_before)
 
@@ -1459,7 +1656,9 @@ class TestMultipleCustomDocumentUploaderWithRequiredField(TestMultipleDocumentUp
             "/admin/documents/multiple/delete_upload/%d/"
             % response.context["uploaded_document"].id,
         )
-        self.assertFormError(response, "form", "author", "This field is required.")
+        self.assertFormError(
+            response.context["form"], "author", "This field is required."
+        )
 
         # Check JSON
         response_json = json.loads(response.content.decode())
@@ -1472,7 +1671,7 @@ class TestMultipleCustomDocumentUploaderWithRequiredField(TestMultipleDocumentUp
         Posting a valid form to the create_from_uploaded_document view will create the document
         """
         doc_count_before = CustomDocumentWithAuthor.objects.count()
-        uploaded_doc_count_before = models.UploadedDocument.objects.count()
+        uploaded_doc_count_before = UploadedFile.objects.count()
 
         # Send request
         response = self.client.post(
@@ -1494,7 +1693,7 @@ class TestMultipleCustomDocumentUploaderWithRequiredField(TestMultipleDocumentUp
         )
 
         doc_count_after = CustomDocumentWithAuthor.objects.count()
-        uploaded_doc_count_after = models.UploadedDocument.objects.count()
+        uploaded_doc_count_after = UploadedFile.objects.count()
 
         # Check response
         self.assertEqual(response.status_code, 200)
@@ -1505,7 +1704,7 @@ class TestMultipleCustomDocumentUploaderWithRequiredField(TestMultipleDocumentUp
         self.assertIn("doc_id", response_json)
         self.assertTrue(response_json["success"])
 
-        # Document should have been created, UploadedDocument deleted
+        # Document should have been created, UploadedFile deleted
         self.assertEqual(doc_count_after, doc_count_before + 1)
         self.assertEqual(uploaded_doc_count_after, uploaded_doc_count_before - 1)
 
@@ -1519,7 +1718,7 @@ class TestMultipleCustomDocumentUploaderWithRequiredField(TestMultipleDocumentUp
 
     def test_delete_uploaded_document(self):
         """
-        This tests that a POST request to the delete view deletes the UploadedDocument
+        This tests that a POST request to the delete view deletes the UploadedFile
         """
         # Send request
         response = self.client.post(
@@ -1534,9 +1733,7 @@ class TestMultipleCustomDocumentUploaderWithRequiredField(TestMultipleDocumentUp
 
         # Make sure the document is deleted
         self.assertFalse(
-            models.UploadedDocument.objects.filter(
-                id=self.uploaded_document.id
-            ).exists()
+            UploadedFile.objects.filter(id=self.uploaded_document.id).exists()
         )
 
         # Check JSON
@@ -1617,11 +1814,7 @@ class TestDocumentChooserView(WagtailTestUtils, TestCase):
         )
 
         # Check response
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "wagtaildocs/chooser/results.html")
-
-        # Check that we got page one
-        self.assertEqual(response.context["results"].number, 1)
+        self.assertEqual(response.status_code, 404)
 
     def test_pagination_out_of_range(self):
         self.make_docs()
@@ -1631,14 +1824,7 @@ class TestDocumentChooserView(WagtailTestUtils, TestCase):
         )
 
         # Check response
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "wagtaildocs/chooser/results.html")
-
-        # Check that we got the last page
-        self.assertEqual(
-            response.context["results"].number,
-            response.context["results"].paginator.num_pages,
-        )
+        self.assertEqual(response.status_code, 404)
 
     def test_construct_queryset_hook_browse(self):
         document = models.Document.objects.create(
@@ -1665,8 +1851,8 @@ class TestDocumentChooserView(WagtailTestUtils, TestCase):
         self.make_docs()
 
         response = self.client.get(reverse("wagtaildocs:index"))
-        self.assertNotContains(response, "<th>Collection</th>")
-        self.assertNotContains(response, "<td>Root</td>")
+        self.assertNotContains(response, "<th>Collection</th>", html=True)
+        self.assertNotContains(response, "<td>Root</td>", html=True)
 
     def test_index_with_collection(self):
         root_collection = Collection.get_first_root_node()
@@ -1675,8 +1861,8 @@ class TestDocumentChooserView(WagtailTestUtils, TestCase):
         self.make_docs()
 
         response = self.client.get(reverse("wagtaildocs:index"))
-        self.assertContains(response, "<th>Collection</th>")
-        self.assertContains(response, "<td>Root</td>")
+        self.assertContains(response, "<th>Collection</th>", html=True)
+        self.assertContains(response, "<td>Root</td>", html=True)
 
 
 class TestDocumentChooserViewSearch(WagtailTestUtils, TransactionTestCase):
@@ -1895,7 +2081,7 @@ class TestUsageCount(WagtailTestUtils, TestCase):
         self.assertContains(response, "Used 0 times")
 
 
-class TestGetUsage(WagtailTestUtils, TestCase):
+class TestGetUsage(AdminTemplateTestUtils, WagtailTestUtils, TestCase):
     fixtures = ["test.json"]
 
     def setUp(self):
@@ -1927,12 +2113,31 @@ class TestGetUsage(WagtailTestUtils, TestCase):
         event_page_related_link.save()
         response = self.client.get(reverse("wagtaildocs:document_usage", args=(1,)))
         self.assertContains(response, "Christmas")
+        self.assertContains(response, '<table class="listing">')
         self.assertContains(response, "<td>Event page</td>", html=True)
+        self.assertBreadcrumbsItemsRendered(
+            [
+                {
+                    "url": reverse("wagtaildocs:index"),
+                    "label": "Documents",
+                },
+                {
+                    "url": reverse("wagtaildocs:edit", args=(1,)),
+                    "label": "test document",
+                },
+                {
+                    "url": "",
+                    "label": "Usage",
+                    "sublabel": "test document",
+                },
+            ],
+            response.content,
+        )
 
     def test_usage_page_no_usage(self):
         response = self.client.get(reverse("wagtaildocs:document_usage", args=(1,)))
-        # There's no usage so there should be no table rows
-        self.assertRegex(response.content.decode("utf-8"), r"<tbody>(\s|\n)*</tbody>")
+        # There's no usage so there should be no listing table
+        self.assertNotContains(response, '<table class="listing">')
 
     def test_usage_page_with_only_change_permission(self):
         doc = models.Document.objects.get(id=1)

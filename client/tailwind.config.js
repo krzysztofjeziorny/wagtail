@@ -3,7 +3,7 @@ const vanillaRTL = require('tailwindcss-vanilla-rtl');
 /**
  * Design Tokens
  */
-const colors = require('./src/tokens/colors');
+const { staticColors, transparencies } = require('./src/tokens/colors');
 const {
   generateColorVariables,
   generateThemeColorVariables,
@@ -36,7 +36,7 @@ const scrollbarThin = require('./src/plugins/scrollbarThin');
  * themeColors: For converting our design tokens into a format that tailwind accepts
  */
 const themeColors = Object.fromEntries(
-  Object.entries(colors).map(([key, hues]) => {
+  Object.entries(staticColors).map(([key, hues]) => {
     const shades = Object.fromEntries(
       Object.entries(hues).map(([k, shade]) => [
         k,
@@ -165,25 +165,25 @@ module.exports = {
         ':root, :host': {
           '--w-font-sans': fontFamily.sans.join(', '),
           '--w-font-mono': fontFamily.mono.join(', '),
-          '--w-color-white-10': 'rgba(255, 255, 255, 0.10)',
-          '--w-color-white-15': 'rgba(255, 255, 255, 0.15)',
-          '--w-color-white-50': 'rgba(255, 255, 255, 0.50)',
-          '--w-color-white-80': 'rgba(255, 255, 255, 0.80)',
-          '--w-color-black-5': 'rgba(0, 0, 0, 0.05)',
-          '--w-color-black-10': 'rgba(0, 0, 0, 0.10)',
-          '--w-color-black-20': 'rgba(0, 0, 0, 0.20)',
-          '--w-color-black-25': 'rgba(0, 0, 0, 0.25)',
-          '--w-color-black-35': 'rgba(0, 0, 0, 0.35)',
-          '--w-color-black-50': 'rgba(0, 0, 0, 0.50)',
-          ...generateColorVariables(colors),
+          '--w-density-factor': '1',
+          ...transparencies,
+          ...generateColorVariables(staticColors),
           ...generateThemeColorVariables(colorThemes.light),
+          'color-scheme': 'light',
         },
         '.w-theme-system': {
-          '@media (prefers-color-scheme: dark)': generateThemeColorVariables(
-            colorThemes.dark,
-          ),
+          '@media (prefers-color-scheme: dark)': {
+            ...generateThemeColorVariables(colorThemes.dark),
+            'color-scheme': 'dark',
+          },
         },
-        '.w-theme-dark': generateThemeColorVariables(colorThemes.dark),
+        '.w-theme-dark': {
+          ...generateThemeColorVariables(colorThemes.dark),
+          'color-scheme': 'dark',
+        },
+        '.w-density-snug': {
+          '--w-density-factor': '0.5',
+        },
       });
     }),
     /** Support for aria-expanded=true variant */
@@ -193,7 +193,7 @@ module.exports = {
   ],
   corePlugins: {
     ...vanillaRTL.disabledCorePlugins,
-    // Disable float and clear which have poor RTL support.
+    // Disable float and clear. Use Flexbox or Grid instead.
     float: false,
     clear: false,
     // Disable text-transform so we don’t rely on uppercasing text.

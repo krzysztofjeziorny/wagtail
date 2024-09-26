@@ -8,10 +8,6 @@ If you have any problems or questions about working with Wagtail, you are invite
 
 [Stack Overflow](https://stackoverflow.com/questions/tagged/wagtail) is the best place to find answers to your questions about working with Wagtail - there is an active community of Wagtail users and developers responding to questions there. When posting questions, please read Stack Overflow's advice on [how to ask questions](https://stackoverflow.com/help/how-to-ask) and remember to tag your question with "wagtail".
 
-## Mailing list
-
-For topics and discussions that do not fit Stack Overflow's question-and-answer format, there is a Wagtail Support mailing list at [groups.google.com/d/forum/wagtail](https://groups.google.com/g/wagtail).
-
 (slack)=
 
 ## Slack
@@ -22,7 +18,7 @@ Please use the **#support** channel for support questions. Support is provided b
 
 ## GitHub discussions
 
-Our [Github discussion boards](https://github.com/wagtail/wagtail/discussions) are open for sharing ideas and plans for the Wagtail project.
+Our [GitHub discussion boards](https://github.com/wagtail/wagtail/discussions) are open for sharing ideas and plans for the Wagtail project.
 
 ## Issues
 
@@ -32,4 +28,4 @@ If your bug report is a security issue, **do not** report it with an issue. Plea
 
 ## Torchbox
 
-Finally, if you have a query which isn't relevant for any of the above forums, feel free to contact the Wagtail team at Torchbox directly, on [hello@wagtail.org](mailto:hello@wagtail.org) or [@wagtailcms](https://twitter.com/wagtailcms).
+Finally, if you have a query which isn't relevant for any of the above forums, feel free to contact the Wagtail team at Torchbox directly, on [hello@wagtail.org](mailto:hello@wagtail.org) or [@wagtailcms](https://x.com/wagtailcms).

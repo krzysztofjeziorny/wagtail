@@ -1,12 +1,11 @@
 from django import forms
-from django.urls import reverse
 from django.utils.functional import cached_property
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 from django.views.generic.base import View
 
 from wagtail.admin.staticfiles import versioned_static
-from wagtail.admin.ui.tables import Column, DateColumn
+from wagtail.admin.ui.tables import Column, DateColumn, DownloadColumn
 from wagtail.admin.views.generic.chooser import (
     BaseChooseView,
     ChooseResultsViewMixin,
@@ -57,15 +56,6 @@ class DocumentCreationFormMixin(CreationFormMixin):
         return kwargs
 
 
-class DownloadColumn(Column):
-    cell_template_name = "wagtaildocs/tables/download_cell.html"
-
-    def get_cell_context_data(self, instance, parent_context):
-        context = super().get_cell_context_data(instance, parent_context)
-        context["download_url"] = instance.url
-        return context
-
-
 class BaseDocumentChooseView(BaseChooseView):
     results_template_name = "wagtaildocs/chooser/results.html"
     per_page = 10
@@ -113,11 +103,6 @@ class DocumentChooseViewMixin(ChooseViewMixin):
         context = super().get_context_data(**kwargs)
         context["collections"] = self.collections
         return context
-
-    def get_response_json_data(self):
-        json_data = super().get_response_json_data()
-        json_data["tag_autocomplete_url"] = reverse("wagtailadmin_tag_autocomplete")
-        return json_data
 
 
 class DocumentChooseView(

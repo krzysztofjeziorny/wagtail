@@ -16,7 +16,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Wagtail\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-04-20 11:47+0100\n"
+"POT-Creation-Date: 2024-08-07 10:05+0100\n"
 "PO-Revision-Date: 2014-02-21 15:51+0000\n"
 "Last-Translator: Ragıp Ünal <ragip@ragipunal.com>, 2015\n"
 "Language-Team: Turkish (Turkey) (http://app.transifex.com/torchbox/wagtail/"
@@ -111,6 +111,33 @@ msgstr "Varsayılan"
 msgid "locked"
 msgstr "kilitlendi"
 
+msgid "Add/edit pages you own"
+msgstr "Sahip olduğun sayfalara ekle/düzenle"
+
+msgid "Bulk delete"
+msgstr "Toplu sil"
+
+msgid "Delete pages with children"
+msgstr "Alt sayfası olan sayfaları sil"
+
+msgid "Edit"
+msgstr "Düzenle"
+
+msgid "Edit any page"
+msgstr "Herhangi bir sayfayı düzenle"
+
+msgid "Lock"
+msgstr "Kilitle"
+
+msgid "Publish"
+msgstr "Yayınla"
+
+msgid "Publish any page"
+msgstr "Herhangi bir sayfayı yayınla"
+
+msgid "Unlock"
+msgstr "Kilidi kaldır"
+
 msgid "title"
 msgstr "başlık"
 
@@ -152,9 +179,6 @@ msgstr "sayfa"
 msgid "pages"
 msgstr "sayfalar"
 
-msgid "submitted for moderation"
-msgstr "kontrol için gönderildi"
-
 msgid "created at"
 msgstr "oluşturulma zamanı"
 
@@ -167,38 +191,11 @@ msgstr "JSON içerik"
 msgid "approved go live at"
 msgstr "onaylandı, canlısı"
 
-msgid "Add/edit pages you own"
-msgstr "Sahip olduğun sayfalara ekle/düzenle"
-
-msgid "Edit"
-msgstr "Düzenle"
-
-msgid "Edit any page"
-msgstr "Herhangi bir sayfayı düzenle"
-
-msgid "Publish"
-msgstr "Yayınla"
-
-msgid "Publish any page"
-msgstr "Herhangi bir sayfayı yayınla"
-
-msgid "Bulk delete"
-msgstr "Toplu sil"
-
-msgid "Delete pages with children"
-msgstr "Alt sayfası olan sayfaları sil"
-
-msgid "Lock"
-msgstr "Kilitle"
-
-msgid "Unlock"
-msgstr "Kilidi kaldır"
-
 msgid "group"
 msgstr "grup"
 
-msgid "permission type"
-msgstr "izin türü"
+msgid "permission"
+msgstr "izin"
 
 msgid "group page permission"
 msgstr "grup sayfası izni"
@@ -233,14 +230,14 @@ msgstr "koleksiyon görme kısıtları"
 msgid "collections"
 msgstr "koleksiyonlar"
 
-msgid "permission"
-msgstr "izin"
-
 msgid "group collection permission"
 msgstr "grup koleksiyon izni"
 
 msgid "group collection permissions"
 msgstr "grup koleksiyon izinleri"
+
+msgid "uploaded by user"
+msgstr "yükleyen kullanıcı"
 
 msgid "hostname"
 msgstr "ana bilgisayar adı (hostname)"
@@ -282,6 +279,9 @@ msgstr "site"
 msgid "sites"
 msgstr "siteler"
 
+msgid "default"
+msgstr "default"
+
 #, python-format
 msgid ""
 "%(hostname)s is already configured as the default site. You must unset that "
@@ -293,17 +293,8 @@ msgstr ""
 msgid "Public"
 msgstr "Genel"
 
-msgid "Private, accessible to logged-in users"
-msgstr "Gizli, giriş yapan kullanıcılar erişebilir"
-
-msgid "Private, accessible with the following password"
-msgstr "Gizli, şu şifreyle erişilebilir"
-
 msgid "Private, accessible to users in specific groups"
 msgstr "Gizli, belirli gruptaki kullanıcılar erişebilir"
-
-msgid "password"
-msgstr "şifre"
 
 msgid "view restriction"
 msgstr "kısıtı gör"

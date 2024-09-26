@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Wagtail\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-04-20 11:47+0100\n"
+"POT-Creation-Date: 2024-08-07 10:06+0100\n"
 "PO-Revision-Date: 2014-09-11 15:42+0000\n"
 "Last-Translator: Kornel Novak Mergulhão <nkornel@gmail.com>, 2016\n"
 "Language-Team: Hungarian (http://app.transifex.com/torchbox/wagtail/language/"
@@ -171,20 +171,12 @@ msgstr[1] "Biztosan törölni szeretné ezeket az űrlap beküldéseket?"
 msgid "Delete"
 msgstr "Törlés"
 
-msgid "Forms"
-msgstr "Űrlapok"
-
-msgid "Pages"
-msgstr "Oldalak"
-
-msgid "Title"
-msgstr "Cím"
-
-msgid "Origin"
-msgstr "Eredet"
-
 msgid "Delete selected submissions"
 msgstr "Kiválasztott beküldések törlése"
+
+#, python-format
+msgid "There have been no submissions of the '%(title)s' form."
+msgstr "Nincs még beküldött adat ehhez az űrlaphoz: '%(title)s'."
 
 msgid "Total submissions"
 msgstr "Összes beküldés"
@@ -192,28 +184,21 @@ msgstr "Összes beküldés"
 msgid "Latest submission"
 msgstr "Legfrissebb beküldés"
 
-msgid "No form pages have been created."
-msgstr "Nincs még űrlap oldal létrehozva."
-
 #, python-format
 msgid "Submissions of %(form_title)s"
 msgstr "%(form_title)s beküldött adatai"
 
-msgid "Download XLSX"
-msgstr "XLSX letöltése"
+msgid "Forms"
+msgstr "Űrlapok"
 
-msgid "Download CSV"
-msgstr "CSV letöltése"
+msgid "Title"
+msgstr "Cím"
 
-#, python-format
-msgid "There have been no submissions of the '%(title)s' form."
-msgstr "Nincs még beküldött adat ehhez az űrlaphoz: '%(title)s'."
+msgid "Origin"
+msgstr "Eredet"
 
-msgid "Filter"
-msgstr "Szűrő"
-
-msgid "Apply filters"
-msgstr "Szűrés"
+msgid "Pages"
+msgstr "Oldalak"
 
 #, python-format
 msgid "One submission has been deleted."

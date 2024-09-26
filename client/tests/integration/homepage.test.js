@@ -1,3 +1,5 @@
+jest.setTimeout(30000);
+
 describe('Homepage', () => {
   beforeAll(async () => {
     await page.goto(`${TEST_ORIGIN}/admin/`, {
@@ -34,14 +36,6 @@ describe('Homepage', () => {
     await trigger.click();
     await expect(page).toPassAxeTests({
       include: '.sidebar-main-menu',
-    });
-  });
-
-  it('axe sidebar footer', async () => {
-    const trigger = await page.$('[aria-label="Edit your account"]');
-    await trigger.click();
-    await expect(page).toPassAxeTests({
-      include: '.sidebar-footer',
     });
   });
 });

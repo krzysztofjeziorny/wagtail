@@ -4,6 +4,7 @@
 #
 # Translators:
 # dellax <michalnebbia@gmail.com>, 2015
+# Ivan Waginger <ivan.waginger@gmail.com>, 2024
 # Martin Janšto <mato@jansto.sk>, 2017
 # Martin Janšto <mato@jansto.sk>, 2017
 # dellax <michalnebbia@gmail.com>, 2015
@@ -13,9 +14,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Wagtail\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-04-20 11:47+0100\n"
+"POT-Creation-Date: 2024-08-07 10:06+0100\n"
 "PO-Revision-Date: 2014-02-19 11:54+0000\n"
-"Last-Translator: Stevo Backor, 2016\n"
+"Last-Translator: Ivan Waginger <ivan.waginger@gmail.com>, 2024\n"
 "Language-Team: Slovak (Slovakia) (http://app.transifex.com/torchbox/wagtail/"
 "language/sk_SK/)\n"
 "MIME-Version: 1.0\n"
@@ -24,6 +25,9 @@ msgstr ""
 "Language: sk_SK\n"
 "Plural-Forms: nplurals=4; plural=(n % 1 == 0 && n == 1 ? 0 : n % 1 == 0 && n "
 ">= 2 && n <= 4 ? 1 : n % 1 != 0 ? 2: 3);\n"
+
+msgid "Wagtail users"
+msgstr "Wagtail užívatelia"
 
 msgid "This value may contain only letters, numbers and @/./+/-/_ characters."
 msgstr "Táto hodnota môže obsahovať len písmená, čísla a znaky @/./+/-/_ "
@@ -93,6 +97,9 @@ msgstr "preferovaný jazyk"
 msgid "Select language for the admin"
 msgstr "Vyberte jazyk pre admin"
 
+msgid "Default"
+msgstr "Predvolené"
+
 msgid "user profile"
 msgstr "používatelský profil"
 
@@ -102,8 +109,8 @@ msgstr "Vymazať"
 msgid "Yes, delete"
 msgstr "Áno, zmazať"
 
-msgid "Delete group"
-msgstr "Vymazať skupinu"
+msgid "No, don't delete"
+msgstr "Nie, nezmazať"
 
 msgid ""
 "Deleting this group will revoke this group's permissions from all member "
@@ -117,11 +124,11 @@ msgstr "Naozaj chcete zmazať túto skupinu?"
 msgid "Add group"
 msgstr "Pridať skupinu"
 
-msgid "Editing"
-msgstr "Upraviť obrázok"
-
 msgid "Save"
 msgstr "Uložiť"
+
+msgid "Delete group"
+msgstr "Vymazať skupinu"
 
 msgid "Object permissions"
 msgstr "Oprávnenia objektu"
@@ -165,14 +172,8 @@ msgstr ""
 "Zatiaľ nie sú nastavené žiadne skupiny. Prečo nenastaviť <a "
 "href=\"%(wagtailusers_create_group_url)s\">jednu skupinu teraz</a>?"
 
-msgid "Delete user"
-msgstr "Zmazať používateľa"
-
 msgid "Are you sure you want to delete this user?"
 msgstr "Naozaj chcete zmazať tohto používateľa?"
-
-msgid "Add user"
-msgstr "Pridať používateľa"
 
 msgid "Account"
 msgstr "Účet"
@@ -180,32 +181,17 @@ msgstr "Účet"
 msgid "Roles"
 msgstr "Role"
 
-msgid "Users"
-msgstr "Používatelia"
-
-msgid "Add a user"
+msgid "Add user"
 msgstr "Pridať používateľa"
 
-msgid "Username"
-msgstr "Používateľské meno"
-
-msgid "Status"
-msgstr "Postavenie"
-
-msgid "Admin"
-msgstr "Admin"
+msgid "Delete user"
+msgstr "Zmazať používateľa"
 
 msgid "Active"
 msgstr "Aktívne"
 
 msgid "Inactive"
 msgstr "Neaktívne"
-
-#, python-format
-msgid "Sorry, no users match \"<em>%(query_string)s</em>\""
-msgstr ""
-"Prepáčte, žiadni používatelia nevyhovujú hľadanému výrazu "
-"\"<em>%(query_string)s</em>\""
 
 msgid "Groups"
 msgstr "Skupiny"
@@ -231,6 +217,24 @@ msgstr "Skupina nemôže byť uložená kvôli chybám."
 msgid "Group '%(object)s' deleted."
 msgstr "Skupina '%(object)s' bola vymazaná."
 
+msgid "Group"
+msgstr "Skupina"
+
+msgid "Add a user"
+msgstr "Pridať používateľa"
+
+msgid "Users"
+msgstr "Používatelia"
+
+msgid "Username"
+msgstr "Používateľské meno"
+
+msgid "Admin"
+msgstr "Admin"
+
+msgid "Status"
+msgstr "Postavenie"
+
 #, python-format
 msgid "User '%(object)s' updated."
 msgstr "Používateľ '%(object)s' bol aktualizovaný."
@@ -239,18 +243,5 @@ msgid "The user could not be saved due to errors."
 msgstr "Používateľ nemôže byť uložený kvôli chybám."
 
 #, python-format
-msgid "Editing %(object)s"
-msgstr "Úprava %(object)s"
-
-#, python-format
 msgid "User '%(object)s' deleted."
 msgstr "Používateľ '%(object)s' zmazaný."
-
-msgid "Edit"
-msgstr "Upraviť"
-
-msgid "Edit this user"
-msgstr "Upraviť tohto používateľa"
-
-msgid "Delete this user"
-msgstr "Zmazať tohto používateľa"

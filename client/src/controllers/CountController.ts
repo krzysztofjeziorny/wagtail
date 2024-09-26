@@ -6,7 +6,7 @@ const DEFAULT_ERROR_SELECTOR = '.error-message,.help-critical';
 /**
  * Adds the ability for a controlled element to update the total count
  * of selected elements within the provided container selector, defaults
- * do `body.`
+ * to `body.`
  *
  * @example
  * <div data-controller="w-count">
@@ -79,10 +79,10 @@ export class CountController extends Controller<HTMLFormElement> {
       this.element.classList.toggle(this.activeClass, total > min);
     }
     if (this.hasLabelTarget) {
-      this.labelTarget.innerHTML = total > min ? this.getLabel(total) : '';
+      this.labelTarget.textContent = total > min ? this.getLabel(total) : '';
     }
     if (this.hasTotalTarget) {
-      this.totalTarget.innerHTML = total > min ? `${total}` : '';
+      this.totalTarget.textContent = total > min ? `${total}` : '';
     }
   }
 }

@@ -16,7 +16,7 @@ export class FieldBlock {
     this.blockDef = blockDef;
     this.type = blockDef.name;
 
-    // See field.html for the reference implementation of this markup.
+    // See wagtailadmin/shared/formatted_field.html for the reference implementation of this markup.
     const dom = $(`
       <div class="w-field__wrapper" data-field-wrapper>
         <div class="${h(this.blockDef.meta.classname)}" data-field>
@@ -39,6 +39,8 @@ export class FieldBlock {
 
     this.prefix = prefix;
 
+    const options = { attributes: this.getAttributes() };
+
     try {
       this.widget = this.blockDef.widget.render(
         widgetElement,
@@ -46,13 +48,14 @@ export class FieldBlock {
         prefix,
         initialState,
         this.parentCapabilities,
+        options,
       );
     } catch (e) {
       // eslint-disable-next-line no-console
       console.error(e);
       this.setError({
         messages: [
-          'This widget failed to render, please check the console for details',
+          'This widget failed to render, please check the console for details.',
         ],
       });
       return;
@@ -125,14 +128,37 @@ export class FieldBlock {
 
       const errorElement = document.createElement('p');
       errorElement.classList.add('error-message');
-      errorElement.innerHTML = error.messages
-        .map((message) => `<span>${h(message)}</span>`)
-        .join('');
+
+      const errorText = document.createTextNode(error.messages.join(' '));
+
+      errorElement.appendChild(errorText);
       errorContainer.appendChild(errorElement);
     } else {
       this.field.classList.remove('w-field--error');
       errorContainer.querySelector('.icon').setAttribute('hidden', 'true');
     }
+  }
+
+  getAttributes() {
+    const prefix = this.prefix;
+    const attributes = {};
+
+    // If the block has help text, we should associate this with the input rendered by the widget.
+    // To accomplish this, we must tell the widget to render an aria-describedby attribute referring
+    // to the help text id in its HTML.
+    if (this.blockDef.meta.helpText) {
+      attributes['aria-describedby'] = `${prefix}-helptext`;
+    }
+    // If the block is required, we must tell the widget to render a required attribute in its HTML.
+    if (this.blockDef.meta.required) {
+      attributes.required = '';
+    }
+
+    if (this.blockDef.meta.maxLength) {
+      attributes.maxLength = this.blockDef.meta.maxLength;
+    }
+
+    return attributes;
   }
 
   getState() {

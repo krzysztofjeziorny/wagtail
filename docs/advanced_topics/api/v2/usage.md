@@ -1,6 +1,8 @@
+(api_v2_usage)=
+
 # Wagtail API v2 Usage Guide
 
-The Wagtail API module exposes a public, read only, JSON-formatted API which
+The Wagtail API module exposes a public, read-only, JSON-formatted API which
 can be used by external clients (such as a mobile app) or the site's frontend.
 
 This document is intended for developers using the API exposed by Wagtail. For
@@ -127,7 +129,7 @@ model. You can read about configuration [here](apiv2_page_fields_configuration).
 ```
 
 This doesn't apply to images/documents as there is only one model exposed in
-those endpoints. But for projects that have customised image/document models,
+those endpoints. But for projects that have customized image/document models,
 the `api_fields` attribute can be used to export any custom fields into the
 API.
 
@@ -161,6 +163,8 @@ modified in your project settings by setting `WAGTAILAPI_LIMIT_MAX` to
 either a number (the new maximum value) or `None` (which disables maximum
 value check).
 ```
+
+(api_v2_usage_ordering)=
 
 ### Ordering
 
@@ -205,6 +209,26 @@ Content-Type: application/json
 ```{note}
 Ordering is case-sensitive so lowercase letters are always ordered after
 uppercase letters when in ascending order.
+```
+
+#### Multiple ordering
+
+Multiple fields can be passed into the `?order` for consecutive ordering.
+
+```
+GET /api/v2/pages/?order=title,-slug
+
+HTTP 200 OK
+Content-Type: application/json
+
+{
+    "meta": {
+        "total_count": 50
+    },
+    "items": [
+        pages will be ordered by title and for all matching titles (a-z), then sorted by slug (z-a).
+    ]
+}
 ```
 
 #### Random ordering
@@ -276,7 +300,7 @@ Content-Type: application/json
 Pages can additionally be filtered by their relation to other pages in the tree.
 
 The `?child_of` filter takes the id of a page and filters the list of results
-to contain only direct children of that page.
+to contain only the direct children of that page.
 
 For example, this can be useful for constructing the main menu, by passing the
 id of the homepage to the filter:
@@ -326,11 +350,11 @@ way down to the site's root page.
 
 For example, when combined with the `type` filter it can be used to
 find the particular `blog.BlogIndexPage` a `blog.BlogPage` belongs
-to. By itself, it can be used to to construct a breadcrumb trail from
+to. By itself, it can be used to construct a breadcrumb trail from
 the current page back to the site's root page.
 
-The `?descendant_of` filter takes the id of a page and filter the list
-to only include descendants of that page (children, grandchildren etc.).
+The `?descendant_of` filter takes the id of a page and filters the list
+to only include descendants of that page (children, grandchildren, etc.).
 
 (api_filtering_pages_by_site)=
 
@@ -519,7 +543,7 @@ the URL. For example:
 -   Documents `/api/v2/documents/1/`
 
 All exported fields will be returned in the response by default. You can use the
-`?fields` parameter to customise which fields are shown.
+`?fields` parameter to customize which fields are shown.
 
 For example: `/api/v2/pages/1/?fields=_,title,body` will return just the
 `title` and `body` of the page with the id of 1.
@@ -544,7 +568,7 @@ These fields are returned by every endpoint.
 The unique ID of the object
 
 ```{note}
-Except for page types, every other content type has its own id space
+Except for page types, every other content type has its own ID space
 so you must combine this with the ``type`` field in order to get a
 unique identifier for an object.
 ```
@@ -574,7 +598,7 @@ Nests some information about the parent page (only available on detail
 views)
 
 **`meta.alias_of` (dictionary)**
-If the page marked as an alias return original page id and full url
+If the page marked as an alias return the original page ID and full URL
 
 ### Images
 
@@ -608,13 +632,13 @@ A URL to the document file
 
 ### Major features
 
--   The `fields` parameter has been improved to allow removing fields, adding all fields and customising nested fields
+-   The `fields` parameter has been improved to allow removing fields, adding all fields, and customizing nested fields
 
 ### Minor features
 
--   `html_url`, `slug`, `first_published_at`, `expires_at` and `show_in_menus` fields have been added to the pages endpoint
+-   `html_url`, `slug`, `first_published_at`, `expires_at`, and `show_in_menus` fields have been added to the pages endpoint
 -   `download_url` field has been added to the documents endpoint
--   Multiple page types can be specified in `type` parameter on pages endpoint
+-   Multiple page types can be specified in `type` parameter on page endpoint
 -   `true` and `false` may now be used when filtering boolean fields
 -   `order` can now be used in conjunction with `search`
 -   `search_operator` parameter was added

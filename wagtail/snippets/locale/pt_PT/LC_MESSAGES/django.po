@@ -4,6 +4,7 @@
 #
 # Translators:
 # 425fe09b3064b9f906f637fff94056ae_a00ea56 <0fa3588fa89906bfcb3a354600956e0e_308047>, 2015
+# Felipe Lobato, 2023
 # Jose Lourenco <jose@lourenco.ws>, 2015
 # Luís Tiago Favas <traducoes@favas.eu>, 2020
 # Luís Tiago Favas <traducoes@favas.eu>, 2020
@@ -14,10 +15,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Wagtail\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-04-20 11:47+0100\n"
+"POT-Creation-Date: 2024-08-07 10:06+0100\n"
 "PO-Revision-Date: 2014-02-19 19:01+0000\n"
-"Last-Translator: 425fe09b3064b9f906f637fff94056ae_a00ea56 "
-"<0fa3588fa89906bfcb3a354600956e0e_308047>, 2015\n"
+"Last-Translator: Felipe Lobato, 2023\n"
 "Language-Team: Portuguese (Portugal) (http://app.transifex.com/torchbox/"
 "wagtail/language/pt_PT/)\n"
 "MIME-Version: 1.0\n"
@@ -66,6 +66,9 @@ msgstr "%(label)s e Publicar"
 msgid "Wagtail snippets"
 msgstr "Trechos Wagtail"
 
+msgid "Delete selected snippets"
+msgstr "Deletar os itens selecionados"
+
 #, python-format
 msgid "%(model_name)s '%(object)s' deleted."
 msgstr "%(model_name)s '%(object)s' apagado."
@@ -98,12 +101,6 @@ msgstr "Sim, apagar"
 msgid "No, don't delete"
 msgstr "Não, não apagar"
 
-msgid "Last updated"
-msgstr "Última atualização"
-
-msgid "History"
-msgstr "Histórico"
-
 msgid "Publishing…"
 msgstr "A publicar..."
 
@@ -119,99 +116,20 @@ msgstr "Substituir rascunho atual."
 msgid "Save draft"
 msgstr "Gravar rascunho"
 
-#, python-format
-msgid "New  %(snippet_type_name)s"
-msgstr "Adicionar  %(snippet_type_name)s"
-
-msgid "New"
-msgstr "Adicionar"
-
 msgid "Actions"
 msgstr "Ações"
-
-msgid "Breadcrumb"
-msgstr "Percurso"
-
-msgid "Snippets"
-msgstr "Trechos"
-
-msgid "Usage"
-msgstr "Utilização"
-
-msgid "No log entries found."
-msgstr "Nenhuma entrada de diário encontrada."
-
-#, python-format
-msgid "Snippets %(snippet_type_name_plural)s"
-msgstr "Trechos %(snippet_type_name_plural)s"
-
-#, python-format
-msgid "Add %(snippet_type_name)s"
-msgstr "Adicionar %(snippet_type_name)s"
-
-#, python-format
-msgid ""
-"No %(snippet_type_name_plural)s have been created. Why not <a "
-"href=\"%(wagtailsnippets_create_url)s\">add one</a>?"
-msgstr ""
-"Ainda não foi criado nenhum %(snippet_type_name_plural)s. Que tal <a "
-"href=\"%(wagtailsnippets_create_url)s\">adicionar um</a>?"
-
-msgid "Live version"
-msgstr "Versão publicada"
-
-msgid "Current draft"
-msgstr "Rascunho atual"
-
-msgid "Preview"
-msgstr "Visualizar"
-
-msgid "Edit"
-msgstr "Alterar"
-
-msgid "Review this version"
-msgstr "Rever esta versão"
-
-msgid "Compare with previous version"
-msgstr "Comparar com versão anterior"
-
-msgid "Compare with current version"
-msgstr "Comparar com versão atual"
-
-msgid "Cancel scheduled publish"
-msgstr "Desmarcar publicação"
 
 msgid "Choose"
 msgstr "Escolher"
 
+msgid "Snippets"
+msgstr "Trechos"
+
 msgid "Name"
 msgstr "Nome"
 
-msgid "The snippet could not be created due to errors."
-msgstr "O trecho não pôde ser criado devido a erros."
-
-msgid "The snippet could not be saved due to errors."
-msgstr "O trecho não pôde ser gravado devido a erros."
-
-msgid "Action"
-msgstr "Ação"
-
-msgid "User"
-msgstr "Utilizador"
-
-msgid "Date"
-msgstr "Data"
-
-msgid "Snippet history"
-msgstr "Histórico de trechos"
-
-#, python-format
-msgid "Edit '%(title)s'"
-msgstr "Alterar '%(title)s'"
-
-#, python-format
-msgid "Delete '%(title)s'"
-msgstr "Apagar '%(title)s'"
+msgid "Home"
+msgstr "Início"
 
 #, python-format
 msgid "Choose another %(object)s"

@@ -1,5 +1,5 @@
-from bs4 import BeautifulSoup
 from django.test import TestCase
+from django.urls import reverse_lazy
 
 from wagtail.documents import get_document_model
 from wagtail.documents.rich_text import (
@@ -9,13 +9,15 @@ from wagtail.documents.rich_text.editor_html import (
     DocumentLinkHandler as EditorHtmlDocumentLinkHandler,
 )
 from wagtail.fields import RichTextField
+from wagtail.rich_text.feature_registry import FeatureRegistry
+from wagtail.test.utils import WagtailTestUtils
 
 
-class TestEditorHtmlDocumentLinkHandler(TestCase):
+class TestEditorHtmlDocumentLinkHandler(WagtailTestUtils, TestCase):
     fixtures = ["test.json"]
 
     def test_get_db_attributes(self):
-        soup = BeautifulSoup('<a data-id="test-id">foo</a>', "html5lib")
+        soup = self.get_soup('<a data-id="test-id">foo</a>')
         tag = soup.a
         result = EditorHtmlDocumentLinkHandler.get_db_attributes(tag)
         self.assertEqual(result, {"id": "test-id"})
@@ -59,4 +61,16 @@ class TestFrontendDocumentLinkHandler(TestCase):
                 )
             ),
             [(get_document_model(), "1", "", "")],
+        )
+
+
+class TestEntityFeatureChooserUrls(TestCase):
+    def test_chooser_urls_exist(self):
+        features = FeatureRegistry()
+        document = features.get_editor_plugin("draftail", "document-link")
+
+        self.assertIsNotNone(document.data.get("chooserUrls"))
+        self.assertEqual(
+            document.data["chooserUrls"]["documentChooser"],
+            reverse_lazy("wagtaildocs_chooser:choose"),
         )
